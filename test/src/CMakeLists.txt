@@ -2,22 +2,9 @@
 add_executable(${PROJECT_NAME}-test-src)
 target_compile_features(${PROJECT_NAME}-test-src PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME}-test-src PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
-#target_sources(${PROJECT_NAME}-test-src PRIVATE main.cpp "TestApplication.cpp" ${WRAPPER_SOURCES} "SampleScene.cpp")
 target_sources(${PROJECT_NAME}-test-src PRIVATE main.cpp "TestApplication.cpp" "SampleScene.cpp")
 
 # ライブラリのリンク
-#target_link_libraries(${PROJECT_NAME}-test-src PRIVATE 
-#    Microsoft::DirectX-Headers
-#    Microsoft::DirectX-Guids
-#    Microsoft::DirectX12-Agility
-#    Microsoft::DirectXShaderCompiler
-#    Microsoft::DirectXTex
-#    imgui::imgui
-#    d3d12
-#    dxgi
-#    dxcompiler
-#    dxguid
-#)
 target_link_libraries(
     ${PROJECT_NAME}-test-src PRIVATE
     DirectX12-Wrapper
@@ -26,10 +13,7 @@ target_link_libraries(
 # インクルードディレクトリへのパスを追加
 # 作成したラッパーのincludeを指定
 target_include_directories(${PROJECT_NAME}-test-src PRIVATE "${PROJECT_SOURCE_DIR}/inc")
-#↓めっちゃ重要！！！
-target_include_directories(${PROJECT_NAME}-test-src PRIVATE "${DIRECTX_INCLUDE_DIRS}/directx")
-target_include_directories(${PROJECT_NAME}-test-src PRIVATE ${IMGUI_INCLUDE_DIRS}/include)
-target_include_directories(${PROJECT_NAME}-test-src PRIVATE ${TINYGLTF_INCLUDE_DIRS})
+
 
 # d3d12の機能を使うためのファイルを実行ファイル以下のディレクトリにコピー
 if(TARGET Microsoft::DirectX12-Agility)

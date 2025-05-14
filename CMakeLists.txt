@@ -33,13 +33,13 @@ find_path(DIRECTX_INCLUDE_DIRS "directx")
 find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 find_path(IMGUI_INCLUDE_DIRS "imgui.h")
 
+# target_include_directoriesをPUBLICにすることでライブラリを使う側に書く必要がなくなる
 # ヘッダーファイルのあるディレクトリをインクルード
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/inc")
+target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/inc")
 #↓めっちゃ重要！！！
-target_include_directories(${PROJECT_NAME} PRIVATE "${DIRECTX_INCLUDE_DIRS}/directx")
-target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS}/include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${TINYGLTF_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC "${DIRECTX_INCLUDE_DIRS}/directx")
+target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_INCLUDE_DIRS}/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${TINYGLTF_INCLUDE_DIRS})
 
 # 公開
 # target_include_directories(${PROJECT_NAME}
