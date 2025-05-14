@@ -36,7 +36,7 @@ find_path(IMGUI_INCLUDE_DIRS "imgui.h")
 # target_include_directoriesをPUBLICにすることでライブラリを使う側に書く必要がなくなる
 # ヘッダーファイルのあるディレクトリをインクルード
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/inc")
-#↓めっちゃ重要！！！
+#↓めっちゃ重要！！！directx-headersの.hをincludeするために設定
 target_include_directories(${PROJECT_NAME} PUBLIC "${DIRECTX_INCLUDE_DIRS}/directx")
 target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_INCLUDE_DIRS}/include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${TINYGLTF_INCLUDE_DIRS})
