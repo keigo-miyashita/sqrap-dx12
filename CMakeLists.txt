@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 project(DirectX12-Wrapper CXX)
 
-set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/ports/directx-dxc;${CMAKE_SOURCE_DIR}/ports/directx12-agility" CACHE STRING "Overlay ports" FORCE)
+# 変数にファイルを格納
+file(GLOB_RECURSE WRAPPER_SOURCES "src/*.cpp")
+file(GLOB_RECURSE WRAPPER_HEADERS "inc/*.hpp")
+
+# hpp, cppファイルのまま扱うためのターゲット設定
+add_library(${PROJECT_NAME} ${WRAPPER_SOURCES})
 
 # 必要なパッケージが存在することを確認
 find_package(directx12-agility CONFIG REQUIRED)
@@ -9,25 +14,32 @@ find_package(directx-dxc CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(directxtex CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    Microsoft::DirectX-Headers
+    Microsoft::DirectX-Guids
+    Microsoft::DirectX12-Agility
+    Microsoft::DirectXShaderCompiler
+    Microsoft::DirectXTex
+    imgui::imgui
+    d3d12
+    dxgi
+    dxcompiler
+    dxguid
+)
+
 find_path(D3DX12_INCLUDE_DIRS "directx/d3dx12.h")
 find_path(DIRECTX_INCLUDE_DIRS "directx")
 find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 find_path(IMGUI_INCLUDE_DIRS "imgui.h")
-message(STATUS "Root CMakeList.txt TINYGLTF_INCLUDE_DIRS: ${TINYGLTF_INCLUDE_DIRS}")
-message(STATUS "Root CMakeList.txt IMGUI_INCLUDE_DIRS: ${IMGUI_INCLUDE_DIRS}")
-
-# hpp, cppファイルのまま扱うためのターゲット設定
-# add_library(${PROJECT_NAME} )
 
 # ヘッダーファイルのあるディレクトリをインクルード
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/inc)
-
-# 変数にファイルを格納
-file(GLOB_RECURSE WRAPPER_SOURCES "src/*.cpp")
-file(GLOB_RECURSE WRAPPER_HEADERS "inc/*.hpp")
-
-# hpp, cppファイルのまま扱うためのターゲット設定
-# add_library(${PROJECT_NAME} ${WRAPPER_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/inc")
+#↓めっちゃ重要！！！
+target_include_directories(${PROJECT_NAME} PRIVATE "${DIRECTX_INCLUDE_DIRS}/directx")
+target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_INCLUDE_DIRS}/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${TINYGLTF_INCLUDE_DIRS})
 
 # 公開
 # target_include_directories(${PROJECT_NAME}
@@ -35,8 +47,6 @@ file(GLOB_RECURSE WRAPPER_HEADERS "inc/*.hpp")
 #         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 #         $<INSTALL_INTERFACE:include>
 # )
-
-message(STATUS "Root CMakeList.txt d3d12_SOURCE_DIR: ${d3d12_SOURCE_DIR}")
 
 # includeディレクトリを設定
 # INTERFACEはこのプロジェクト自体のビルドには
@@ -49,18 +59,6 @@ message(STATUS "Root CMakeList.txt d3d12_SOURCE_DIR: ${d3d12_SOURCE_DIR}")
 #         ${TINYGLTF_INCLUDE_DIRS}
 #         "${dxc_SOURCE_DIR}/inc"
 #         "${d3d12_SOURCE_DIR}/build/native/include"
-# )
-
-# リンクするライブラリを指定
-# 同様にINTERFACEをつけている
-# target_link_libraries(
-#     ${PROJECT_NAME}
-#     PUBLIC
-#         d3d12
-#         dxgi
-#         Microsoft::DirectXTex
-#         dxcompiler
-#         imgui::imgui
 # )
 
 # NOTE : 順序に注意

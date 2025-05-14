@@ -16,8 +16,7 @@ bool Mesh::LoadModel(string modelPath)
 	tinygltf::TinyGLTF loader;
 	string err, warn;
 
-	string modelFullPath = string(MODEL_DIR) + "\\" + modelPath;
-	bool success = loader.LoadASCIIFromFile(&model, &err, &warn, modelFullPath.c_str());
+	bool success = loader.LoadASCIIFromFile(&model, &err, &warn, modelPath.c_str());
 	if (!success) {
 		cerr << "failed to load gltf\n";
 		assert(0);
@@ -55,11 +54,12 @@ bool Mesh::LoadModel(string modelPath)
 
 			for (int i = 0; i < posAccessor.count; i++) {
 				vertices_.push_back(
-					Vertex(
+					{
 						(XMFLOAT4(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], 1.0f)),
 						(XMFLOAT4(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], 1.0f)),
 						(XMFLOAT4(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3])),
-						(XMFLOAT2(uvs[i * 2], uvs[i * 2 + 1]))));
+						(XMFLOAT2(uvs[i * 2], uvs[i * 2 + 1]))
+					});
 			}
 
 			int indicesAccessorIndex = primitive.indices;

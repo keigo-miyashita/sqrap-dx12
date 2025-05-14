@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Shader::CreateShader(const DXC& dxc, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry)
+bool Shader::CreateShader(const DXC& dxc, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry)
 {
 	shaderType_ = shaderType;
 	if (!dxc.CompileShader(blob_, fileName, shaderType, model, entry)) {
@@ -22,7 +22,7 @@ Shader::Shader()
 
 }
 
-bool Shader::Init(const DXC& dxc, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry)
+bool Shader::Init(const DXC& dxc, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry)
 {
 	if (!CreateShader(dxc, fileName, shaderType, model, entry)) {
 		return false;

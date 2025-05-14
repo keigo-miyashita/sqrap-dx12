@@ -27,7 +27,7 @@ public:
 	~DXC() = default;
 	bool Init();
 	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main") const;
-	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main") const;
+	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main") const;
 	ComPtr<IDxcCompiler> GetCompiler();
 	ComPtr<IDxcLibrary> GetLibarary();
 	ComPtr<IDxcUtils> GetUtils();

@@ -98,7 +98,8 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	// Objects data
-	if (!sphere_.Init(device_, "sphere.gltf")) {
+	string modelPath = string(modelPath) + "\\sphere.gltf";
+	if (!sphere_.Init(device_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -153,12 +154,13 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	// Shaders
-	if (!simpleVS_.Init(dxc_, L"lambert.hlsl", ShaderType::Vertex, L"vs_6_6", L"VSmain")) {
+	wstring shaderPath = wstring(SHADER_DIR) + L"\\lambert.hlsl";
+	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"vs_6_6", L"VSmain")) {
 		cerr << "Failed to create simpleVS" << endl;
 		return false;
 	}
 	
-	if (!lambertPS_.Init(dxc_, L"lambert.hlsl", ShaderType::Pixel, L"ps_6_6", L"PSmain")) {
+	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"ps_6_6", L"PSmain")) {
 		cerr << "Failed to create lambertPS_" << endl;
 		return false;
 	}
@@ -235,7 +237,8 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	}
 
 	// Objects data
-	if (!sphere_.Init(device_, "sphere.gltf")) {
+	string modelPath = string(MODEL_DIR) + "\\sphere.gltf";
+	if (!sphere_.Init(device_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -290,12 +293,13 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	}
 
 	// Shaders
-	if (!simpleVS_.Init(dxc_, L"lambert.hlsl", ShaderType::Vertex, L"vs_6_6", L"VSmain")) {
+	wstring shaderPath = wstring(SHADER_DIR) + L"\\lambert.hlsl";
+	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"vs_6_6", L"VSmain")) {
 		cerr << "Failed to create simpleVS" << endl;
 		return false;
 	}
 
-	if (!lambertPS_.Init(dxc_, L"lambert.hlsl", ShaderType::Pixel, L"ps_6_6", L"PSmain")) {
+	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"ps_6_6", L"PSmain")) {
 		cerr << "Failed to create lambertPS_" << endl;
 		return false;
 	}

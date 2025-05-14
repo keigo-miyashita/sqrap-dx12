@@ -57,7 +57,6 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 		return false;
 	}
 
-	wstring fullPath = wstring(SHADER_DIR) + L"\\" + fileName + L".hlsl";
 	vector<const wchar_t*> options;
 #ifdef DEBUG
 	options.push_back(L"-Zi");
@@ -65,12 +64,12 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 	options.push_back(fileName + L".pdb");
 #endif // DEBUG
 	ComPtr<IDxcBlobEncoding> source = nullptr;
-	if (FAILED(library_->CreateBlobFromFile(fullPath.c_str(), nullptr, source.ReleaseAndGetAddressOf()))) {
+	if (FAILED(library_->CreateBlobFromFile(fileName, nullptr, source.ReleaseAndGetAddressOf()))) {
 		return false;
 	}
 
 	ComPtr<IDxcOperationResult> dxcResult = nullptr;
-	result = compiler_->Compile(source.Get(), fullPath.c_str(), entry, model, options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
+	result = compiler_->Compile(source.Get(), fileName, entry, model, options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
 	ComPtr<IDxcBlobEncoding> err;
 	if (FAILED(result)) {
 		dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
@@ -94,10 +93,8 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry) const
+bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry) const
 {
-	wstring fullPath = wstring(SHADER_DIR) + L"/" + fileName;
-	wcout << fullPath.c_str() << endl;
 	vector<const wchar_t*> options;
 #ifdef DEBUG
 	options.push_back(L"-Zi");
@@ -105,13 +102,13 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, LPCWSTR fileName, ShaderTy
 	options.push_back(fileName + L".pdb");
 #endif // DEBUG
 	ComPtr<IDxcBlobEncoding> source = nullptr;
-	if (FAILED(library_->CreateBlobFromFile(fullPath.c_str(), nullptr, source.ReleaseAndGetAddressOf()))) {
+	if (FAILED(library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf()))) {
 		cerr << "Failed to create blob from file" << endl;
 		return false;
 	}
 
 	ComPtr<IDxcOperationResult> dxcResult = nullptr;
-	auto result = compiler_->Compile(source.Get(), fullPath.c_str(), entry, model, options.data(), options.size(), nullptr, 0, nullptr, dxcResult.ReleaseAndGetAddressOf());
+	auto result = compiler_->Compile(source.Get(), fileName.c_str(), entry, model, options.data(), options.size(), nullptr, 0, nullptr, dxcResult.ReleaseAndGetAddressOf());
 	ComPtr<IDxcBlobEncoding> err;
 	if (FAILED(result)) {
 		dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
