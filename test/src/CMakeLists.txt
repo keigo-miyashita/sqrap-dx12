@@ -32,13 +32,13 @@ message(STATUS "vcpkg_installed path: " ${VCPKG_INSTALLED})
 add_custom_command(TARGET ${PROJECT_NAME}-test-src POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
   "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/dxcompiler.dll"
-  "${CMAKE_SOURCE_DIR}/external/dll/dxil.dll"
+  "${PROJECT_SOURCE_DIR}/external/dll/dxil.dll"
   "$<TARGET_FILE_DIR:${PROJECT_NAME}-test-src>")
 
 # シェーダー、モデル用のディレクトリを設定
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shader")
 add_compile_definitions(SHADER_DIR=L"${SHADER_DIR}")
-set(MODEL_DIR "${CMAKE_SOURCE_DIR}/external/model")
+set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/model")
 add_compile_definitions(MODEL_DIR="${MODEL_DIR}")
 
 get_cmake_property(_variableNames VARIABLES)
