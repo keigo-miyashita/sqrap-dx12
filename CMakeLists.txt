@@ -41,26 +41,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC "${DIRECTX_INCLUDE_DIRS}/direc
 target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_INCLUDE_DIRS}/include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${TINYGLTF_INCLUDE_DIRS})
 
-# 公開
-# target_include_directories(${PROJECT_NAME}
-#     PUBLIC
-#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#         $<INSTALL_INTERFACE:include>
-# )
-
-# includeディレクトリを設定
-# INTERFACEはこのプロジェクト自体のビルドには
-# このディレクトリを含まないことを指定
-# 依存先のプロジェクトでのみ利用
-# 今回のようにラッパーをつくるときに利用するのだろう
-# NOTE : INTERFACEにより変数(ex. ${})の下階層への伝播に影響している可能性あり
-# target_include_directories(${PROJECT_NAME}
-#     PUBLIC
-#         ${TINYGLTF_INCLUDE_DIRS}
-#         "${dxc_SOURCE_DIR}/inc"
-#         "${d3d12_SOURCE_DIR}/build/native/include"
-# )
-
 # NOTE : 順序に注意
 # 外部ライブラリのインストールが終わって
 # ディレクトリへのパスが変数に格納されてから

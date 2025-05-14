@@ -14,7 +14,6 @@ target_link_libraries(
 # 作成したラッパーのincludeを指定
 target_include_directories(${PROJECT_NAME}-test-src PRIVATE "${PROJECT_SOURCE_DIR}/inc")
 
-
 # d3d12の機能を使うためのファイルを実行ファイル以下のディレクトリにコピー
 if(TARGET Microsoft::DirectX12-Agility)
 #        file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")
