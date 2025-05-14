@@ -1,0 +1,57 @@
+#include <common.hpp>
+
+using namespace Microsoft::WRL;
+using namespace std;
+using namespace DirectX;
+
+bool Fence::CreateFence(const Device& device, wstring name)
+{
+	if (FAILED(device.GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf())))) {
+		return false;
+	}
+	fence_->SetName(name.c_str());
+	return true;
+}
+
+Fence::Fence()
+{
+
+}
+
+bool Fence::Init(const Device& device, wstring name)
+{
+	if (!CreateFence(device, name)) {
+		return false;
+	}
+
+	return true;
+}
+
+void Fence::WaitCommand(CommandManager& commandManager)
+{
+	commandManager.GetCommandList()->Close();
+
+	ID3D12CommandList* cmdLists[] = { commandManager.GetCommandList().Get() };
+	commandManager.GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
+	commandManager.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+
+	if (fence_->GetCompletedValue() < fenceVal_) {
+		auto event = CreateEvent(nullptr, false, false, nullptr);
+		fence_->SetEventOnCompletion(fenceVal_, event);
+		WaitForSingleObject(event, INFINITE);
+		CloseHandle(event);
+	}
+
+	commandManager.GetCommandAllocator()->Reset();
+	commandManager.GetCommandList()->Reset(commandManager.GetCommandAllocator().Get(), nullptr);
+}
+
+ComPtr<ID3D12Fence> Fence::GetFence()
+{
+	return fence_;
+}
+
+UINT64 Fence::GetFenceVal()
+{
+	return fenceVal_;
+}
