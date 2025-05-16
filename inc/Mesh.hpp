@@ -4,10 +4,10 @@
 
 struct Vertex
 {
-	DirectX::XMFLOAT4 position;
-	DirectX::XMFLOAT4 normal;
-	DirectX::XMFLOAT4 tangent;
-	DirectX::XMFLOAT2 uv;
+	DirectX::XMFLOAT4 position = {0.0f, 0.0f, 0.0f, 1.0f};
+	DirectX::XMFLOAT4 normal = { 0.0f, 0.0f, 0.0f, 1.0f };
+	DirectX::XMFLOAT4 tangent = { 0.0f, 0.0f, 0.0f, 1.0f };
+	DirectX::XMFLOAT2 uv = { 0.0f, 0.0f };
 };
 
 class Device;
@@ -33,6 +33,7 @@ public:
 	Mesh();
 	~Mesh() = default;
 	bool Init(const Device& device, std::string modelPath);
+	bool Init(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	ComPtr<ID3D12Resource> GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;

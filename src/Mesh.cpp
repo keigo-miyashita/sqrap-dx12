@@ -140,6 +140,22 @@ bool Mesh::Init(const Device& device, string modelPath)
 	return true;
 }
 
+bool Mesh::Init(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+{
+	vertices_ = vertices;
+	indices_ = indices;
+	
+	if (FAILED(CreateVertexBuffer(device))) {
+		return false;
+	}
+
+	if (FAILED(CreateIndexBuffer(device))) {
+		return false;
+	}
+
+	return true;
+}
+
 ComPtr<ID3D12Resource> Mesh::GetVertexBuffer() const
 {
 	return vertexBuffer_;
