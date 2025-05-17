@@ -75,11 +75,11 @@ bool Mesh::LoadModel(string modelPath)
 	return true;
 }
 
-HRESULT Mesh::CreateVertexBuffer(const Device& device)
+HRESULT Mesh::CreateVertexBuffer()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices_.size() * sizeof(Vertex));
-	if (FAILED(device.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(vertexBuffer_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(vertexBuffer_.ReleaseAndGetAddressOf())))) {
 		return S_FALSE;
 	}
 	Vertex* vertMap = nullptr;
@@ -96,11 +96,11 @@ HRESULT Mesh::CreateVertexBuffer(const Device& device)
 	return S_OK;
 }
 
-HRESULT Mesh::CreateIndexBuffer(const Device& device)
+HRESULT Mesh::CreateIndexBuffer()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
-	if (FAILED(device.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(indexBuffer_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(indexBuffer_.ReleaseAndGetAddressOf())))) {
 		return S_FALSE;
 	}
 	uint32_t* idxMap = nullptr;
@@ -122,17 +122,18 @@ Mesh::Mesh()
 
 }
 
-bool Mesh::Init(const Device& device, string modelPath)
+bool Mesh::Init(Device* pDevice, std::string modelPath)
 {
+	pDevice_ = pDevice;
 	if (!LoadModel(modelPath)) {
 		return false;
 	}
 
-	if (FAILED(CreateVertexBuffer(device))) {
+	if (FAILED(CreateVertexBuffer())) {
 		return false;
 	}
 
-	if (FAILED(CreateIndexBuffer(device))) {
+	if (FAILED(CreateIndexBuffer())) {
 		return false;
 	}
 
@@ -140,16 +141,17 @@ bool Mesh::Init(const Device& device, string modelPath)
 	return true;
 }
 
-bool Mesh::Init(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+bool Mesh::Init(Device* pDevice, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 {
+	pDevice_ = pDevice;
 	vertices_ = vertices;
 	indices_ = indices;
 	
-	if (FAILED(CreateVertexBuffer(device))) {
+	if (FAILED(CreateVertexBuffer())) {
 		return false;
 	}
 
-	if (FAILED(CreateIndexBuffer(device))) {
+	if (FAILED(CreateIndexBuffer())) {
 		return false;
 	}
 

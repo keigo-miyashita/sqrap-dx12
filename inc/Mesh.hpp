@@ -18,6 +18,7 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	std::vector<Vertex> vertices_;
 	ComPtr<ID3D12Resource> vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vbView_;
@@ -26,14 +27,14 @@ private:
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
 	bool LoadModel(std::string modelPath);
-	HRESULT CreateVertexBuffer(const Device& device);
-	HRESULT CreateIndexBuffer(const Device& device);
+	HRESULT CreateVertexBuffer();
+	HRESULT CreateIndexBuffer();
 
 public:
 	Mesh();
 	~Mesh() = default;
-	bool Init(const Device& device, std::string modelPath);
-	bool Init(const Device& device, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	bool Init(Device* pDevice, std::string modelPath);
+	bool Init(Device* pDevice, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	ComPtr<ID3D12Resource> GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;

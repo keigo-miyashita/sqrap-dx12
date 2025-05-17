@@ -99,7 +99,7 @@ bool SampleScene::Init(const Application& app)
 
 	// Objects data
 	string modelPath = string(modelPath) + "\\sphere.gltf";
-	if (!sphere_.Init(device_, modelPath)) {
+	if (!sphere_.Init(&device_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -129,7 +129,7 @@ bool SampleScene::Init(const Application& app)
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 	
 	// Resources
-	cameraBuffer_.InitAsUpload(device_,  Buffer::AlignForConstantBuffer(sizeof(Camera)), 1);
+	cameraBuffer_.InitAsUpload(&device_,  Buffer::AlignForConstantBuffer(sizeof(Camera)), 1);
 	void* rawPtr = cameraBuffer_.Map();
 	if (rawPtr) {
 		Camera* pCamera = static_cast<Camera*>(rawPtr);
@@ -137,7 +137,7 @@ bool SampleScene::Init(const Application& app)
 		cameraBuffer_.Unmap();
 	}
 
-	light0Buffer_.InitAsUpload(device_, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	light0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
 	rawPtr = light0Buffer_.Map();
 	if (rawPtr) {
 		Light* pLight = static_cast<Light*>(rawPtr);
@@ -145,7 +145,7 @@ bool SampleScene::Init(const Application& app)
 		light0Buffer_.Unmap();
 	}
 
-	sphere0Buffer_.InitAsUpload(device_, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
+	sphere0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
 	rawPtr = sphere0Buffer_.Map();
 	if (rawPtr) {
 		Object* pObject = static_cast<Object*>(rawPtr);
@@ -238,7 +238,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "\\sphere.gltf";
-	if (!sphere_.Init(device_, modelPath)) {
+	if (!sphere_.Init(&device_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -268,7 +268,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 
 	// Resources
-	cameraBuffer_.InitAsUpload(device_, Buffer::AlignForConstantBuffer(sizeof(Camera)), 1);
+	cameraBuffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Camera)), 1);
 	void* rawPtr = cameraBuffer_.Map();
 	if (rawPtr) {
 		Camera* pCamera = static_cast<Camera*>(rawPtr);
@@ -276,7 +276,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		cameraBuffer_.Unmap();
 	}
 
-	light0Buffer_.InitAsUpload(device_, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	light0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
 	rawPtr = light0Buffer_.Map();
 	if (rawPtr) {
 		Light* pLight = static_cast<Light*>(rawPtr);
@@ -284,7 +284,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		light0Buffer_.Unmap();
 	}
 
-	sphere0Buffer_.InitAsUpload(device_, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
+	sphere0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
 	rawPtr = sphere0Buffer_.Map();
 	if (rawPtr) {
 		Object* pObject = static_cast<Object*>(rawPtr);

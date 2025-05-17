@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool BLAS::CreateBLAS(const Device& device, const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
+bool BLAS::CreateBLAS(const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
 {
 	D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 	geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -25,18 +25,18 @@ bool BLAS::CreateBLAS(const Device& device, const Mesh& mesh, CommandManager& co
 	buildInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
-	device.GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
+	pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 	auto scratchBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(prebuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 	auto blasBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(prebuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 
 	scratchBuffer_.Init(
-		device, prebuildInfo.ScratchDataSizeInBytes, 1,
+		pDevice_, prebuildInfo.ScratchDataSizeInBytes, 1,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	);
 
 	ASBuffer_.Init(
-		device, prebuildInfo.ResultDataMaxSizeInBytes, 1,
+		pDevice_, prebuildInfo.ResultDataMaxSizeInBytes, 1,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	);
 
@@ -59,9 +59,10 @@ BLAS::BLAS()
 
 }
 
-bool BLAS::Init(const Device& device, const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
+bool BLAS::Init(Device* pDevice, const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
 {
-	if (!CreateBLAS(device, mesh, commandManager, fence, name)) {
+	pDevice_ = pDevice;
+	if (!CreateBLAS(mesh, commandManager, fence, name)) {
 		return false;
 	}
 
@@ -73,7 +74,7 @@ D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASGPUVirtualAddress() const
 	return ASBuffer_.GetResource()->GetGPUVirtualAddress();
 }
 
-bool TLAS::CreateTLAS(const Device& device, const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
+bool TLAS::CreateTLAS(const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
 {
 	vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDesc;
 	for (int numDescs = 0; tlasDescs_.size(); numDescs++) {
@@ -89,7 +90,7 @@ bool TLAS::CreateTLAS(const Device& device, const Mesh& mesh, CommandManager& co
 	}
 
 	Buffer uploadBuffer;
-	uploadBuffer.InitAsUpload(device, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size(), name);
+	uploadBuffer.InitAsUpload(pDevice_, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size(), name);
 	void* rawPtr = uploadBuffer.Map();
 	if (rawPtr) {
 		D3D12_RAYTRACING_INSTANCE_DESC* pDesc = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(rawPtr);
@@ -97,7 +98,7 @@ bool TLAS::CreateTLAS(const Device& device, const Mesh& mesh, CommandManager& co
 		uploadBuffer.Unmap();
 	}
 	instanceDescBuffer_.Init(
-		device, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size(),
+		pDevice_, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size(),
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, name
 	);
 
@@ -112,15 +113,15 @@ bool TLAS::CreateTLAS(const Device& device, const Mesh& mesh, CommandManager& co
 	buildInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
-	device.GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
+	pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 	scratchBuffer_.Init(
-		device, prebuildInfo.ScratchDataSizeInBytes, 1, 
+		pDevice_, prebuildInfo.ScratchDataSizeInBytes, 1,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE
 	);
 
 	ASBuffer_.Init(
-		device, prebuildInfo.ResultDataMaxSizeInBytes, 1,
+		pDevice_, prebuildInfo.ResultDataMaxSizeInBytes, 1,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE
 	);
 
@@ -143,9 +144,10 @@ TLAS::TLAS()
 	
 }
 
-bool TLAS::Init(const Device& device, const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
+bool TLAS::Init(Device* pDevice, const Mesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
 {
-	if (!CreateTLAS(device, mesh, commandManager, fence, name)) {
+	pDevice_ = pDevice;
+	if (!CreateTLAS(mesh, commandManager, fence, name)) {
 		return false;
 	}
 

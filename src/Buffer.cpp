@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Buffer::CreateBuffer(const Device& device, UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, wstring name)
+bool Buffer::CreateBuffer(UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, wstring name)
 {
 	heapType_ = heapType;
 	rscFlag_ = rscFlag;
@@ -13,7 +13,7 @@ bool Buffer::CreateBuffer(const Device& device, UINT strideSize, UINT numElement
 	rscState_ = initRscState;
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType);
 	auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
-	if (FAILED(device.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
 	resource_->SetName(name.c_str());
@@ -36,27 +36,30 @@ Buffer::Buffer()
 
 }
 
-bool Buffer::Init(const Device& device, UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, wstring name)
+bool Buffer::Init(Device* pDevice, UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, wstring name)
 {
-	if (!CreateBuffer(device, strideSize, numElement, heapType, rscFlag, initRscState, name)) {
+	pDevice_ = pDevice;
+	if (!CreateBuffer(strideSize, numElement, heapType, rscFlag, initRscState, name)) {
 		return false;
 	}
 
 	return true;
 }
 
-bool Buffer::InitAsUpload(const Device& device, UINT strideSize, UINT numElement, wstring name)
+bool Buffer::InitAsUpload(Device* pDevice, UINT strideSize, UINT numElement, wstring name)
 {
-	if (!CreateBuffer(device, strideSize, numElement, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_SOURCE, name)) {
+	pDevice_ = pDevice;
+	if (!CreateBuffer(strideSize, numElement, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_SOURCE, name)) {
 		return false;
 	}
 
 	return true;
 }
 
-bool Buffer::InitAsReadback(const Device& device, UINT strideSize, UINT numElement, wstring name)
+bool Buffer::InitAsReadback(Device* pDevice, UINT strideSize, UINT numElement, wstring name)
 {
-	if (!CreateBuffer(device, strideSize, numElement, D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, name)) {
+	pDevice_ = pDevice;
+	if (!CreateBuffer(strideSize, numElement, D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, name)) {
 		return false;
 	}
 
