@@ -27,8 +27,6 @@
 #include <Application.hpp>
 #include <Buffer.hpp>
 #include <Commandmanager.hpp>
-#include <Commandlist.hpp>
-#include <Commandqueue.hpp>
 #include <Descriptorheap.hpp>
 #include <Descriptortable.hpp>
 #include <Device.hpp>
