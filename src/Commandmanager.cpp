@@ -20,12 +20,12 @@ bool CommandManager::CreateCommandList(const Device& device, D3D12_COMMAND_LIST_
 	return true;
 }
 
-bool CommandManager::InitializeStableCommandList(std::wstring name = L"Direct")
+bool CommandManager::InitializeStableCommandList(std::wstring name)
 {
 	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
-	latestCommandList_->SetName((L"StableCommandList" + name).c_str());
+	stableCommandList_->SetName((L"StableCommandList" + name).c_str());
 	return true;
 }
 

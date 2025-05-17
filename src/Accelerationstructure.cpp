@@ -40,16 +40,18 @@ bool BLAS::CreateBLAS(const Device& device, const Mesh& mesh, CommandManager& co
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	);
 
-	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildDesc = {};
-	buildDesc.Inputs = buildInputs;
-	buildDesc.DestAccelerationStructureData = ASBuffer_.GetResource()->GetGPUVirtualAddress();
-	buildDesc.ScratchAccelerationStructureData = scratchBuffer_.GetResource()->GetGPUVirtualAddress();
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
+	buildASDesc.Inputs = buildInputs;
+	buildASDesc.DestAccelerationStructureData = ASBuffer_.GetResource()->GetGPUVirtualAddress();
+	buildASDesc.ScratchAccelerationStructureData = scratchBuffer_.GetResource()->GetGPUVirtualAddress();
 
-	commandManager.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildDesc, 0, nullptr);
+	commandManager.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
 
 	auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_.GetResource().Get());
 	commandManager.GetStableCommandList()->ResourceBarrier(1, &barrier);
 	fence.WaitCommand(commandManager);
+
+	return true;
 }
 
 BLAS::BLAS()
@@ -132,6 +134,8 @@ bool TLAS::CreateTLAS(const Device& device, const Mesh& mesh, CommandManager& co
 	auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_.GetResource().Get());
 	commandManager.GetStableCommandList()->ResourceBarrier(1, &barrier);
 	fence.WaitCommand(commandManager);
+
+	return true;
 }
 
 TLAS::TLAS()

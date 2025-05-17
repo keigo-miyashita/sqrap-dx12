@@ -1,8 +1,13 @@
 #pragma once
 
 #include <common.hpp>
+#include "Buffer.hpp"
 
 class Buffer;
+class CommandManager;
+class Device;
+class Fence;
+class Mesh;
 
 class BLAS
 {
