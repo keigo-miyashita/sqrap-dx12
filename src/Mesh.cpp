@@ -171,6 +171,11 @@ const D3D12_VERTEX_BUFFER_VIEW* Mesh::GetVBViewPtr() const
 	return &vbView_;
 }
 
+UINT Mesh::GetVertexCount() const
+{
+	return vertices_.size();
+}
+
 ComPtr<ID3D12Resource> Mesh::GetIndexBuffer() const
 {
 	return indexBuffer_;

@@ -20,13 +20,21 @@ bool CommandManager::CreateCommandList(const Device& device, D3D12_COMMAND_LIST_
 	return true;
 }
 
+bool CommandManager::InitializeStableCommandList(std::wstring name = L"Direct")
+{
+	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf())))) {
+		return false;
+	}
+	latestCommandList_->SetName((L"StableCommandList" + name).c_str());
+	return true;
+}
+
 bool CommandManager::InitializeLatestCommandList(std::wstring name)
 {
 	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
-	wstring latestName = L"LatestCommandList";
-	latestCommandList_->SetName((latestName + name).c_str());
+	latestCommandList_->SetName((L"LatestCommandList" + name).c_str());
 	return true;
 }
 
@@ -57,6 +65,10 @@ bool CommandManager::Init(const Device& device, D3D12_COMMAND_LIST_TYPE commandT
 		return false;
 	}
 
+	if (!InitializeStableCommandList(name)) {
+		return false;
+	}
+
 	if (!InitializeLatestCommandList(name)) {
 		return false;
 	}
@@ -76,6 +88,26 @@ void CommandManager::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
 	commandList_->DrawIndexedInstanced(mesh.GetNumIndices(), 1, 0, 0, 0);
 }
 
+void CommandManager::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
+{
+	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
+	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), srcBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+		srcBuffer.SetResourceState(D3D12_RESOURCE_STATE_COPY_SOURCE);
+		rscBarriers.push_back(srcBarrier);
+	}
+	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
+		auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), destBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+		rscBarriers.push_back(destBarrier);
+	}
+
+	commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
+	commandList_->CopyResource(destBuffer.GetResource().Get(), srcBuffer.GetResource().Get());
+
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer.GetResourceState());
+	commandList_->ResourceBarrier(1, &barrier);
+}
+
 D3D12_COMMAND_LIST_TYPE CommandManager::GetCommandType()
 {
 	return commandType_;
@@ -89,6 +121,11 @@ ComPtr<ID3D12CommandAllocator> CommandManager::GetCommandAllocator() const
 ComPtr<ID3D12GraphicsCommandList> CommandManager::GetCommandList() const
 {
 	return commandList_;
+}
+
+ComPtr<StableCommandList> CommandManager::GetStableCommandList() const
+{
+	return stableCommandList_;
 }
 
 ComPtr<LatestCommandList> CommandManager::GetLatestCommandList() const

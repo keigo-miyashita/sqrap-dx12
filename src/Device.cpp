@@ -70,6 +70,16 @@ bool Device::CreateDXDevice(wstring gpuVendorName)
 	return isCreatedDevice;
 }
 
+bool Device::InitializeStableDevice()
+{
+	if (FAILED(device_->QueryInterface(IID_PPV_ARGS(stableDevice_.ReleaseAndGetAddressOf())))) {
+		cerr << "Failed to get stable device" << endl;
+		return false;
+	}
+	
+	return true;
+}
+
 bool Device::InitializeLatestDevice()
 {
 	bool isInitializedLatestDevice = false;
@@ -133,6 +143,11 @@ bool Device::Init(wstring gpuVenorName)
 
 	if (!CreateDXDevice(gpuVenorName)) {
 		cerr << "Failed to create dx device" << endl;
+		return false;
+	}
+
+	if (!InitializeStableDevice()) {
+		cerr << "Failed to get stable device" << endl;
 		return false;
 	}
 

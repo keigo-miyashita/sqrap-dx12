@@ -23,6 +23,7 @@
 #include <variant>
 #include <vector>
 
+#include <Accelerationstructure.hpp>
 #include <Application.hpp>
 #include <Buffer.hpp>
 #include <Commandmanager.hpp>

@@ -37,6 +37,7 @@ public:
 	ComPtr<ID3D12Resource> GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
+	UINT GetVertexCount() const;
 	ComPtr<ID3D12Resource> GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;

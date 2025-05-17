@@ -10,10 +10,10 @@ bool Buffer::CreateBuffer(const Device& device, UINT strideSize, UINT numElement
 	rscFlag_ = rscFlag;
 	strideSize_ = strideSize;
 	numElement_ = numElement;
-	initRscState_ = initRscState;
+	rscState_ = initRscState;
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType);
 	auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
-	if (FAILED(device.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initRscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(device.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
 	resource_->SetName(name.c_str());
@@ -78,10 +78,6 @@ void Buffer::Unmap()
 	resource_->Unmap(0, nullptr);
 }
 
-void Buffer::Upload()
-{
-
-}
 
 ComPtr<ID3D12Resource> Buffer::GetResource() const
 {
@@ -98,6 +94,11 @@ D3D12_RESOURCE_FLAGS Buffer::GetResourceFlag() const
 	return rscFlag_;
 }
 
+D3D12_RESOURCE_STATES Buffer::GetResourceState() const
+{
+	return rscState_;
+}
+
 UINT Buffer::GetStrideSize() const
 {
 	return strideSize_;
@@ -106,4 +107,9 @@ UINT Buffer::GetStrideSize() const
 UINT Buffer::GetNumElement() const
 {
 	return numElement_;
+}
+
+void Buffer::SetResourceState(D3D12_RESOURCE_STATES rscState)
+{
+	rscState_ = rscState;
 }
