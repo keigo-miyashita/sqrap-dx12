@@ -77,8 +77,8 @@ ComPtr<ID3D12PipelineState> GraphicsPipeline::GetPipelineState() const
 bool ComputePipeline::CreateComputePipelineState(const ComputeDesc& desc, wstring name)
 {
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
-	computePSDesc.pRootSignature = desc.rootSignature_.GetRootSignature().Get();
-	computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc.CS_.GetBlob()->GetBufferPointer(), desc.CS_.GetBlob()->GetBufferSize());
+	computePSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
+	computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc.CS_->GetBlob()->GetBufferPointer(), desc.CS_->GetBlob()->GetBufferSize());
 	computePSDesc.NodeMask = desc.nodeMask_;
 
 	if (FAILED(pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf())))) {

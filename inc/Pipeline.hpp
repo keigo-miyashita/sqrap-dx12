@@ -49,8 +49,8 @@ public:
 
 struct ComputeDesc
 {
-	RootSignature& rootSignature_;
-	Shader& CS_;
+	RootSignature* rootSignature_ = nullptr;
+	Shader* CS_ = nullptr;
 	UINT nodeMask_ = 0;
 };
 

@@ -96,10 +96,16 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry) const
 {
 	vector<const wchar_t*> options;
-#ifdef DEBUG
+#ifdef _DEBUG
 	options.push_back(L"-Zi");
 	options.push_back(L"-Fd");
-	options.push_back(fileName + L".pdb");
+	wstring erasedExtension = fileName;
+	size_t pos = erasedExtension.find(L'.');
+	if (pos != std::wstring::npos) {
+		erasedExtension.erase(pos);
+	}
+	options.push_back((erasedExtension + L".pdb").c_str());
+	cout << "Generate pdb files" << endl;
 #endif // DEBUG
 	ComPtr<IDxcBlobEncoding> source = nullptr;
 	if (FAILED(library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf()))) {

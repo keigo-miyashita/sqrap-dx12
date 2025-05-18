@@ -40,6 +40,7 @@ public:
 	void CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer);
 	void CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBuffer, UINT destOffset, UINT numBytes);
 	void DrawIndirect(const Mesh& mesh, const Indirect& indirect, const Buffer& buffer, UINT maxCommandNum);
+	void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
 
 	D3D12_COMMAND_LIST_TYPE GetCommandType();
 	ComPtr<ID3D12CommandAllocator> GetCommandAllocator() const;

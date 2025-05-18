@@ -137,6 +137,11 @@ void CommandManager::DrawIndirect(const Mesh& mesh, const Indirect& indirect, co
 	commandList_->ExecuteIndirect(indirect.GetCommandSignature().Get(), maxCommandNum, buffer.GetResource().Get(), 0, nullptr, 0);
 }
 
+void CommandManager::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
+{
+	commandList_->Dispatch(threadX, threadY, threadZ);
+}
+
 D3D12_COMMAND_LIST_TYPE CommandManager::GetCommandType()
 {
 	return commandType_;
