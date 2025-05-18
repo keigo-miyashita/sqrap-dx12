@@ -31,6 +31,7 @@ public:
 	bool InitAsReadback(Device* pDevice, UINT strideSize, UINT numElement, std::wstring name = L"Readback Buffer");
 	void* Map();
 	void Unmap();
+	void Reset();
 
 	ComPtr<ID3D12Resource> GetResource() const;
 	D3D12_HEAP_TYPE GetHeapType() const;

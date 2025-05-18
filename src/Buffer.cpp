@@ -81,6 +81,10 @@ void Buffer::Unmap()
 	resource_->Unmap(0, nullptr);
 }
 
+void Buffer::Reset()
+{
+	resource_.Reset();
+}
 
 ComPtr<ID3D12Resource> Buffer::GetResource() const
 {
