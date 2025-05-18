@@ -11,6 +11,7 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12CommandSignature> cmdSig_ = nullptr;
 	std::vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgDesc_;
 	D3D12_COMMAND_SIGNATURE_DESC cmdSigDesc_ = {};
@@ -18,8 +19,8 @@ private:
 public:
 	Indirect();
 	~Indirect() = default;
-	bool Init();
-	bool InitializeCommandSignature(const Device& device, const RootSignature& rootSignature_, UINT byteStride_);
+	bool Init(Device* pDevice);
+	bool InitializeCommandSignature(const RootSignature& rootSignature_, UINT byteStride_);
 	void AddCBV(UINT rootParameterIndex);
 	void AddSRV(UINT rootParameterIndex);
 	void AddUAV(UINT rootParameterIndex);

@@ -22,6 +22,7 @@ bool TestApplication::Init()
 bool TestApplication::Init(ComPtr<ID3D12DebugDevice>& debugDevice)
 {
 	if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
+		std::cerr << "Failed to CoInitializeEx" << std::endl;
 		return false;
 	}
 	CreateGameWindow(windowName_);

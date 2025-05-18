@@ -44,7 +44,8 @@ bool GraphicsPipeline::CreateGraphicsPipelineState(const Device& device, const G
 	}
 	graphicsPSDesc.SampleDesc = desc.sampleDesc_;
 
-	if (FAILED(device.GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf())))) {
+	auto result = device.GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
 		cerr << "Failed to create graphics pipeline state" << endl;
 		return false;
 	}

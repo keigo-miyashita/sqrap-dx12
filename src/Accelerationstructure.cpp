@@ -94,7 +94,7 @@ bool TLAS::CreateTLAS(const Mesh& mesh, CommandManager& commandManager, Fence& f
 	void* rawPtr = uploadBuffer.Map();
 	if (rawPtr) {
 		D3D12_RAYTRACING_INSTANCE_DESC* pDesc = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(rawPtr);
-		memcpy(rawPtr, instanceDesc.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size());
+		memcpy(pDesc, instanceDesc.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size());
 		uploadBuffer.Unmap();
 	}
 	instanceDescBuffer_.Init(

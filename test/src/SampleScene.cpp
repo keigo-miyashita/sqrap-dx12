@@ -81,7 +81,7 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
-	if (!commandManager_.Init(device_)) {
+	if (!commandManager_.Init(&device_)) {
 		cerr << "Failed to init commandmanager" << endl;
 		return false;
 	}
@@ -220,7 +220,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	if (!commandManager_.Init(device_)) {
+	if (!commandManager_.Init(&device_)) {
 		cerr << "Failed to init commandmanager" << endl;
 		return false;
 	}

@@ -6,22 +6,24 @@ using namespace DirectX;
 
 Indirect::Indirect()
 {
-
+	
 }
 
-bool Indirect::Init()
+bool Indirect::Init(Device* pDevice)
 {
+	pDevice_ = pDevice;
+
 	return true;
 }
 
-bool Indirect::InitializeCommandSignature(const Device& device, const RootSignature& rootSignature_, UINT byteStride_)
+bool Indirect::InitializeCommandSignature(const RootSignature& rootSignature_, UINT byteStride_)
 {
 	cmdSigDesc_.pArgumentDescs = indirectArgDesc_.data();
 	cmdSigDesc_.NumArgumentDescs = indirectArgDesc_.size();
 	cmdSigDesc_.ByteStride = byteStride_;
 	cmdSigDesc_.NodeMask = 0;
 
-	auto result = device.GetDevice()->CreateCommandSignature(&cmdSigDesc_, rootSignature_.GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+	auto result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, rootSignature_.GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		cerr << "Failed to CreateCommandSignaure" << endl;
 		return false;
@@ -30,6 +32,7 @@ bool Indirect::InitializeCommandSignature(const Device& device, const RootSignat
 	return true;
 }
 
+// not numReg but RootParameterIndex
 void Indirect::AddCBV(UINT rootParameterIndex)
 {
 	D3D12_INDIRECT_ARGUMENT_DESC desc;
