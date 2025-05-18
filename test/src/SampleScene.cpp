@@ -92,7 +92,7 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
-	if (!fence_.Init(device_)) {
+	if (!fence_.Init(&device_)) {
 		return false;
 		cerr << "Failed to init fence" << endl;
 	}
@@ -166,16 +166,17 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	// Descriptor Heap
-	sphere0DescHeap_.Init(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
-	sphere0DescHeap_.CreateCBV(device_, cameraBuffer_, 0);
-	sphere0DescHeap_.CreateCBV(device_, light0Buffer_, 1);
-	sphere0DescHeap_.CreateCBV(device_, sphere0Buffer_, 2);
+	sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
+	sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
+	sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
+	sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
 	// Descriptor Table
 	sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
 	// RootSignature
+	sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(sphere0DescTable_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
-	sphere0RootSignature_.InitializeRootSignature(device_, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	// Graphics pipeline
 	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
@@ -200,7 +201,7 @@ bool SampleScene::Init(const Application& app)
 	lambertDesc.RTVFormats_ = RTVFormats;
 	lambertDesc.sampleDesc_.Count = 1;
 	lambertDesc.sampleDesc_.Quality = 0;*/
-	if (!lambert_.Init(device_, lambertDesc)) {
+	if (!lambert_.Init(&device_, lambertDesc)) {
 		cerr << "Failed to create lambert pipeline state" << endl;
 		return false;
 	}
@@ -231,7 +232,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	if (!fence_.Init(device_)) {
+	if (!fence_.Init(&device_)) {
 		return false;
 		cerr << "Failed to init fence" << endl;
 	}
@@ -305,16 +306,17 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	}
 
 	// Descriptor Heap
-	sphere0DescHeap_.Init(device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
-	sphere0DescHeap_.CreateCBV(device_, cameraBuffer_, 0);
-	sphere0DescHeap_.CreateCBV(device_, light0Buffer_, 1);
-	sphere0DescHeap_.CreateCBV(device_, sphere0Buffer_, 2);
+	sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
+	sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
+	sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
+	sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
 	// Descriptor Table
 	sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
 	// RootSignature
+	sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(sphere0DescTable_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
-	sphere0RootSignature_.InitializeRootSignature(device_, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	// Graphics pipeline
 	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
@@ -339,7 +341,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	lambertDesc.RTVFormats_ = RTVFormats;
 	lambertDesc.sampleDesc_.Count = 1;
 	lambertDesc.sampleDesc_.Quality = 0;*/
-	if (!lambert_.Init(device_, lambertDesc)) {
+	if (!lambert_.Init(&device_, lambertDesc)) {
 		cerr << "Failed to create lambert pipeline state" << endl;
 		return false;
 	}

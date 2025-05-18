@@ -9,7 +9,7 @@ GraphicsDesc::GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts) 
 
 }
 
-bool GraphicsPipeline::CreateGraphicsPipelineState(const Device& device, const GraphicsDesc& desc, wstring name)
+bool GraphicsPipeline::CreateGraphicsPipelineState(const GraphicsDesc& desc, wstring name)
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPSDesc = {};
 
@@ -44,7 +44,7 @@ bool GraphicsPipeline::CreateGraphicsPipelineState(const Device& device, const G
 	}
 	graphicsPSDesc.SampleDesc = desc.sampleDesc_;
 
-	auto result = device.GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+	auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		cerr << "Failed to create graphics pipeline state" << endl;
 		return false;
@@ -59,9 +59,10 @@ GraphicsPipeline::GraphicsPipeline()
 
 }
 
-bool GraphicsPipeline::Init(const Device& device, const GraphicsDesc& desc, wstring name)
+bool GraphicsPipeline::Init(Device* pDevice, const GraphicsDesc& desc, wstring name)
 {
-	if (!CreateGraphicsPipelineState(device, desc, name)) {
+	pDevice_ = pDevice;
+	if (!CreateGraphicsPipelineState(desc, name)) {
 		return false;
 	}
 
@@ -73,14 +74,14 @@ ComPtr<ID3D12PipelineState> GraphicsPipeline::GetPipelineState() const
 	return pipeline_;
 }
 
-bool ComputePipeline::CreateComputePipelineState(const Device& device, const ComputeDesc& desc, wstring name)
+bool ComputePipeline::CreateComputePipelineState(const ComputeDesc& desc, wstring name)
 {
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
 	computePSDesc.pRootSignature = desc.rootSignature_.GetRootSignature().Get();
 	computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc.CS_.GetBlob()->GetBufferPointer(), desc.CS_.GetBlob()->GetBufferSize());
 	computePSDesc.NodeMask = desc.nodeMask_;
 
-	if (FAILED(device.GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
 	pipeline_->SetName(name.c_str());
@@ -93,9 +94,10 @@ ComputePipeline::ComputePipeline()
 
 }
 
-bool ComputePipeline::Init(const Device& device, const ComputeDesc& desc, wstring name)
+bool ComputePipeline::Init(Device* pDevice, const ComputeDesc& desc, wstring name)
 {
-	if (!CreateComputePipelineState(device, desc, name)) {
+	pDevice_ = pDevice;
+	if (!CreateComputePipelineState(desc, name)) {
 		return false;
 	}
 
@@ -163,13 +165,13 @@ std::wstring StateObjectDesc::GetProgramName() const
 	return programName_;
 }
 
-bool StateObject::CreateStateObject(const Device& device, StateObjectDesc& soDesc, wstring name)
+bool StateObject::CreateStateObject(StateObjectDesc& soDesc, wstring name)
 {
 	if (soDesc.GetStateObjectType() == StateObjectType::Raytracing) {
 
 	}
 	else if (soDesc.GetStateObjectType() == StateObjectType::WorkGraph) {
-		if (FAILED(device.GetLatestDevice()->CreateStateObject(soDesc.GetStateObjectDesc(), IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf())))) {
+		if (FAILED(pDevice_->GetLatestDevice()->CreateStateObject(soDesc.GetStateObjectDesc(), IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf())))) {
 			return false;
 		}
 		return true;
@@ -181,10 +183,11 @@ StateObject::StateObject()
 
 }
 
-bool StateObject::Init(const Device& device, StateObjectDesc& soDesc, wstring name)
+bool StateObject::Init(Device* pDevice, StateObjectDesc& soDesc, wstring name)
 {
+	pDevice_ = pDevice;
 	programName_ = soDesc.GetProgramName();
-	if (!CreateStateObject(device, soDesc, name))
+	if (!CreateStateObject(soDesc, name))
 	{
 		return false;
 	}

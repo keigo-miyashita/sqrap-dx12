@@ -43,14 +43,15 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12RootSignature> rootSig_ = nullptr;
 	std::vector<RootParameter> rootParams_;
 
 public:
 	RootSignature();
 	~RootSignature() = default;
-	bool Init();
-	bool InitializeRootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name = L"RootSignature");
+	bool Init(Device* pDevice);
+	bool InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name = L"RootSignature");
 	void AddDescriptorTable(const DescriptorTable& descriptorTable, D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
 	void AddDescriptor(D3D12_ROOT_PARAMETER_TYPE rootParamType, UINT numReg, D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
 	void AddConstant(UINT numReg, UINT numConstant = 1);

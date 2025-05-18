@@ -35,14 +35,15 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
-	bool CreateGraphicsPipelineState(const Device& device, const GraphicsDesc& desc, std::wstring name = L"GraphicsPipelineState");
+	bool CreateGraphicsPipelineState(const GraphicsDesc& desc, std::wstring name = L"GraphicsPipelineState");
 
 public:
 	GraphicsPipeline();
 	~GraphicsPipeline() = default;
-	bool Init(const Device& device, const GraphicsDesc& desc, std::wstring name = L"GraphicsPipelineState");
+	bool Init(Device* pDevice, const GraphicsDesc& desc, std::wstring name = L"GraphicsPipelineState");
 	ComPtr<ID3D12PipelineState> GetPipelineState() const;
 };
 
@@ -59,14 +60,15 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
-	bool CreateComputePipelineState(const Device& device, const ComputeDesc& desc, std::wstring name = L"ComputePipelineState");
+	bool CreateComputePipelineState(const ComputeDesc& desc, std::wstring name = L"ComputePipelineState");
 
 public:
 	ComputePipeline();
 	~ComputePipeline() = default;
-	bool Init(const Device& device, const ComputeDesc& desc, std::wstring name = L"ComputePipelineState");
+	bool Init(Device* pDevice, const ComputeDesc& desc, std::wstring name = L"ComputePipelineState");
 	ComPtr<ID3D12PipelineState> GetPipelineState() const;
 };
 
@@ -107,15 +109,16 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12StateObject> stateObject_ = nullptr;
 	std::wstring programName_;
 
-	bool CreateStateObject(const Device& device, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
+	bool CreateStateObject(StateObjectDesc& soDesc, std::wstring name = L"StateObject");
 
 public:
 	StateObject();
 	~StateObject() = default;
-	bool Init(const Device& device, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
+	bool Init(Device* pDevice, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
 };

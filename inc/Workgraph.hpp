@@ -11,6 +11,7 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12WorkGraphProperties1> workGraphProp_ = nullptr;
 	D3D12_PROGRAM_IDENTIFIER workGraphProgramID_ = {};
 	D3D12_WORK_GRAPH_MEMORY_REQUIREMENTS memReqs_ = {};
@@ -24,12 +25,12 @@ private:
 	// CommandList.SetProgramÇ…ìnÇ∑ç\ë¢ëÃ
 	D3D12_SET_PROGRAM_DESC pgDesc_ = {};
 
-	bool InitWorkGraphContext(const Device& device, const StateObject& stateObject);
+	bool InitWorkGraphContext(const StateObject& stateObject);
 
 public:
 	WorkGraph();
 	~WorkGraph() = default;
-	bool Init(const Device& device, const StateObject& stateObject);
+	bool Init(Device* pDevice, const StateObject& stateObject);
 
 	D3D12_SET_PROGRAM_DESC GetProgramDesc() const;
 };

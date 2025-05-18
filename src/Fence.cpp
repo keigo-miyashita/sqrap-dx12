@@ -4,9 +4,9 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Fence::CreateFence(const Device& device, wstring name)
+bool Fence::CreateFence(wstring name)
 {
-	if (FAILED(device.GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
 	fence_->SetName(name.c_str());
@@ -18,9 +18,10 @@ Fence::Fence()
 
 }
 
-bool Fence::Init(const Device& device, wstring name)
+bool Fence::Init(Device* pDevice, wstring name)
 {
-	if (!CreateFence(device, name)) {
+	pDevice_ = pDevice;
+	if (!CreateFence(name)) {
 		return false;
 	}
 

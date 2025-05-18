@@ -75,7 +75,7 @@ UINT RootParameter::GetNumConstant()
 	return numConstant_;
 }
 
-bool RootSignature::InitializeRootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS flags, wstring name)
+bool RootSignature::InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flags, wstring name)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER> rps;
 	for (auto rootParam_ : rootParams_) {
@@ -121,7 +121,7 @@ bool RootSignature::InitializeRootSignature(const Device& device, D3D12_ROOT_SIG
 		return false;
 	}
 	
-	if (FAILED(device.GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf())))) {
 		cerr << "Failed to create root signature" << endl;
 		return false;
 	}
@@ -136,8 +136,9 @@ RootSignature::RootSignature()
 
 }
 
-bool RootSignature::Init()
+bool RootSignature::Init(Device* pDevice)
 {
+	pDevice_ = pDevice;
 	return true;
 }
 

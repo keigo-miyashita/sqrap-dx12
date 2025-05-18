@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool WorkGraph::InitWorkGraphContext(const Device& device, const StateObject& stateObject)
+bool WorkGraph::InitWorkGraphContext(const StateObject& stateObject)
 {
 	ComPtr<ID3D12StateObjectProperties1> soProp = nullptr;
 	auto result = stateObject.GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp.ReleaseAndGetAddressOf()));
@@ -22,7 +22,7 @@ bool WorkGraph::InitWorkGraphContext(const Device& device, const StateObject& st
 	CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(memReqs_.MaxSizeInBytes);
 	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 	CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
-	result = device.GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
+	result = pDevice_->GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		cerr << "Failed to CreateCommittedResource for backingmemory" << endl;
 	}
@@ -51,8 +51,9 @@ WorkGraph::WorkGraph()
 
 }
 
-bool WorkGraph::Init(const Device& device, const StateObject& stateObject)
+bool WorkGraph::Init(Device* pDevice, const StateObject& stateObject)
 {
+	pDevice_ = pDevice;
 	return true;
 }
 
