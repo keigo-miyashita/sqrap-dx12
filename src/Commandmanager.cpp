@@ -94,7 +94,6 @@ void CommandManager::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
 		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), srcBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-		srcBuffer.SetResourceState(D3D12_RESOURCE_STATE_COPY_SOURCE);
 		rscBarriers.push_back(srcBarrier);
 	}
 	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
@@ -105,8 +104,16 @@ void CommandManager::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
 	commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
 	commandList_->CopyResource(destBuffer.GetResource().Get(), srcBuffer.GetResource().Get());
 
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer.GetResourceState());
-	commandList_->ResourceBarrier(1, &barrier);
+	rscBarriers.clear();
+	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+		auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcBuffer.GetResourceState());
+		rscBarriers.push_back(srcbarrier);
+	}
+	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
+		auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer.GetResourceState());
+		rscBarriers.push_back(destbarrier);
+	}
+	commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
 }
 
 void CommandManager::CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBuffer, UINT destOffset, UINT numBytes)
@@ -140,6 +147,11 @@ void CommandManager::DrawIndirect(const Mesh& mesh, const Indirect& indirect, co
 void CommandManager::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
 {
 	commandList_->Dispatch(threadX, threadY, threadZ);
+}
+
+void CommandManager::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
+{
+	commandList_->ResourceBarrier(numBarriers, pBarriers);
 }
 
 D3D12_COMMAND_LIST_TYPE CommandManager::GetCommandType()
