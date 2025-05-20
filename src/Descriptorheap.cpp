@@ -81,11 +81,11 @@ void DescriptorHeap::CreateUAVCounter(const Buffer& buff, UINT viewOffset)
 	viewDesc.Buffer.StructureByteStride = buff.GetStrideSize();
 	viewDesc.Buffer.NumElements = buff.GetNumElement();
 	viewDesc.Buffer.FirstElement = 0;
-	viewDesc.Buffer.CounterOffsetInBytes = buff.GetStrideSize() * buff.GetNumElement();
+	viewDesc.Buffer.CounterOffsetInBytes = buff.GetOffsetCounter();
 	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 	auto heapHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
 	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-	pDevice_->GetDevice()->CreateUnorderedAccessView(buff.GetResource().Get(), nullptr, &viewDesc, heapHandle);
+	pDevice_->GetDevice()->CreateUnorderedAccessView(buff.GetResource().Get(), buff.GetResource().Get(), &viewDesc, heapHandle);
 }
 
 void DescriptorHeap::CreateSampler(UINT viewOffset)
@@ -93,12 +93,12 @@ void DescriptorHeap::CreateSampler(UINT viewOffset)
 
 }
 
-ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDescriptorHeap()
+ComPtr<ID3D12DescriptorHeap> DescriptorHeap::GetDescriptorHeap() const
 {
 	return descHeap_;
 }
 
-D3D12_DESCRIPTOR_HEAP_TYPE DescriptorHeap::GetHeapType()
+D3D12_DESCRIPTOR_HEAP_TYPE DescriptorHeap::GetHeapType() const
 {
 	return heapType_;
 }

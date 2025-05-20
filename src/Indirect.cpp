@@ -16,14 +16,30 @@ bool Indirect::Init(Device* pDevice)
 	return true;
 }
 
-bool Indirect::InitializeCommandSignature(const RootSignature& rootSignature_, UINT byteStride_)
+bool Indirect::InitializeCommandSignature(const RootSignature& rootSignature, UINT byteStride)
 {
 	cmdSigDesc_.pArgumentDescs = indirectArgDesc_.data();
 	cmdSigDesc_.NumArgumentDescs = indirectArgDesc_.size();
-	cmdSigDesc_.ByteStride = byteStride_;
+	cmdSigDesc_.ByteStride = byteStride;
 	cmdSigDesc_.NodeMask = 0;
 
-	auto result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, rootSignature_.GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+	auto result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, rootSignature.GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		cerr << "Failed to CreateCommandSignaure" << endl;
+		return false;
+	}
+
+	return true;
+}
+
+bool Indirect::InitializeCommandSignature(UINT byteStride)
+{
+	cmdSigDesc_.pArgumentDescs = indirectArgDesc_.data();
+	cmdSigDesc_.NumArgumentDescs = indirectArgDesc_.size();
+	cmdSigDesc_.ByteStride = byteStride;
+	cmdSigDesc_.NodeMask = 0;
+
+	auto result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, nullptr, IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		cerr << "Failed to CreateCommandSignaure" << endl;
 		return false;
@@ -76,6 +92,13 @@ void Indirect::AddDrawIndexed()
 {
 	D3D12_INDIRECT_ARGUMENT_DESC desc;
 	desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+	indirectArgDesc_.push_back(desc);
+}
+
+void Indirect::AddDraw()
+{
+	D3D12_INDIRECT_ARGUMENT_DESC desc;
+	desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
 	indirectArgDesc_.push_back(desc);
 }
 

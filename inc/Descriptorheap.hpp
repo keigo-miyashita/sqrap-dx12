@@ -26,6 +26,6 @@ public:
 	void CreateUAV(const Buffer& buff, UINT viewOffset);
 	void CreateUAVCounter(const Buffer& buff, UINT viewOffset);
 	void CreateSampler(UINT viewOffset);
-	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap();
-	D3D12_DESCRIPTOR_HEAP_TYPE GetHeapType();
+	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() const;
+	D3D12_DESCRIPTOR_HEAP_TYPE GetHeapType() const;
 };

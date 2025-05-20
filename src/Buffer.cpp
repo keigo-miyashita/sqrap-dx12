@@ -20,6 +20,23 @@ bool Buffer::CreateBuffer(UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heap
 	return true;
 }
 
+bool Buffer::CreateCounterBuffer(UINT strideSize, UINT numElement, std::wstring name)
+{
+	heapType_ = D3D12_HEAP_TYPE_DEFAULT;
+	rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	strideSize_ = strideSize;
+	numElement_ = numElement;
+	rscState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	offsetCounter_ = AlignForUAVCounter(strideSize * numElement);
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
+	auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignForUAVCounter(strideSize_ * numElement_) + sizeof(UINT), rscFlag_);
+	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())))) {
+		return false;
+	}
+	resource_->SetName(name.c_str());
+	return true;
+}
+
 UINT Buffer::AlignForUAVCounter(UINT size)
 {
 	const UINT alignment = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
@@ -40,6 +57,16 @@ bool Buffer::Init(Device* pDevice, UINT strideSize, UINT numElement, D3D12_HEAP_
 {
 	pDevice_ = pDevice;
 	if (!CreateBuffer(strideSize, numElement, heapType, rscFlag, initRscState, name)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool Buffer::InitAsCounter(Device* pDevice, UINT strideSize, UINT numElement, wstring name)
+{
+	pDevice_ = pDevice;
+	if (!CreateCounterBuffer(strideSize, numElement, name)) {
 		return false;
 	}
 
@@ -114,6 +141,11 @@ UINT Buffer::GetStrideSize() const
 UINT Buffer::GetNumElement() const
 {
 	return numElement_;
+}
+
+UINT Buffer::GetOffsetCounter() const
+{
+	return offsetCounter_;
 }
 
 void Buffer::SetResourceState(D3D12_RESOURCE_STATES rscState)

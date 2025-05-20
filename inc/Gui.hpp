@@ -2,6 +2,7 @@
 
 #include <common.hpp>
 
+class CommandManager;
 class Device;
 
 class GUI
@@ -10,15 +11,19 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	Device* pDevice_ = nullptr;
 	// D3D12 descriptor heap
 	ComPtr<ID3D12DescriptorHeap> imguiDescHeap_ = nullptr;
 
-	bool InitializeGui(const Device& device, const HWND& hwnd);
+	bool InitializeGUI(const HWND& hwnd);
 
 
 public:
 	GUI();
-	~GUI() = default;
-	bool Init();
-	ComPtr<ID3D12DescriptorHeap> GetImguiDescHeap();
+	~GUI();
+	bool Init(Device* pDevice, const HWND& hwnd);
+	void BeginCommand();
+	void EndCommand();
+	void Draw(CommandManager& commandManager);
+	ComPtr<ID3D12DescriptorHeap> GetImguiDescHeap() const;
 };

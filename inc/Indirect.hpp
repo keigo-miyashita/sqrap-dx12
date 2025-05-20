@@ -20,7 +20,8 @@ public:
 	Indirect();
 	~Indirect() = default;
 	bool Init(Device* pDevice);
-	bool InitializeCommandSignature(const RootSignature& rootSignature_, UINT byteStride_);
+	bool InitializeCommandSignature(const RootSignature& rootSignature, UINT byteStride);
+	bool InitializeCommandSignature(UINT byteStride);
 	void AddCBV(UINT rootParameterIndex);
 	void AddSRV(UINT rootParameterIndex);
 	void AddUAV(UINT rootParameterIndex);
@@ -29,6 +30,7 @@ public:
 	// インデックスバッファを命令ごとに切り替える場合指定
 	void AddIndexBufferView();
 	void AddDrawIndexed();
+	void AddDraw();
 	void AddDispatch();
 	ComPtr<ID3D12CommandSignature> GetCommandSignature() const;
 
