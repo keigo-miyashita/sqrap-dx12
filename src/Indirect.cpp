@@ -12,6 +12,10 @@ Indirect::Indirect()
 bool Indirect::Init(Device* pDevice)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "Indirect class doesn't have any pointer" << endl;
+		return false;
+	}
 
 	return true;
 }

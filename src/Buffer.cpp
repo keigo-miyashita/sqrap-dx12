@@ -56,6 +56,10 @@ Buffer::Buffer()
 bool Buffer::Init(Device* pDevice, UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, wstring name)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "Buffer class pDevice doesn't have any pounter" << endl; ;
+		return false;
+	}
 	if (!CreateBuffer(strideSize, numElement, heapType, rscFlag, initRscState, name)) {
 		return false;
 	}
