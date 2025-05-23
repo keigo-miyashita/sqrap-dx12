@@ -12,25 +12,25 @@ void SampleScene::BeginRender()
 
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_.GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	commandManager_.GetCommandList()->ResourceBarrier(1, &barrier);
+	command_.GetCommandList()->ResourceBarrier(1, &barrier);
 
 	auto rtvHandle = swapChain_.GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += bbIdx * device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	auto dsvHandle = swapChain_.GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
-	commandManager_.GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+	command_.GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 	// Clear depth buffer
-	commandManager_.GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	command_.GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// Clear display
 	float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	commandManager_.GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	command_.GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 	// Set viewport and scissors
 	auto viewPort = swapChain_.GetViewPort();
 	auto scissorRect = swapChain_.GetRect();
-	commandManager_.GetCommandList()->RSSetViewports(1, &viewPort);
-	commandManager_.GetCommandList()->RSSetScissorRects(1, &scissorRect);
+	command_.GetCommandList()->RSSetViewports(1, &viewPort);
+	command_.GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
 	//cout << "Begin Render" << endl;
 }
@@ -41,9 +41,9 @@ void SampleScene::EndRender()
 
 	// Transit render target to present
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_.GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	commandManager_.GetCommandList()->ResourceBarrier(1, &barrier);
+	command_.GetCommandList()->ResourceBarrier(1, &barrier);
 
-	fence_.WaitCommand(commandManager_);
+	fence_.WaitCommand(command_);
 
 	//cout << "End Render" << endl;
 }
@@ -52,13 +52,13 @@ void SampleScene::Render()
 {
 	BeginRender();
 
-	commandManager_.GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
-	commandManager_.GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
-	commandManager_.GetCommandList()->SetDescriptorHeaps(1, sphere0DescHeap_.GetDescriptorHeap().GetAddressOf());
-	commandManager_.GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescHeap_.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	command_.GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
+	command_.GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
+	command_.GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_.GetDescriptorHeap().GetAddressOf());
+	command_.GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
-	commandManager_.GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
-	commandManager_.AddDrawIndexed(sphere_, 1);
+	command_.GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
+	command_.AddDrawIndexed(sphere_, 1);
 
 	EndRender();
 
@@ -81,13 +81,13 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
-	if (!commandManager_.Init(&device_)) {
+	if (!command_.Init(&device_)) {
 		cerr << "Failed to init commandmanager" << endl;
 		return false;
 	}
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight()};
-	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, commandManager_)) {
+	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, command_)) {
 		cerr << "Failed to init swapchain" << endl;
 		return false;
 	}
@@ -165,16 +165,21 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
-	// Descriptor Heap
-	sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
-	sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
-	sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
-	sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
-	// Descriptor Table
-	sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
+	//// Descriptor Heap
+	//sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
+	//sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
+	//sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
+	//sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
+	//// Descriptor Table
+	//sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
+	// Descriptor Manager
+	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
+	sphere0DescManager_.CreateCBV(cameraBuffer_, 0);
+	sphere0DescManager_.CreateCBV(light0Buffer_, 1);
+	sphere0DescManager_.CreateCBV(sphere0Buffer_, 2);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
-	sphere0RootSignature_.AddDescriptorTable(sphere0DescTable_, D3D12_SHADER_VISIBILITY_ALL);
+	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
 	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -221,13 +226,13 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	if (!commandManager_.Init(&device_)) {
+	if (!command_.Init(&device_)) {
 		cerr << "Failed to init commandmanager" << endl;
 		return false;
 	}
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight() };
-	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, commandManager_)) {
+	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, command_)) {
 		cerr << "Failed to init swapchain" << endl;
 		return false;
 	}
@@ -305,16 +310,21 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	// Descriptor Heap
-	sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
-	sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
-	sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
-	sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
-	// Descriptor Table
-	sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
+	//// Descriptor Heap
+	//sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
+	//sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
+	//sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
+	//sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
+	//// Descriptor Table
+	//sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
+	// Descriptor Manager
+	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
+	sphere0DescManager_.CreateCBV(cameraBuffer_, 0);
+	sphere0DescManager_.CreateCBV(light0Buffer_, 1);
+	sphere0DescManager_.CreateCBV(sphere0Buffer_, 2);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
-	sphere0RootSignature_.AddDescriptorTable(sphere0DescTable_, D3D12_SHADER_VISIBILITY_ALL);
+	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
 	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 

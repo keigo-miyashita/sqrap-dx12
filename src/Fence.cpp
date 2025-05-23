@@ -29,13 +29,13 @@ bool Fence::Init(Device* pDevice, wstring name)
 	return true;
 }
 
-void Fence::WaitCommand(CommandManager& commandManager)
+void Fence::WaitCommand(Command& command)
 {
-	commandManager.GetCommandList()->Close();
+	command.GetCommandList()->Close();
 
-	ID3D12CommandList* cmdLists[] = { commandManager.GetCommandList().Get() };
-	commandManager.GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
-	HRESULT result = commandManager.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+	ID3D12CommandList* cmdLists[] = { command.GetCommandList().Get() };
+	command.GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
+	HRESULT result = command.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
 
 	if (FAILED(result)) {
 		_com_error err(result);
@@ -53,8 +53,8 @@ void Fence::WaitCommand(CommandManager& commandManager)
 		CloseHandle(event);
 	}
 
-	commandManager.GetCommandAllocator()->Reset();
-	commandManager.GetCommandList()->Reset(commandManager.GetCommandAllocator().Get(), nullptr);
+	command.GetCommandAllocator()->Reset();
+	command.GetCommandList()->Reset(command.GetCommandAllocator().Get(), nullptr);
 }
 
 ComPtr<ID3D12Fence> Fence::GetFence()

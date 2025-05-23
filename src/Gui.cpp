@@ -84,9 +84,9 @@ void GUI::EndCommand()
 	ImGui::Render();
 }
 
-void GUI::Draw(CommandManager& commandManager)
+void GUI::Draw(Command& command)
 {
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandManager.GetCommandList().Get());
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), command.GetCommandList().Get());
 }
 
 ComPtr<ID3D12DescriptorHeap> GUI::GetImguiDescHeap() const

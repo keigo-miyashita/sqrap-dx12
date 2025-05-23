@@ -8,6 +8,7 @@
 class Buffer;
 class ComputePipeline;
 class DescriptorHeap;
+class DescriptorManager;
 class Device;
 class GraphicsPipeline;
 class GUI;
@@ -15,7 +16,7 @@ class Indirect;
 class Mesh;
 class RootSignature;
 
-class CommandManager
+class Command
 {
 private:
 	template<typename T>
@@ -38,8 +39,8 @@ private:
 
 
 public:
-	CommandManager();
-	~CommandManager() = default;
+	Command();
+	~Command() = default;
 	bool Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"Direct");
 	void AddDrawIndexed(const Mesh& mesh, UINT numInstances);
 	void AddDrawIndexedLine(const Mesh& mesh, UINT numInstances);
@@ -53,9 +54,9 @@ public:
 	void SetPipeline(const ComputePipeline& computePipeline);
 	void SetGraphicsRootSig(const RootSignature& graphicsRootSig);
 	void SetComputeRootSig(const RootSignature& computeRootSig);
-	void SetDescriptorHeap(const DescriptorHeap& descHeaep);
-	void SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorHeap& descHeaep);
-	void SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorHeap& descHeaep);
+	void SetDescriptorHeap(const DescriptorManager& descManager);
+	void SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
+	void SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
 
 	D3D12_COMMAND_LIST_TYPE GetCommandType();

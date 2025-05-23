@@ -2,7 +2,7 @@
 
 #include <common.hpp>
 
-class CommandManager;
+class Command;
 class Device;
 
 class GUI
@@ -24,6 +24,6 @@ public:
 	bool Init(Device* pDevice, const HWND& hwnd);
 	void BeginCommand();
 	void EndCommand();
-	void Draw(CommandManager& commandManager);
+	void Draw(Command& command);
 	ComPtr<ID3D12DescriptorHeap> GetImguiDescHeap() const;
 };

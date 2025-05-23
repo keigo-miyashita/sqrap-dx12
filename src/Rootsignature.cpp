@@ -142,10 +142,10 @@ bool RootSignature::Init(Device* pDevice)
 	return true;
 }
 
-void RootSignature::AddDescriptorTable(const DescriptorTable& descriptorTable, D3D12_SHADER_VISIBILITY shaderVisibility)
+void RootSignature::AddDescriptorTable(const DescriptorManager& descriptorManager, D3D12_SHADER_VISIBILITY shaderVisibility)
 {
 	RootParameter rootParam;
-	rootParam.InitAsDescriptorTable(descriptorTable.GetNumDescRanges(), descriptorTable.GetPDescRanges(), shaderVisibility);
+	rootParam.InitAsDescriptorTable(descriptorManager.GetNumDescRanges(), descriptorManager.GetPDescRanges(), shaderVisibility);
 	rootParams_.push_back(rootParam);
 }
 

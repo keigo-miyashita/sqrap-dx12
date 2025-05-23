@@ -32,7 +32,7 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 	Device device_;
 	DXC dxc_;
-	CommandManager commandManager_;
+	Command command_;
 	SwapChain swapChain_;
 	Fence fence_;
 	Mesh sphere_;
@@ -55,6 +55,7 @@ private:
 	// Constant buffer x 4
 	DescriptorHeap sphere0DescHeap_;
 	DescriptorTable sphere0DescTable_;
+	DescriptorManager sphere0DescManager_;
 	// RootSignature
 	RootSignature sphere0RootSignature_;
 

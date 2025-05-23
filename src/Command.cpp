@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool CommandManager::CreateCommandList(D3D12_COMMAND_LIST_TYPE commandType, wstring name)
+bool Command::CreateCommandList(D3D12_COMMAND_LIST_TYPE commandType, wstring name)
 {
 	commandType_ = commandType;
 	if (FAILED(pDevice_->GetDevice()->CreateCommandAllocator(commandType, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf())))) {
@@ -20,7 +20,7 @@ bool CommandManager::CreateCommandList(D3D12_COMMAND_LIST_TYPE commandType, wstr
 	return true;
 }
 
-bool CommandManager::InitializeStableCommandList(std::wstring name)
+bool Command::InitializeStableCommandList(std::wstring name)
 {
 	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf())))) {
 		return false;
@@ -29,7 +29,7 @@ bool CommandManager::InitializeStableCommandList(std::wstring name)
 	return true;
 }
 
-bool CommandManager::InitializeLatestCommandList(std::wstring name)
+bool Command::InitializeLatestCommandList(std::wstring name)
 {
 	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf())))) {
 		return false;
@@ -38,7 +38,7 @@ bool CommandManager::InitializeLatestCommandList(std::wstring name)
 	return true;
 }
 
-bool CommandManager::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE commandType, wstring name)
+bool Command::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE commandType, wstring name)
 {
 	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
 	cmdQueueDesc.Type = commandType;
@@ -54,12 +54,12 @@ bool CommandManager::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE commandType, wst
 	return true;
 }
 
-CommandManager::CommandManager()
+Command::Command()
 {
 
 }
 
-bool CommandManager::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
+bool Command::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
 {
 	pDevice_ = pDevice;
 	if (!CreateCommandList(commandType, name)) {
@@ -81,7 +81,7 @@ bool CommandManager::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, 
 	return true;
 }
 
-void CommandManager::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
+void Command::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList_->IASetVertexBuffers(0, 1, mesh.GetVBViewPtr());
@@ -89,7 +89,7 @@ void CommandManager::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
 	commandList_->DrawIndexedInstanced(mesh.GetNumIndices(), 1, 0, 0, 0);
 }
 
-void CommandManager::AddDrawIndexedLine(const Mesh& mesh, UINT numInstances)
+void Command::AddDrawIndexedLine(const Mesh& mesh, UINT numInstances)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 	commandList_->IASetVertexBuffers(0, 1, mesh.GetVBViewPtr());
@@ -97,12 +97,12 @@ void CommandManager::AddDrawIndexedLine(const Mesh& mesh, UINT numInstances)
 	commandList_->DrawIndexedInstanced(mesh.GetNumIndices(), 1, 0, 0, 0);
 }
 
-void CommandManager::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
+void Command::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
 {
 	commandList_->ResourceBarrier(numBarriers, pBarriers);
 }
 
-void CommandManager::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
+void Command::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
 {
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
@@ -133,7 +133,7 @@ void CommandManager::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
 	}
 }
 
-void CommandManager::CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBuffer, UINT destOffset, UINT numBytes)
+void Command::CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBuffer, UINT destOffset, UINT numBytes)
 {
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
@@ -165,7 +165,7 @@ void CommandManager::CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer&
 	}
 }
 
-void CommandManager::DrawIndirect(const Mesh& mesh, const Indirect& indirect, const Buffer& buffer, UINT maxCommandNum)
+void Command::DrawIndirect(const Mesh& mesh, const Indirect& indirect, const Buffer& buffer, UINT maxCommandNum)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList_->IASetVertexBuffers(0, 1, mesh.GetVBViewPtr());
@@ -173,83 +173,83 @@ void CommandManager::DrawIndirect(const Mesh& mesh, const Indirect& indirect, co
 	commandList_->ExecuteIndirect(indirect.GetCommandSignature().Get(), maxCommandNum, buffer.GetResource().Get(), 0, nullptr, 0);
 }
 
-void CommandManager::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
+void Command::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
 {
 	commandList_->Dispatch(threadX, threadY, threadZ);
 }
 
-void CommandManager::DrawGUI(GUI& GUI)
+void Command::DrawGUI(GUI& GUI)
 {
 	commandList_->SetDescriptorHeaps(1, GUI.GetImguiDescHeap().GetAddressOf());
 	GUI.Draw(*this);
 }
 
-void CommandManager::SetPipeline(const GraphicsPipeline& graphicsPipeline)
+void Command::SetPipeline(const GraphicsPipeline& graphicsPipeline)
 {
 	commandList_->SetPipelineState(graphicsPipeline.GetPipelineState().Get());
 }
 
-void CommandManager::SetPipeline(const ComputePipeline& computePipeline)
+void Command::SetPipeline(const ComputePipeline& computePipeline)
 {
 	commandList_->SetPipelineState(computePipeline.GetPipelineState().Get());
 }
 
-void CommandManager::SetGraphicsRootSig(const RootSignature& graphicsRootSig)
+void Command::SetGraphicsRootSig(const RootSignature& graphicsRootSig)
 {
 	commandList_->SetGraphicsRootSignature(graphicsRootSig.GetRootSignature().Get());
 }
 
-void CommandManager::SetComputeRootSig(const RootSignature& computeRootSig)
+void Command::SetComputeRootSig(const RootSignature& computeRootSig)
 {
 	commandList_->SetComputeRootSignature(computeRootSig.GetRootSignature().Get());
 }
 
-void CommandManager::SetDescriptorHeap(const DescriptorHeap& descHeaep)
+void Command::SetDescriptorHeap(const DescriptorManager& descManager)
 {
-	commandList_->SetDescriptorHeaps(1, descHeaep.GetDescriptorHeap().GetAddressOf());
+	commandList_->SetDescriptorHeaps(1, descManager.GetDescriptorHeap().GetAddressOf());
 }
 
-void CommandManager::SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorHeap& descHeaep)
+void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager)
 {
-	commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descHeaep.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
-void CommandManager::SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorHeap& descHeaep)
+void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager)
 {
-	commandList_->SetComputeRootDescriptorTable(rootParamIndex, descHeaep.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
-void CommandManager::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData)
+void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData)
 {
 	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
 }
 
-D3D12_COMMAND_LIST_TYPE CommandManager::GetCommandType()
+D3D12_COMMAND_LIST_TYPE Command::GetCommandType()
 {
 	return commandType_;
 }
 
-ComPtr<ID3D12CommandAllocator> CommandManager::GetCommandAllocator() const
+ComPtr<ID3D12CommandAllocator> Command::GetCommandAllocator() const
 {
 	return commandAllocator_;
 }
 
-ComPtr<ID3D12GraphicsCommandList> CommandManager::GetCommandList() const
+ComPtr<ID3D12GraphicsCommandList> Command::GetCommandList() const
 {
 	return commandList_;
 }
 
-ComPtr<StableCommandList> CommandManager::GetStableCommandList() const
+ComPtr<StableCommandList> Command::GetStableCommandList() const
 {
 	return stableCommandList_;
 }
 
-ComPtr<LatestCommandList> CommandManager::GetLatestCommandList() const
+ComPtr<LatestCommandList> Command::GetLatestCommandList() const
 {
 	return latestCommandList_;
 }
 
-ComPtr<ID3D12CommandQueue> CommandManager::GetCommandQueue() const
+ComPtr<ID3D12CommandQueue> Command::GetCommandQueue() const
 {
 	return commandQueue_;
 }

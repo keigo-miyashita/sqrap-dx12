@@ -23,11 +23,12 @@
 #include <variant>
 #include <vector>
 
-#include <Accelerationstructure.hpp>
+#include <AS.hpp>
 #include <Application.hpp>
 #include <Buffer.hpp>
-#include <Commandmanager.hpp>
+#include <Command.hpp>
 #include <Descriptorheap.hpp>
+#include <Descriptormanager.hpp>
 #include <Descriptortable.hpp>
 #include <Device.hpp>
 #include <Dxc.hpp>

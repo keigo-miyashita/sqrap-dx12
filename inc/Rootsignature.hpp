@@ -52,7 +52,7 @@ public:
 	~RootSignature() = default;
 	bool Init(Device* pDevice);
 	bool InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name = L"RootSignature");
-	void AddDescriptorTable(const DescriptorTable& descriptorTable, D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
+	void AddDescriptorTable(const DescriptorManager& descriptorManager, D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
 	void AddDescriptor(D3D12_ROOT_PARAMETER_TYPE rootParamType, UINT numReg, D3D12_SHADER_VISIBILITY shaderVisibility = D3D12_SHADER_VISIBILITY_ALL);
 	void AddConstant(UINT numReg, UINT numConstant = 1);
 	ComPtr<ID3D12RootSignature> GetRootSignature() const;

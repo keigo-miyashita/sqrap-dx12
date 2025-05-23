@@ -4,7 +4,7 @@
 #include "Buffer.hpp"
 
 class Buffer;
-class CommandManager;
+class Command;
 class Device;
 class Fence;
 class Mesh;
@@ -19,13 +19,13 @@ private:
 	Device* pDevice_ = nullptr;
 	Buffer ASBuffer_;
 	Buffer scratchBuffer_;
-	bool CreateBLAS(const ASMesh& mesh, CommandManager& commandManager,Fence& fence, std::wstring name = L"BLAS");
+	bool CreateBLAS(const ASMesh& mesh, Command& Command,Fence& fence, std::wstring name = L"BLAS");
 
 public:
 
 	BLAS();
 	~BLAS() = default;
-	bool Init(Device* pDevice, const ASMesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name = L"BLAS");
+	bool Init(Device* pDevice, const ASMesh& mesh, Command& command, Fence& fence, std::wstring name = L"BLAS");
 
 	D3D12_GPU_VIRTUAL_ADDRESS GetASGPUVirtualAddress();
 };
@@ -49,12 +49,12 @@ private:
 	Buffer instanceDescBuffer_;
 	Buffer ASBuffer_;
 	Buffer scratchBuffer_;
-	bool CreateTLAS(CommandManager& commandManager, Fence& fence, std::wstring name = L"TLAS");
+	bool CreateTLAS(Command& command, Fence& fence, std::wstring name = L"TLAS");
 
 public:
 
 	TLAS();
 	~TLAS() = default;
-	bool Init(Device* pDevice, CommandManager& commandManager, Fence& fence, std::vector<TLASDesc> tlasDescs, std::wstring name = L"TLAS");
+	bool Init(Device* pDevice, Command& command, Fence& fence, std::vector<TLASDesc> tlasDescs, std::wstring name = L"TLAS");
 	Buffer GetASBuffer() const;
 };

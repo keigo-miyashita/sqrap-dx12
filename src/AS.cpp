@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool BLAS::CreateBLAS(const ASMesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
+bool BLAS::CreateBLAS(const ASMesh& mesh, Command& command, Fence& fence, std::wstring name)
 {
 	D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 	geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -62,12 +62,12 @@ bool BLAS::CreateBLAS(const ASMesh& mesh, CommandManager& commandManager, Fence&
 
 	commandManager.CopyBuffer(testUploadBuffer, testBuffer);*/
 	auto transBarrier = CD3DX12_RESOURCE_BARRIER::Transition(scratchBuffer_.GetResource().Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-	commandManager.GetStableCommandList()->ResourceBarrier(1, &transBarrier);
-	commandManager.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
+	command.GetStableCommandList()->ResourceBarrier(1, &transBarrier);
+	command.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
 
 	auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_.GetResource().Get());
-	commandManager.GetStableCommandList()->ResourceBarrier(1, &barrier);
-	fence.WaitCommand(commandManager);
+	command.GetStableCommandList()->ResourceBarrier(1, &barrier);
+	fence.WaitCommand(command);
 
 	return true;
 }
@@ -77,13 +77,13 @@ BLAS::BLAS()
 
 }
 
-bool BLAS::Init(Device* pDevice, const ASMesh& mesh, CommandManager& commandManager, Fence& fence, std::wstring name)
+bool BLAS::Init(Device* pDevice, const ASMesh& mesh, Command& command, Fence& fence, std::wstring name)
 {
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
 		cerr << "BLAS doesn't have Device pointer" << endl;
 	}
-	if (!CreateBLAS(mesh, commandManager, fence, name)) {
+	if (!CreateBLAS(mesh, command, fence, name)) {
 		return false;
 	}
 
@@ -95,7 +95,7 @@ D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASGPUVirtualAddress()
 	return ASBuffer_.GetResource()->GetGPUVirtualAddress();
 }
 
-bool TLAS::CreateTLAS(CommandManager& commandManager, Fence& fence, std::wstring name)
+bool TLAS::CreateTLAS(Command& command, Fence& fence, std::wstring name)
 {
 	vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDesc;
 	instanceDesc.resize(tlasDescs_.size());
@@ -131,8 +131,8 @@ bool TLAS::CreateTLAS(CommandManager& commandManager, Fence& fence, std::wstring
 	}
 	cout << "instanceDescBuffer_r result : stride = " << instanceDescBuffer_.GetResource()->GetDesc().Width << " num = " << instanceDescBuffer_.GetResource()->GetDesc().Height << endl;
 
-	commandManager.CopyBuffer(uploadBuffer, instanceDescBuffer_);
-	fence.WaitCommand(commandManager);
+	command.CopyBuffer(uploadBuffer, instanceDescBuffer_);
+	fence.WaitCommand(command);
 
 	//commandManager.CopyBuffer(testUploadBuffer, testBuffer);
 	/*auto testBarrier = CD3DX12_RESOURCE_BARRIER::Transition(instanceDescBuffer_.GetResource().Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -179,11 +179,11 @@ bool TLAS::CreateTLAS(CommandManager& commandManager, Fence& fence, std::wstring
 	buildASDesc.DestAccelerationStructureData = ASBuffer_.GetResource()->GetGPUVirtualAddress();
 	buildASDesc.ScratchAccelerationStructureData = scratchBuffer_.GetResource()->GetGPUVirtualAddress();
 
-	commandManager.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
+	command.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
 
 	auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_.GetResource().Get());
-	commandManager.GetStableCommandList()->ResourceBarrier(1, &barrier);
-	fence.WaitCommand(commandManager);
+	command.GetStableCommandList()->ResourceBarrier(1, &barrier);
+	fence.WaitCommand(command);
 
 	return true;
 }
@@ -193,14 +193,14 @@ TLAS::TLAS()
 	
 }
 
-bool TLAS::Init(Device* pDevice, CommandManager& commandManager, Fence& fence, std::vector<TLASDesc> tlasDescs, std::wstring name)
+bool TLAS::Init(Device* pDevice, Command& command, Fence& fence, std::vector<TLASDesc> tlasDescs, std::wstring name)
 {
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
 		cerr << "TLAS doesn't have Device pointer" << endl;
 	}
 	tlasDescs_ = tlasDescs;
-	if (!CreateTLAS(commandManager, fence, name)) {
+	if (!CreateTLAS(command, fence, name)) {
 		return false;
 	}
 

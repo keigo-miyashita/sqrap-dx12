@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE winSize, const CommandManager& commandManager, wstring name)
+bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, wstring name)
 {
 	RECT rc = {};
 	GetWindowRect(hwnd, &rc);
@@ -23,7 +23,7 @@ bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE win
 	swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	swapChainDesc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	if (FAILED(device.GetDXGIFactory()->CreateSwapChainForHwnd(commandManager.GetCommandQueue().Get(),
+	if (FAILED(device.GetDXGIFactory()->CreateSwapChainForHwnd(command.GetCommandQueue().Get(),
 													hwnd,
 													&swapChainDesc1,
 													nullptr,
@@ -120,9 +120,9 @@ SwapChain::SwapChain()
 
 }
 
-bool SwapChain::Init(const Device& device, const HWND& hwnd, SIZE winSize, const CommandManager& commandManager, wstring name)
+bool SwapChain::Init(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, wstring name)
 {
-	if (!CreateSwapChain(device, hwnd, winSize, commandManager, name)) {
+	if (!CreateSwapChain(device, hwnd, winSize, command, name)) {
 		return false;
 	}
 
