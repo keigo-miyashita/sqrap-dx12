@@ -1,4 +1,5 @@
 #include <common.hpp>
+#include <comdef.h>
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -34,7 +35,16 @@ void Fence::WaitCommand(CommandManager& commandManager)
 
 	ID3D12CommandList* cmdLists[] = { commandManager.GetCommandList().Get() };
 	commandManager.GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
-	commandManager.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+	HRESULT result = commandManager.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+
+	if (FAILED(result)) {
+		_com_error err(result);
+		wcerr << L"Error message: " << err.ErrorMessage() << endl;
+		result = pDevice_->GetDevice()->GetDeviceRemovedReason();
+		_com_error DeviceRemovedReason(result);
+		wcerr << L"Device removed reason: " << DeviceRemovedReason.ErrorMessage() << endl;
+		cerr << "Failed to Signal" << endl;
+	}
 
 	if (fence_->GetCompletedValue() < fenceVal_) {
 		auto event = CreateEvent(nullptr, false, false, nullptr);

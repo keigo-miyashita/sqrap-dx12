@@ -54,6 +54,7 @@ bool Device::CreateDXDevice(wstring gpuVendorName)
 		if (strDesc.find(gpuVendorName.c_str()) != string::npos) {
 			wcout << strDesc << endl;
 			optionalAdapter = adapter;
+			adapter.As(&adapter_);
 			break;
 		}
 	}
@@ -193,6 +194,26 @@ bool Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
 	return true;
 }
 
+void Device::ShowUsedVramSize()
+{
+	cout << "Try to get Vram info" << endl;
+	DXGI_QUERY_VIDEO_MEMORY_INFO memInfo = {};
+	if (SUCCEEDED(adapter_->QueryVideoMemoryInfo(
+		0, 
+		DXGI_MEMORY_SEGMENT_GROUP_LOCAL,
+		&memInfo)))
+	{
+		cout << "Scceeded to get memory info" << endl;
+		/*std::wcout << L"Adapter: " << desc.Description << std::endl;*/
+		std::cout << (memInfo.CurrentUsage / (1024.0 * 1024.0)) << " MB" << std::endl;
+		std::cout << (memInfo.Budget / (1024.0 * 1024.0)) << " MB" << std::endl;
+		return;
+	}
+	else {
+		cerr << "Failed to get memory info" << endl;
+	}
+}
+
 ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
 {
 	return dxgiFactory_;
@@ -201,6 +222,11 @@ ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
 ComPtr<ID3D12Device> Device::GetDevice() const
 {
 	return device_;
+}
+
+ComPtr<StableDevice> Device::GetStableDevice() const
+{
+	return stableDevice_;
 }
 
 ComPtr<LatestDevice> Device::GetLatestDevice() const

@@ -76,7 +76,8 @@ struct StateObjectType
 {
 	enum Type {
 		Raytracing,
-		WorkGraph
+		WorkGraph,
+		WorkGraphMesh
 	};
 };
 
@@ -90,14 +91,14 @@ private:
 	StateObjectType::Type stateObjectType_;
 	std::wstring programName_;
 
-	void AddGlobalRootSignature(const RootSignature& rootSignature);
-	void AddShader(const Shader& shader);
-	void AddWorkgraph(std::wstring programName);
-
 public:
 	StateObjectDesc();
 	~StateObjectDesc() = default;
 	void Init(StateObjectType::Type type);
+	void AddGlobalRootSignature(const RootSignature& rootSignature);
+	void AddShader(const Shader& shader);
+	void AddWorkgraph(std::wstring programName);
+	void AddGenericProgram(std::vector<std::wstring> entries);
 	CD3DX12_STATE_OBJECT_DESC& GetStateObjectDesc();
 	StateObjectType::Type GetStateObjectType() const;
 	std::wstring GetProgramName() const;
@@ -112,6 +113,7 @@ private:
 	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12StateObject> stateObject_ = nullptr;
 	std::wstring programName_;
+	StateObjectType::Type stateObjectType_;
 
 	bool CreateStateObject(StateObjectDesc& soDesc, std::wstring name = L"StateObject");
 
@@ -121,4 +123,5 @@ public:
 	bool Init(Device* pDevice, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
+	StateObjectType::Type GetStateObjectType() const;
 };

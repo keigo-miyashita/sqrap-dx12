@@ -1,4 +1,5 @@
 #include <common.hpp>
+#include <comdef.h>
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -13,7 +14,14 @@ bool Buffer::CreateBuffer(UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heap
 	rscState_ = initRscState;
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType);
 	auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
-	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf())))) {
+	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		_com_error err(result);
+		wcerr << L"Error message: " << err.ErrorMessage() << endl;
+		result = pDevice_->GetDevice()->GetDeviceRemovedReason();
+		_com_error DeviceRemovedReason(result);
+		wcerr << L"Device removed reason: " << DeviceRemovedReason.ErrorMessage() << endl;
+		cerr << "Failed to CreateCommittedResource" << endl;
 		return false;
 	}
 	resource_->SetName(name.c_str());
@@ -61,6 +69,7 @@ bool Buffer::Init(Device* pDevice, UINT strideSize, UINT numElement, D3D12_HEAP_
 		return false;
 	}
 	if (!CreateBuffer(strideSize, numElement, heapType, rscFlag, initRscState, name)) {
+		cerr << "Failed to create buffer" << endl;
 		return false;
 	}
 
@@ -81,6 +90,7 @@ bool Buffer::InitAsUpload(Device* pDevice, UINT strideSize, UINT numElement, wst
 {
 	pDevice_ = pDevice;
 	if (!CreateBuffer(strideSize, numElement, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_SOURCE, name)) {
+		cerr << "Failed to CreateBuffer" << endl;
 		return false;
 	}
 

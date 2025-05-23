@@ -130,6 +130,23 @@ void StateObjectDesc::AddWorkgraph(wstring programName)
 	programName_ = programName;
 }
 
+void StateObjectDesc::AddGenericProgram(std::vector<std::wstring> entries)
+{
+	auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
+	pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
+	pRTFormats->SetNumRenderTargets(1);
+	pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
+	pGenericProgram->SetProgramName(L"program");
+	for (int i = 0; i < entries.size(); i++) {
+		pGenericProgram->AddExport(entries[i].c_str());
+	}
+	pGenericProgram->AddSubobject(*pPrimitiveTopology);
+	pGenericProgram->AddSubobject(*pRTFormats);
+}
+
 StateObjectDesc::StateObjectDesc()
 {
 
@@ -138,15 +155,16 @@ StateObjectDesc::StateObjectDesc()
 
 void StateObjectDesc::Init(StateObjectType::Type type)
 {
-	if (type == StateObjectType::Raytracing) {
+	stateObjectType_ = type;
+	if (stateObjectType_ == StateObjectType::Raytracing) {
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
 	}
-	else if (type == StateObjectType::WorkGraph) {
+	else if (stateObjectType_ == StateObjectType::WorkGraph || stateObjectType_ == StateObjectType::WorkGraphMesh) {
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
 		// Graphics nodeを使うときは下のコメントアウトを外す.
-		//pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
+		pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
 	}
 }
 
@@ -167,10 +185,14 @@ std::wstring StateObjectDesc::GetProgramName() const
 
 bool StateObject::CreateStateObject(StateObjectDesc& soDesc, wstring name)
 {
+	cout << "StateObject::CreateStateObject" << endl;
+	StateObjectType::Type test = soDesc.GetStateObjectType();
+	stateObjectType_ = soDesc.GetStateObjectType();
 	if (soDesc.GetStateObjectType() == StateObjectType::Raytracing) {
-
+		cout << "StateObjectType::Raytracing" << endl;
 	}
-	else if (soDesc.GetStateObjectType() == StateObjectType::WorkGraph) {
+	else if (soDesc.GetStateObjectType() == StateObjectType::WorkGraph || soDesc.GetStateObjectType() == StateObjectType::WorkGraphMesh) {
+		cout << "StateObjectType::WorkGraph" << endl;
 		if (FAILED(pDevice_->GetLatestDevice()->CreateStateObject(soDesc.GetStateObjectDesc(), IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf())))) {
 			return false;
 		}
@@ -185,7 +207,12 @@ StateObject::StateObject()
 
 bool StateObject::Init(Device* pDevice, StateObjectDesc& soDesc, wstring name)
 {
+	cout << "StateObject::Init" << endl;
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "StateObject class doesn't have Device class pointer" << endl;
+		return false;
+	}
 	programName_ = soDesc.GetProgramName();
 	if (!CreateStateObject(soDesc, name))
 	{
@@ -203,4 +230,9 @@ ComPtr<ID3D12StateObject> StateObject::GetStateObject() const
 std::wstring StateObject::GetProgramName() const
 {
 	return programName_;
+}
+
+StateObjectType::Type StateObject::GetStateObjectType() const
+{
+	return stateObjectType_;
 }

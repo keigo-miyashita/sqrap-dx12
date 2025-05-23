@@ -14,12 +14,12 @@ private:
 	void* pBinary_ = nullptr;
 	size_t binarySize = 0;
 
-	bool CreateShader(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main");
+	bool CreateShader(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main", std::vector<std::wstring> additionalOption = {});
 
 public:
 	Shader();
 	~Shader() = default;
-	bool Init(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main");
+	bool Init(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry = L"main", std::vector<std::wstring> additionalOption = {});
 	ComPtr<IDxcBlob> GetBlob() const;
 	
 };

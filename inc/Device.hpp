@@ -14,6 +14,7 @@ private:
 	ComPtr<IDXGIFactory7> dxgiFactory_ = nullptr;
 	D3D_FEATURE_LEVEL featureLevel_ = D3D_FEATURE_LEVEL_12_1;
 	ComPtr<ID3D12Device> device_ = nullptr;
+	ComPtr<IDXGIAdapter4> adapter_ = nullptr;
 	ComPtr<StableDevice> stableDevice_ = nullptr;
 	ComPtr<LatestDevice> latestDevice_ = nullptr;
 
@@ -29,6 +30,7 @@ public:
 	~Device() = default;
 	bool Init(std::wstring gpuVenorName);
 	bool Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
+	void ShowUsedVramSize();
 	ComPtr<IDXGIFactory7> GetDXGIFactory() const;
 	ComPtr<ID3D12Device> GetDevice() const;
 	ComPtr<StableDevice> GetStableDevice() const;

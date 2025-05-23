@@ -197,3 +197,78 @@ UINT Mesh::GetNumIndices() const
 {
 	return indices_.size();
 }
+
+bool ASMesh::LoadModel(std::string modelPath)
+{
+	tinygltf::Model model;
+	tinygltf::TinyGLTF loader;
+	string err, warn;
+
+	bool success = loader.LoadASCIIFromFile(&model, &err, &warn, modelPath.c_str());
+	if (!success) {
+		cerr << "failed to load gltf\n";
+		assert(0);
+		return false;
+	}
+
+	ASVertices_.clear();
+	indices_.clear();
+
+	for (auto& mesh : model.meshes) {
+		for (auto& primitive : mesh.primitives) {
+			int posAccessorIndex = primitive.attributes["POSITION"];
+			const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
+			const tinygltf::BufferView& posBufferView = model.bufferViews[posAccessor.bufferView];
+			tinygltf::Buffer& posBuffer = model.buffers[posBufferView.buffer];
+			float* positions = reinterpret_cast<float*>(&posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset]);
+
+			for (int i = 0; i < posAccessor.count; i++) {
+				ASVertices_.push_back(
+					{
+						(XMFLOAT3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])),
+					});
+			}
+
+			int indicesAccessorIndex = primitive.indices;
+			const tinygltf::Accessor& indicesAccessor = model.accessors[indicesAccessorIndex];
+			const tinygltf::BufferView& indicesBufferView = model.bufferViews[indicesAccessor.bufferView];
+			tinygltf::Buffer& indicesBuffer = model.buffers[indicesBufferView.buffer];
+			unsigned short* index = reinterpret_cast<unsigned short*>(&indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset]);
+			for (int i = 0; i < indicesAccessor.count; i++) {
+				indices_.push_back(index[i]);
+			}
+		}
+	}
+	return true;
+}
+
+HRESULT ASMesh::CreateVertexBuffer()
+{
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(ASVertices_.size() * sizeof(ASVertex));
+	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(vertexBuffer_.ReleaseAndGetAddressOf())))) {
+		return S_FALSE;
+	}
+	ASVertex* vertMap = nullptr;
+	if (FAILED(vertexBuffer_->Map(0, nullptr, (void**)&vertMap))) {
+		return S_FALSE;
+	}
+	std::copy(std::begin(ASVertices_), std::end(ASVertices_), vertMap);
+	vertexBuffer_->Unmap(0, nullptr);
+
+	vbView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
+	vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
+	vbView_.StrideInBytes = sizeof(ASVertex);
+
+	return S_OK;
+}
+
+ASMesh::ASMesh()
+{
+
+}
+
+UINT ASMesh::GetVertexCount() const
+{
+	return ASVertices_.size();
+}

@@ -36,7 +36,7 @@ bool DXC::Init()
 	return true;
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry) const
+bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry, std::vector<std::wstring> additionalOption) const
 {
 	ComPtr<IDxcIncludeHandler> incHandler_ = nullptr;
 	ComPtr<IDxcBlob> incBlob_ = nullptr;
@@ -63,6 +63,11 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 	options.push_back(L"-Fd");
 	options.push_back(fileName + L".pdb");
 #endif // DEBUG
+	if (additionalOption.size() != 0) {
+		for (int i = 0; i < additionalOption.size(); i++) {
+			options.push_back(additionalOption[i].c_str());
+		}
+	}
 	ComPtr<IDxcBlobEncoding> source = nullptr;
 	if (FAILED(library_->CreateBlobFromFile(fileName, nullptr, source.ReleaseAndGetAddressOf()))) {
 		return false;
@@ -93,7 +98,7 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry) const
+bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry, std::vector<std::wstring> additionalOption) const
 {
 	vector<const wchar_t*> options;
 #ifdef _DEBUG
@@ -107,6 +112,11 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderTy
 	options.push_back((erasedExtension + L".pdb").c_str());
 	cout << "Generate pdb files" << endl;
 #endif // DEBUG
+	if (additionalOption.size() != 0) {
+		for (int i = 0; i < additionalOption.size(); i++) {
+			options.push_back(additionalOption[i].c_str());
+		}
+	}
 	ComPtr<IDxcBlobEncoding> source = nullptr;
 	if (FAILED(library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf()))) {
 		cerr << "Failed to create blob from file" << endl;
