@@ -4,10 +4,10 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Shader::CreateShader(const DXC& dxc, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry, std::vector<std::wstring> additionalOption)
+bool Shader::CreateShader(const DXC& dxc, wstring fileName, ShaderType::Type shaderType, LPCWSTR entry)
 {
 	shaderType_ = shaderType;
-	if (!dxc.CompileShader(blob_, fileName, shaderType, model, entry, additionalOption)) {
+	if (!dxc.CompileShader(blob_, fileName, shaderType, entry)) {
 		cerr << "Failed to compile shader" << endl;
 		return false;
 	}
@@ -22,9 +22,9 @@ Shader::Shader()
 
 }
 
-bool Shader::Init(const DXC& dxc, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry, std::vector<std::wstring> additionalOption)
+bool Shader::Init(const DXC& dxc, wstring fileName, ShaderType::Type shaderType, LPCWSTR entry)
 {
-	if (!CreateShader(dxc, fileName, shaderType, model, entry, additionalOption)) {
+	if (!CreateShader(dxc, fileName, shaderType, entry)) {
 		return false;
 	}
 

@@ -2,7 +2,7 @@
 
 #include <common.hpp>
 
-struct Camera
+struct CameraMatrix
 {
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX proj;
@@ -38,6 +38,7 @@ private:
 	Mesh sphere_;
 
 	// Scene Items
+	CameraMatrix cameraTest_;
 	Camera camera_;
 	Light light0_;
 	Object sphere0_;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Windows.h>
+#include <windowsx.h>
 #include <wrl.h>
 #include <tchar.h>
 
@@ -20,12 +21,14 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
 #include <AS.hpp>
 #include <Application.hpp>
 #include <Buffer.hpp>
+#include <Camera.hpp>
 #include <Command.hpp>
 #include <Descriptorheap.hpp>
 #include <Descriptormanager.hpp>

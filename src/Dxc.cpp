@@ -36,7 +36,7 @@ bool DXC::Init()
 	return true;
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry, std::vector<std::wstring> additionalOption) const
+bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR entry) const
 {
 	ComPtr<IDxcIncludeHandler> incHandler_ = nullptr;
 	ComPtr<IDxcBlob> incBlob_ = nullptr;
@@ -63,10 +63,8 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 	options.push_back(L"-Fd");
 	options.push_back(fileName + L".pdb");
 #endif // DEBUG
-	if (additionalOption.size() != 0) {
-		for (int i = 0; i < additionalOption.size(); i++) {
-			options.push_back(additionalOption[i].c_str());
-		}
+	if (shaderType == ShaderType::WorkGraph) {
+		options.push_back(L"-select-validator internal");
 	}
 	ComPtr<IDxcBlobEncoding> source = nullptr;
 	if (FAILED(library_->CreateBlobFromFile(fileName, nullptr, source.ReleaseAndGetAddressOf()))) {
@@ -74,7 +72,7 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 	}
 
 	ComPtr<IDxcOperationResult> dxcResult = nullptr;
-	result = compiler_->Compile(source.Get(), fileName, entry, model, options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
+	result = compiler_->Compile(source.Get(), fileName, entry, ShaderModel[shaderType].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
 	ComPtr<IDxcBlobEncoding> err;
 	if (FAILED(result)) {
 		dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
@@ -98,7 +96,7 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath
 
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderType::Type shaderType, LPCWSTR model, LPCWSTR entry, std::vector<std::wstring> additionalOption) const
+bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderType::Type shaderType, LPCWSTR entry) const
 {
 	vector<const wchar_t*> options;
 #ifdef _DEBUG
@@ -112,10 +110,8 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderTy
 	options.push_back((erasedExtension + L".pdb").c_str());
 	cout << "Generate pdb files" << endl;
 #endif // DEBUG
-	if (additionalOption.size() != 0) {
-		for (int i = 0; i < additionalOption.size(); i++) {
-			options.push_back(additionalOption[i].c_str());
-		}
+	if (shaderType == ShaderType::WorkGraph) {
+		options.push_back(L"-select-validator internal");
 	}
 	ComPtr<IDxcBlobEncoding> source = nullptr;
 	if (FAILED(library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf()))) {
@@ -124,7 +120,7 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, wstring fileName, ShaderTy
 	}
 
 	ComPtr<IDxcOperationResult> dxcResult = nullptr;
-	auto result = compiler_->Compile(source.Get(), fileName.c_str(), entry, model, options.data(), options.size(), nullptr, 0, nullptr, dxcResult.ReleaseAndGetAddressOf());
+	auto result = compiler_->Compile(source.Get(), fileName.c_str(), entry, ShaderModel[shaderType].c_str(), options.data(), options.size(), nullptr, 0, nullptr, dxcResult.ReleaseAndGetAddressOf());
 	ComPtr<IDxcBlobEncoding> err;
 	if (FAILED(result)) {
 		dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());

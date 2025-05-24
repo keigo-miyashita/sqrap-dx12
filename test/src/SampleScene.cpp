@@ -52,6 +52,15 @@ void SampleScene::Render()
 {
 	BeginRender();
 
+	camera_.Update();
+	void* rawPtr = cameraBuffer_.Map();
+	if (rawPtr) {
+		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
+		pCamera->view = camera_.GetView();
+		pCamera->proj = camera_.GetProj();
+		cameraBuffer_.Unmap();
+	}
+
 	command_.GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
 	command_.GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
 	command_.GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_.GetDescriptorHeap().GetAddressOf());
@@ -116,8 +125,10 @@ bool SampleScene::Init(const Application& app)
 	float nearZ = 0.1f;
 	float farZ = 100.0f;
 	XMMATRIX proj = XMMatrixPerspectiveFovLH(fovYAngle, aspectRatio, nearZ, farZ);
-	camera_.view = view;
-	camera_.proj = proj;
+	cameraTest_.view = view;
+	cameraTest_.proj = proj;
+
+	camera_.Init((float)app.GetWindowWidth() / (float)app.GetWindowHeight(), XMFLOAT3(0.0f, 0.0f, -5.0f));
 	
 	// Light
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
@@ -129,11 +140,12 @@ bool SampleScene::Init(const Application& app)
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 	
 	// Resources
-	cameraBuffer_.InitAsUpload(&device_,  Buffer::AlignForConstantBuffer(sizeof(Camera)), 1);
+	cameraBuffer_.InitAsUpload(&device_,  Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
 	void* rawPtr = cameraBuffer_.Map();
 	if (rawPtr) {
-		Camera* pCamera = static_cast<Camera*>(rawPtr);
-		*pCamera = camera_;
+		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
+		pCamera->view = camera_.GetView();
+		pCamera->proj = camera_.GetProj();
 		cameraBuffer_.Unmap();
 	}
 
@@ -155,12 +167,12 @@ bool SampleScene::Init(const Application& app)
 
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"\\lambert.hlsl";
-	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"vs_6_6", L"VSmain")) {
+	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
 		cerr << "Failed to create simpleVS" << endl;
 		return false;
 	}
 	
-	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"ps_6_6", L"PSmain")) {
+	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"PSmain")) {
 		cerr << "Failed to create lambertPS_" << endl;
 		return false;
 	}
@@ -261,8 +273,10 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	float nearZ = 0.1f;
 	float farZ = 100.0f;
 	XMMATRIX proj = XMMatrixPerspectiveFovLH(fovYAngle, aspectRatio, nearZ, farZ);
-	camera_.view = view;
-	camera_.proj = proj;
+	cameraTest_.view = view;
+	cameraTest_.proj = proj;
+
+	camera_.Init((float)app.GetWindowWidth() / (float)app.GetWindowHeight(), XMFLOAT3(0.0f, 0.0f, -5.0f));
 
 	// Light
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
@@ -274,11 +288,12 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 
 	// Resources
-	cameraBuffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Camera)), 1);
+	cameraBuffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
 	void* rawPtr = cameraBuffer_.Map();
 	if (rawPtr) {
-		Camera* pCamera = static_cast<Camera*>(rawPtr);
-		*pCamera = camera_;
+		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
+		pCamera->view = camera_.GetView();
+		pCamera->proj = camera_.GetProj();
 		cameraBuffer_.Unmap();
 	}
 
@@ -300,12 +315,12 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"\\lambert.hlsl";
-	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"vs_6_6", L"VSmain")) {
+	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
 		cerr << "Failed to create simpleVS" << endl;
 		return false;
 	}
 
-	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"ps_6_6", L"PSmain")) {
+	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"PSmain")) {
 		cerr << "Failed to create lambertPS_" << endl;
 		return false;
 	}

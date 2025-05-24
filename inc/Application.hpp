@@ -2,6 +2,61 @@
 
 #include <common.hpp>
 
+struct MousePosition
+{
+	int x;
+	int y;
+};
+
+class InputManager
+{
+private:
+	static inline std::unordered_map<UINT, bool> isPushKey_ = {
+		{'A', false},
+		{'B', false},
+		{'C', false},
+		{'D', false},
+		{'E', false},
+		{'F', false},
+		{'G', false},
+		{'H', false},
+		{'I', false},
+		{'J', false},
+		{'K', false},
+		{'L', false},
+		{'M', false},
+		{'N', false},
+		{'O', false},
+		{'P', false},
+		{'Q', false},
+		{'R', false},
+		{'S', false},
+		{'T', false},
+		{'U', false},
+		{'V', false},
+		{'W', false},
+		{'X', false},
+		{'Y', false},
+		{'Z', false},
+		{VK_SPACE, false},
+		{VK_CONTROL, false},
+	};
+	static inline int wheel_ = 0;
+	static inline bool isPushedLButton_ = false;
+	static inline bool isPushedRButton_ = false;
+	static inline MousePosition pushedMousePos_;
+	static inline MousePosition currentMousePos_;
+
+public:
+	static void Update(UINT msg, WPARAM wparam, LPARAM lparam);
+	static bool IsPushKey(UINT key);
+	static int GetWheel();
+	static MousePosition GetPushedPos();
+	static MousePosition GetPos();
+	static bool IsPushedLButton();
+	static bool IsPushedRButton();
+};
+
 class Application
 {
 private:

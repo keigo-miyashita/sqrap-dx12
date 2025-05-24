@@ -6,6 +6,63 @@ using namespace DirectX;
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
+void InputManager::Update(UINT msg, WPARAM wparam, LPARAM lparam)
+{
+	UINT vkCode = (UINT)wparam;
+	int xPos = GET_X_LPARAM(lparam);
+	int yPos = GET_Y_LPARAM(lparam);
+	currentMousePos_ = {xPos, yPos};
+	switch (msg) {
+	case WM_KEYDOWN:
+		isPushKey_[vkCode] = true;
+		break;
+	case WM_KEYUP:
+		isPushKey_[vkCode] = false;
+		break;
+	case WM_LBUTTONDOWN:
+		isPushedLButton_ = true;
+		pushedMousePos_ = { xPos, yPos };
+		break;
+	case WM_LBUTTONUP:
+		isPushedLButton_ = false;
+		break;
+	case WM_MOUSEWHEEL:
+		short wheelDelta = GET_WHEEL_DELTA_WPARAM(wparam);
+		wheel_ = wheelDelta;
+		break;
+	}
+}
+
+bool InputManager::IsPushKey(UINT key)
+{
+	return isPushKey_[key];
+}
+
+int InputManager::GetWheel()
+{
+	return wheel_;
+}
+
+MousePosition InputManager::GetPushedPos()
+{
+	return pushedMousePos_;
+}
+
+MousePosition InputManager::GetPos()
+{
+	return currentMousePos_;
+}
+
+bool InputManager::IsPushedLButton()
+{
+	return isPushedLButton_;
+}
+
+bool InputManager::IsPushedRButton()
+{
+	return isPushedRButton_;
+}
+
 namespace {
 
 	Application* appPtr = nullptr;
@@ -82,7 +139,7 @@ Application::Application(std::string windowName, unsigned int window_width, unsi
 
 int Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
 {
-
+	InputManager::Update(msg, wparam, lparam);
 
 	return 0;
 }
