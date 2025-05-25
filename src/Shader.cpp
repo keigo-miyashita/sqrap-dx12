@@ -11,8 +11,6 @@ bool Shader::CreateShader(const DXC& dxc, wstring fileName, ShaderType::Type sha
 		cerr << "Failed to compile shader" << endl;
 		return false;
 	}
-	pBinary_ = blob_->GetBufferPointer();
-	binarySize = blob_->GetBufferSize();
 
 	return true;
 }

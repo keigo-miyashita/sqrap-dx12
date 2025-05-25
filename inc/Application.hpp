@@ -8,7 +8,7 @@ struct MousePosition
 	int y;
 };
 
-class InputManager
+class Input
 {
 private:
 	static inline std::unordered_map<UINT, bool> isPushKey_ = {

@@ -12,6 +12,7 @@ private:
 
 	Device* pDevice_ = nullptr;
 	ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
+	UINT viewOffset_ = 0;
 	// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
 	D3D12_DESCRIPTOR_HEAP_TYPE heapType_;
 	UINT numDescriptor_ = 0;
@@ -34,11 +35,11 @@ public:
 	~DescriptorManager() = default;
 	bool InitAsBuffer(Device* pDevice, UINT baseRegCBV, UINT numCBV, UINT baseRegSRV, UINT numSRV, UINT baseRegUAV, UINT numUAV, std::wstring name = L"DescriptorHeap");
 	bool InitAsSampler(Device* pDevice, UINT baseRegSampler, UINT numSampler, std::wstring name = L"DescriptorHeap");
-	void CreateCBV(const Buffer& buff, UINT viewOffset);
-	void CreateSRV(const Buffer& buff, UINT viewOffset);
-	void CreateUAV(const Buffer& buff, UINT viewOffset);
-	void CreateUAVCounter(const Buffer& buff, UINT viewOffset);
-	void CreateSampler(UINT viewOffset);
+	void CreateCBV(const Buffer& buff);
+	void CreateSRV(const Buffer& buff);
+	void CreateUAV(const Buffer& buff);
+	void CreateUAVCounter(const Buffer& buff);
+	void CreateSampler();
 	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() const;
 	D3D12_DESCRIPTOR_HEAP_TYPE GetHeapType() const;
 	UINT GetNumDescRanges() const;

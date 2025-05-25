@@ -11,8 +11,6 @@ private:
 	ShaderType::Type shaderType_;
 	// Shader‚ÌByte code‚ðŠi”[
 	ComPtr<IDxcBlob> blob_ = nullptr;
-	void* pBinary_ = nullptr;
-	size_t binarySize = 0;
 
 	bool CreateShader(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR entry = L"main");
 
@@ -21,5 +19,4 @@ public:
 	~Shader() = default;
 	bool Init(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR entry = L"main");
 	ComPtr<IDxcBlob> GetBlob() const;
-	
 };

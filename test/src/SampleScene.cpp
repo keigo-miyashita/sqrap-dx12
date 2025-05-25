@@ -108,7 +108,7 @@ bool SampleScene::Init(const Application& app)
 
 	// Objects data
 	string modelPath = string(modelPath) + "\\sphere.gltf";
-	if (!sphere_.Init(&device_, modelPath)) {
+	if (!sphere_.Init(&device_, command_, fence_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -186,9 +186,9 @@ bool SampleScene::Init(const Application& app)
 	//sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
 	// Descriptor Manager
 	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
-	sphere0DescManager_.CreateCBV(cameraBuffer_, 0);
-	sphere0DescManager_.CreateCBV(light0Buffer_, 1);
-	sphere0DescManager_.CreateCBV(sphere0Buffer_, 2);
+	sphere0DescManager_.CreateCBV(cameraBuffer_);
+	sphere0DescManager_.CreateCBV(light0Buffer_);
+	sphere0DescManager_.CreateCBV(sphere0Buffer_);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
@@ -256,7 +256,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "\\sphere.gltf";
-	if (!sphere_.Init(&device_, modelPath)) {
+	if (!sphere_.Init(&device_, command_, fence_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -334,9 +334,9 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	//sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
 	// Descriptor Manager
 	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
-	sphere0DescManager_.CreateCBV(cameraBuffer_, 0);
-	sphere0DescManager_.CreateCBV(light0Buffer_, 1);
-	sphere0DescManager_.CreateCBV(sphere0Buffer_, 2);
+	sphere0DescManager_.CreateCBV(cameraBuffer_);
+	sphere0DescManager_.CreateCBV(light0Buffer_);
+	sphere0DescManager_.CreateCBV(sphere0Buffer_);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);

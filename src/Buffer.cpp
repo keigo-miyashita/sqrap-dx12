@@ -132,6 +132,11 @@ ComPtr<ID3D12Resource> Buffer::GetResource() const
 	return resource_;
 }
 
+D3D12_GPU_VIRTUAL_ADDRESS Buffer::GetGPUAddress() const
+{
+	return resource_->GetGPUVirtualAddress();
+}
+
 D3D12_HEAP_TYPE Buffer::GetHeapType() const
 {
 	return heapType_;

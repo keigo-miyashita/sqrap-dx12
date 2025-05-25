@@ -15,40 +15,40 @@ void Camera::Update()
 	XMFLOAT3 right = GetRight();
 	XMFLOAT3 up = GetUp();
 	float moveScale = 0.1f;
-	if (InputManager::IsPushKey('W')) {
+	if (Input::IsPushKey('W')) {
 		position_.x += front.x * moveScale;
 		position_.y += front.y * moveScale;
 		position_.z += front.z * moveScale;
 	}
-	else if (InputManager::IsPushKey('S')) {
+	else if (Input::IsPushKey('S')) {
 		position_.x -= front.x * moveScale;
 		position_.y -= front.y * moveScale;
 		position_.z -= front.z * moveScale;
 	}
-	else if (InputManager::IsPushKey('D')) {
+	else if (Input::IsPushKey('D')) {
 		position_.x += right.x * moveScale;
 		position_.y += right.y * moveScale;
 		position_.z += right.z * moveScale;
 	}
-	else if (InputManager::IsPushKey('A')) {
+	else if (Input::IsPushKey('A')) {
 		position_.x -= right.x * moveScale;
 		position_.y -= right.y * moveScale;
 		position_.z -= right.z * moveScale;
 	}
-	else if (InputManager::IsPushKey(VK_SPACE)) {
+	else if (Input::IsPushKey(VK_SPACE)) {
 		position_.x += up.x * moveScale;
 		position_.y += up.y * moveScale;
 		position_.z += up.z * moveScale;
 	}
-	else if (InputManager::IsPushKey(VK_CONTROL)) {
+	else if (Input::IsPushKey(VK_CONTROL)) {
 		position_.x -= up.x * moveScale;
 		position_.y -= up.y * moveScale;
 		position_.z -= up.z * moveScale;
 	}
 
-	if (InputManager::IsPushedLButton()) {
-		auto pushedMousePos = InputManager::GetPushedPos();
-		auto currentMousePos = InputManager::GetPos();
+	if (Input::IsPushedLButton()) {
+		auto pushedMousePos = Input::GetPushedPos();
+		auto currentMousePos = Input::GetPos();
 
 		rotation_.x += (currentMousePos.y - pushedMousePos.y) * moveScale;
 		rotation_.y += (currentMousePos.x - pushedMousePos.x) * moveScale;

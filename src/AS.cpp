@@ -9,11 +9,11 @@ bool BLAS::CreateBLAS(const ASMesh& mesh, Command& command, Fence& fence, std::w
 	D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 	geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
 	geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
-	geomDesc.Triangles.VertexBuffer.StartAddress = mesh.GetVertexBuffer()->GetGPUVirtualAddress();
+	geomDesc.Triangles.VertexBuffer.StartAddress = mesh.GetVertexBuffer().GetGPUAddress();
 	geomDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(ASVertex);
 	geomDesc.Triangles.VertexCount = mesh.GetVertexCount();
 	geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-	geomDesc.Triangles.IndexBuffer = mesh.GetIndexBuffer()->GetGPUVirtualAddress();
+	geomDesc.Triangles.IndexBuffer = mesh.GetIndexBuffer().GetGPUAddress();
 	geomDesc.Triangles.IndexCount = mesh.GetNumIndices();
 	geomDesc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
 

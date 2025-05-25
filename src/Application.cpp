@@ -6,7 +6,7 @@ using namespace DirectX;
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-void InputManager::Update(UINT msg, WPARAM wparam, LPARAM lparam)
+void Input::Update(UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	UINT vkCode = (UINT)wparam;
 	int xPos = GET_X_LPARAM(lparam);
@@ -33,32 +33,32 @@ void InputManager::Update(UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 }
 
-bool InputManager::IsPushKey(UINT key)
+bool Input::IsPushKey(UINT key)
 {
 	return isPushKey_[key];
 }
 
-int InputManager::GetWheel()
+int Input::GetWheel()
 {
 	return wheel_;
 }
 
-MousePosition InputManager::GetPushedPos()
+MousePosition Input::GetPushedPos()
 {
 	return pushedMousePos_;
 }
 
-MousePosition InputManager::GetPos()
+MousePosition Input::GetPos()
 {
 	return currentMousePos_;
 }
 
-bool InputManager::IsPushedLButton()
+bool Input::IsPushedLButton()
 {
 	return isPushedLButton_;
 }
 
-bool InputManager::IsPushedRButton()
+bool Input::IsPushedRButton()
 {
 	return isPushedRButton_;
 }
@@ -139,7 +139,7 @@ Application::Application(std::string windowName, unsigned int window_width, unsi
 
 int Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	InputManager::Update(msg, wparam, lparam);
+	Input::Update(msg, wparam, lparam);
 
 	return 0;
 }

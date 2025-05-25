@@ -37,6 +37,7 @@ public:
 	void Reset();
 
 	ComPtr<ID3D12Resource> GetResource() const;
+	D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
 	D3D12_HEAP_TYPE GetHeapType() const;
 	D3D12_RESOURCE_FLAGS GetResourceFlag() const;
 	D3D12_RESOURCE_STATES GetResourceState() const;

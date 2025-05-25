@@ -25,26 +25,26 @@ protected:
 
 	Device* pDevice_ = nullptr;
 	std::vector<Vertex> vertices_;
-	ComPtr<ID3D12Resource> vertexBuffer_;
+	Buffer vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vbView_;
 	std::vector<uint32_t> indices_;
-	ComPtr<ID3D12Resource> indexBuffer_;
+	Buffer indexBuffer_;
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
 	virtual bool LoadModel(std::string modelPath);
-	virtual HRESULT CreateVertexBuffer();
-	HRESULT CreateIndexBuffer();
+	virtual HRESULT CreateVertexBuffer(Command& command_, Fence& fence);
+	HRESULT CreateIndexBuffer(Command& command_, Fence& fence);
 
 public:
 	Mesh();
 	~Mesh() = default;
-	bool Init(Device* pDevice, std::string modelPath);
-	bool Init(Device* pDevice, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
-	ComPtr<ID3D12Resource> GetVertexBuffer() const;
+	bool Init(Device* pDevice, Command& command_, Fence& fence, std::string modelPath);
+	bool Init(Device* pDevice, Command& command_, Fence& fence, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	const Buffer& GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
 	virtual UINT GetVertexCount() const;
-	ComPtr<ID3D12Resource> GetIndexBuffer() const;
+	const Buffer& GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
 	UINT GetNumIndices() const;
@@ -59,7 +59,7 @@ protected:
 	std::vector<ASVertex> ASVertices_;
 
 	bool LoadModel(std::string modelPath) override;
-	HRESULT CreateVertexBuffer() override;
+	HRESULT CreateVertexBuffer(Command& command, Fence& fence) override;
 
 public:
 	ASMesh();
