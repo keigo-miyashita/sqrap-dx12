@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(DirectX12-Wrapper CXX)
+project(sqrap-dx12 CXX)
 
 # •Ï”‚Éƒtƒ@ƒCƒ‹‚ğŠi”[
 file(GLOB_RECURSE WRAPPER_SOURCES "src/*.cpp")

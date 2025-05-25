@@ -7,7 +7,7 @@ target_sources(${PROJECT_NAME}-test-src PRIVATE main.cpp "TestApplication.cpp" "
 # ライブラリのリンク
 target_link_libraries(
     ${PROJECT_NAME}-test-src PRIVATE
-    DirectX12-Wrapper
+    sqrap-dx12
 )
 
 # インクルードディレクトリへのパスを追加
