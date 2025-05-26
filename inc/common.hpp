@@ -30,9 +30,7 @@
 #include <Buffer.hpp>
 #include <Camera.hpp>
 #include <Command.hpp>
-#include <Descriptorheap.hpp>
 #include <Descriptormanager.hpp>
-#include <Descriptortable.hpp>
 #include <Device.hpp>
 #include <Dxc.hpp>
 #include <Fence.hpp>

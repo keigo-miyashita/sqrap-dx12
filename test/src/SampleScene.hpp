@@ -54,8 +54,6 @@ private:
 
 	// Descriptor
 	// Constant buffer x 4
-	DescriptorHeap sphere0DescHeap_;
-	DescriptorTable sphere0DescTable_;
 	DescriptorManager sphere0DescManager_;
 	// RootSignature
 	RootSignature sphere0RootSignature_;
