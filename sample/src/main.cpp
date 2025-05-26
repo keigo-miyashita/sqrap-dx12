@@ -1,6 +1,6 @@
 #include <common.hpp>
 
-#include "TestApplication.hpp"
+#include "SampleApplication.hpp"
 
 #ifdef _DEBUG
 int main()
@@ -9,7 +9,7 @@ int main()
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 #endif
-	auto app = TestApplication("Test");
+	auto app = SampleApplication("Sample");
 
 	Microsoft::WRL::ComPtr<ID3D12DebugDevice> debugDevice_ = nullptr;
 

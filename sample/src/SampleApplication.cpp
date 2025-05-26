@@ -1,13 +1,13 @@
 #include <common.hpp>
 
-#include "TestApplication.hpp"
+#include "SampleApplication.hpp"
 
-TestApplication::TestApplication(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
+SampleApplication::SampleApplication(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
 {
 
 }
 
-bool TestApplication::Init()
+bool SampleApplication::Init()
 {
 	// Comポインタを使う準備
 	// 第二引数はマルチスレッドへの対応
@@ -19,7 +19,7 @@ bool TestApplication::Init()
 	sampleScene_.Init(*this);
 };
 
-bool TestApplication::Init(ComPtr<ID3D12DebugDevice>& debugDevice)
+bool SampleApplication::Init(ComPtr<ID3D12DebugDevice>& debugDevice)
 {
 	if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
 		std::cerr << "Failed to CoInitializeEx" << std::endl;
@@ -34,7 +34,7 @@ bool TestApplication::Init(ComPtr<ID3D12DebugDevice>& debugDevice)
 	return true;
 };
 
-void TestApplication::Run()
+void SampleApplication::Run()
 {
 	ShowWindow(hwnd_, SW_SHOW);
 	MSG msg = {};
@@ -54,7 +54,7 @@ void TestApplication::Run()
 	}
 };
 
-void TestApplication::Terminate()
+void SampleApplication::Terminate()
 {
 	UnregisterClass(windowClass_.lpszClassName, windowClass_.hInstance);
 };

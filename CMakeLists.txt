@@ -50,4 +50,4 @@ target_compile_options(${PROJECT_NAME} PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cp
 # ディレクトリへのパスが変数に格納されてから
 # add_subdirectoryする
 # これによって下の階層に正しい値をもった変数がコピーされる
-add_subdirectory(test/src)
+add_subdirectory(sample/src)
