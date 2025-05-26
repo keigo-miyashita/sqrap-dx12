@@ -62,6 +62,10 @@ GraphicsPipeline::GraphicsPipeline()
 bool GraphicsPipeline::Init(Device* pDevice, const GraphicsDesc& desc, wstring name)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "GraphicsPipeline class doesn't have any pointer" << endl;
+		return false;
+	}
 	if (!CreateGraphicsPipelineState(desc, name)) {
 		return false;
 	}
@@ -97,6 +101,10 @@ ComputePipeline::ComputePipeline()
 bool ComputePipeline::Init(Device* pDevice, const ComputeDesc& desc, wstring name)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "ComputePipeline class doesn't have any pointer" << endl;
+		return false;
+	}
 	if (!CreateComputePipelineState(desc, name)) {
 		return false;
 	}
@@ -210,7 +218,7 @@ bool StateObject::Init(Device* pDevice, StateObjectDesc& soDesc, wstring name)
 	cout << "StateObject::Init" << endl;
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
-		cerr << "StateObject class doesn't have Device class pointer" << endl;
+		cerr << "StateObject class doesn't have any pointer" << endl;
 		return false;
 	}
 	programName_ = soDesc.GetProgramName();

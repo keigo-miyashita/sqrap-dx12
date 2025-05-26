@@ -27,16 +27,13 @@ bool BLAS::CreateBLAS(const ASMesh& mesh, Command& command, Fence& fence, std::w
 	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
 	pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
-	//auto scratchBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(prebuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-	//auto blasBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(prebuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
 	cout << "BLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 	if (!scratchBuffer_.Init(
 		pDevice_, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1,
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
 	))
 	{
-		cerr << "Failed to create scratch buffer" << endl;
+		cerr << "Failed to create scratch buffer of BLAS class" << endl;
 		return false;
 	}
 
@@ -46,7 +43,7 @@ bool BLAS::CreateBLAS(const ASMesh& mesh, Command& command, Fence& fence, std::w
 		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE
 	))
 	{
-		cerr << "Failed to create AS buffer" << endl;
+		cerr << "Failed to create AS buffer of BLAS class" << endl;
 		return false;
 	}
 
@@ -55,12 +52,6 @@ bool BLAS::CreateBLAS(const ASMesh& mesh, Command& command, Fence& fence, std::w
 	buildASDesc.DestAccelerationStructureData = ASBuffer_.GetResource()->GetGPUVirtualAddress();
 	buildASDesc.ScratchAccelerationStructureData = scratchBuffer_.GetResource()->GetGPUVirtualAddress();
 
-	/*Buffer testUploadBuffer;
-	testUploadBuffer.InitAsUpload(pDevice_, sizeof(float), 1024);
-	Buffer testBuffer;
-	testBuffer.Init(pDevice_, sizeof(float), 1024);
-
-	commandManager.CopyBuffer(testUploadBuffer, testBuffer);*/
 	auto transBarrier = CD3DX12_RESOURCE_BARRIER::Transition(scratchBuffer_.GetResource().Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	command.GetStableCommandList()->ResourceBarrier(1, &transBarrier);
 	command.GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
@@ -81,7 +72,7 @@ bool BLAS::Init(Device* pDevice, const ASMesh& mesh, Command& command, Fence& fe
 {
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
-		cerr << "BLAS doesn't have Device pointer" << endl;
+		cerr << "BLAS class pDevice doesn't have any pounter" << endl;
 	}
 	if (!CreateBLAS(mesh, command, fence, name)) {
 		return false;
@@ -90,7 +81,7 @@ bool BLAS::Init(Device* pDevice, const ASMesh& mesh, Command& command, Fence& fe
 	return true;
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASGPUVirtualAddress()
+D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASAddress()
 {
 	return ASBuffer_.GetResource()->GetGPUVirtualAddress();
 }
@@ -107,7 +98,7 @@ bool TLAS::CreateTLAS(Command& command, Fence& fence, std::wstring name)
 			}
 		}
 		instanceDesc[numDescs].InstanceMask = 0xFF;
-		instanceDesc[numDescs].AccelerationStructure = tlasDescs_[numDescs].blas->GetASGPUVirtualAddress();
+		instanceDesc[numDescs].AccelerationStructure = tlasDescs_[numDescs].blas->GetASAddress();
 		instanceDesc[numDescs].Flags = tlasDescs_[numDescs].flags;
 	}
 
@@ -133,16 +124,6 @@ bool TLAS::CreateTLAS(Command& command, Fence& fence, std::wstring name)
 
 	command.CopyBuffer(uploadBuffer, instanceDescBuffer_);
 	fence.WaitCommand(command);
-
-	//commandManager.CopyBuffer(testUploadBuffer, testBuffer);
-	/*auto testBarrier = CD3DX12_RESOURCE_BARRIER::Transition(instanceDescBuffer_.GetResource().Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST);
-	commandManager.GetCommandList()->ResourceBarrier(1, &testBarrier);
-	commandManager.GetCommandList()->CopyResource(instanceDescBuffer_.GetResource().Get(), uploadBuffer.GetResource().Get());
-	testBarrier = CD3DX12_RESOURCE_BARRIER::Transition(instanceDescBuffer_.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-	commandManager.GetCommandList()->ResourceBarrier(1, &testBarrier);*/
-	/*Buffer testBuffer;
-	testBuffer.Init(pDevice_, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
-	commandManager.CopyBuffer(testBuffer, instanceDescBuffer_);*/
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = {};
 	buildInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
@@ -197,7 +178,7 @@ bool TLAS::Init(Device* pDevice, Command& command, Fence& fence, std::vector<TLA
 {
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
-		cerr << "TLAS doesn't have Device pointer" << endl;
+		cerr << "TLAS class pDevice doesn't have any pounter" << endl;
 	}
 	tlasDescs_ = tlasDescs;
 	if (!CreateTLAS(command, fence, name)) {
@@ -210,4 +191,9 @@ bool TLAS::Init(Device* pDevice, Command& command, Fence& fence, std::vector<TLA
 Buffer TLAS::GetASBuffer() const
 {
 	return ASBuffer_;
+}
+
+D3D12_GPU_VIRTUAL_ADDRESS TLAS::GetASAddress()
+{
+	return ASBuffer_.GetResource()->GetGPUVirtualAddress();
 }

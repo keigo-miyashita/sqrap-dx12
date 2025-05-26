@@ -82,6 +82,10 @@ bool DescriptorManager::InitAsBuffer(Device* pDevice, UINT baseRegCBV, UINT numC
 bool DescriptorManager::InitAsSampler(Device* pDevice, UINT baseRegSampler, UINT numSampler, std::wstring name)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "DescriptorManager class pDevice doesn't have any pounter" << endl; ;
+		return false;
+	}
 	heapType_ = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
 	baseRegSampler_ = baseRegSampler;
 	numSampler_ = numSampler;

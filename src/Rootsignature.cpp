@@ -139,6 +139,10 @@ RootSignature::RootSignature()
 bool RootSignature::Init(Device* pDevice)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "RootSignature class doesn't have any pointer" << endl;
+		return false;
+	}
 	return true;
 }
 

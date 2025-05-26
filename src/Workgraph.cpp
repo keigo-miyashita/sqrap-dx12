@@ -59,7 +59,7 @@ bool WorkGraph::Init(Device* pDevice, const StateObject& stateObject, UINT maxIn
 {
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
-		cerr << "WorkGraph class doesn't have Device class pointer" << endl;
+		cerr << "WorkGraph class doesn't have any pointer" << endl;
 		return false;
 	}
 	if (!InitWorkGraphContext(stateObject)) {

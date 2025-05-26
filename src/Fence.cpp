@@ -22,6 +22,10 @@ Fence::Fence()
 bool Fence::Init(Device* pDevice, wstring name)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "Fence class pDevice doesn't have any pounter" << endl; ;
+		return false;
+	}
 	if (!CreateFence(name)) {
 		return false;
 	}

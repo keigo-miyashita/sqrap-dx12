@@ -62,6 +62,10 @@ Command::Command()
 bool Command::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "Command class pDevice doesn't have any pounter" << endl; ;
+		return false;
+	}
 	if (!CreateCommandList(commandType, name)) {
 		return false;
 	}

@@ -149,6 +149,10 @@ Mesh::Mesh()
 bool Mesh::Init(Device* pDevice, Command& command_, Fence& fence, std::string modelPath)
 {
 	pDevice_ = pDevice;
+	if (pDevice_ == nullptr) {
+		cerr << "Mesh class doesn't have any pointer" << endl;
+		return false;
+	}
 	if (!LoadModel(modelPath)) {
 		return false;
 	}

@@ -27,7 +27,7 @@ public:
 	~BLAS() = default;
 	bool Init(Device* pDevice, const ASMesh& mesh, Command& command, Fence& fence, std::wstring name = L"BLAS");
 
-	D3D12_GPU_VIRTUAL_ADDRESS GetASGPUVirtualAddress();
+	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 };
 
 struct TLASDesc
@@ -57,4 +57,5 @@ public:
 	~TLAS() = default;
 	bool Init(Device* pDevice, Command& command, Fence& fence, std::vector<TLASDesc> tlasDescs, std::wstring name = L"TLAS");
 	Buffer GetASBuffer() const;
+	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 };
