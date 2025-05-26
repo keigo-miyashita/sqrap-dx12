@@ -12,25 +12,25 @@ void SampleScene::BeginRender()
 
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_.GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	command_.GetCommandList()->ResourceBarrier(1, &barrier);
+	command_->GetCommandList()->ResourceBarrier(1, &barrier);
 
 	auto rtvHandle = swapChain_.GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += bbIdx * device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	auto dsvHandle = swapChain_.GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
-	command_.GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+	command_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 	// Clear depth buffer
-	command_.GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	command_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// Clear display
 	float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	command_.GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	command_->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 	// Set viewport and scissors
 	auto viewPort = swapChain_.GetViewPort();
 	auto scissorRect = swapChain_.GetRect();
-	command_.GetCommandList()->RSSetViewports(1, &viewPort);
-	command_.GetCommandList()->RSSetScissorRects(1, &scissorRect);
+	command_->GetCommandList()->RSSetViewports(1, &viewPort);
+	command_->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
 	//cout << "Begin Render" << endl;
 }
@@ -41,9 +41,9 @@ void SampleScene::EndRender()
 
 	// Transit render target to present
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_.GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	command_.GetCommandList()->ResourceBarrier(1, &barrier);
+	command_->GetCommandList()->ResourceBarrier(1, &barrier);
 
-	fence_.WaitCommand(command_);
+	fence_.WaitCommand(*command_);
 
 	//cout << "End Render" << endl;
 }
@@ -61,13 +61,13 @@ void SampleScene::Render()
 		cameraBuffer_.Unmap();
 	}
 
-	command_.GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
-	command_.GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
-	command_.GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_.GetDescriptorHeap().GetAddressOf());
-	command_.GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	command_->GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
+	command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
+	command_->GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_.GetDescriptorHeap().GetAddressOf());
+	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
-	command_.GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
-	command_.AddDrawIndexed(sphere_, 1);
+	command_->GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
+	command_->AddDrawIndexed(sphere_, 1);
 
 	EndRender();
 
@@ -90,13 +90,10 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
-	if (!command_.Init(&device_)) {
-		cerr << "Failed to init commandmanager" << endl;
-		return false;
-	}
+	command_ = device_.CreateCommand();
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight()};
-	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, command_)) {
+	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
 		cerr << "Failed to init swapchain" << endl;
 		return false;
 	}
@@ -108,7 +105,7 @@ bool SampleScene::Init(const Application& app)
 
 	// Objects data
 	string modelPath = string(modelPath) + "\\sphere.gltf";
-	if (!sphere_.Init(&device_, command_, fence_, modelPath)) {
+	if (!sphere_.Init(&device_, *command_, fence_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -238,13 +235,15 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	if (!command_.Init(&device_)) {
+	command_.reset();
+	command_ = make_shared<Command>(device_);
+	/*if (!command_.Init(&device_)) {
 		cerr << "Failed to init commandmanager" << endl;
 		return false;
-	}
+	}*/
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight() };
-	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, command_)) {
+	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
 		cerr << "Failed to init swapchain" << endl;
 		return false;
 	}
@@ -256,7 +255,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "\\sphere.gltf";
-	if (!sphere_.Init(&device_, command_, fence_, modelPath)) {
+	if (!sphere_.Init(&device_, (*command_), fence_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}

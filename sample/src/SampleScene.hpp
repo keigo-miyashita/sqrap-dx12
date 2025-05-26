@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common.hpp>
+#include <Command.hpp>
 
 struct CameraMatrix
 {
@@ -32,7 +33,7 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 	Device device_;
 	DXC dxc_;
-	Command command_;
+	std::shared_ptr<Command> command_;
 	SwapChain swapChain_;
 	Fence fence_;
 	Mesh sphere_;

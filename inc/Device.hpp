@@ -5,6 +5,8 @@
 #define StableDevice ID3D12Device13
 #define LatestDevice ID3D12Device14
 
+class Command;
+
 class Device
 {
 private:
@@ -31,6 +33,7 @@ public:
 	bool Init(std::wstring gpuVenorName);
 	bool Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 	void ShowUsedVramSize();
+	std::shared_ptr<Command> CreateCommand(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"");
 	ComPtr<IDXGIFactory7> GetDXGIFactory() const;
 	ComPtr<ID3D12Device> GetDevice() const;
 	ComPtr<StableDevice> GetStableDevice() const;

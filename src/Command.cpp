@@ -4,86 +4,102 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Command::CreateCommandList(D3D12_COMMAND_LIST_TYPE commandType, wstring name)
+bool Command::CreateCommandList()
 {
-	commandType_ = commandType;
-	if (FAILED(pDevice_->GetDevice()->CreateCommandAllocator(commandType, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf())))) {
+	commandType_ = commandType_;
+	HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateCommandAllocator : " + to_string(result));
 		return false;
 	}
 	wstring cmdAllocName = L"CommandAllocator";
-	commandAllocator_->SetName((cmdAllocName + name).c_str());
-	if (FAILED(pDevice_->GetDevice()->CreateCommandList(0, commandType, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf())))) {
+	commandAllocator_->SetName((cmdAllocName + name_).c_str());
+	result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateCommandList : " + to_string(result));
 		return true;
 	}
 	wstring cmdListName = L"CommandList";
-	commandList_->SetName((cmdListName + name).c_str());
+	commandList_->SetName((cmdListName + name_).c_str());
 	return true;
 }
 
-bool Command::InitializeStableCommandList(std::wstring name)
+bool Command::InitializeStableCommandList()
 {
-	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf())))) {
+	HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to QueryInterface for StableCommandList : " + to_string(result));
 		return false;
 	}
-	stableCommandList_->SetName((L"StableCommandList" + name).c_str());
+	stableCommandList_->SetName((L"StableCommandList" + name_).c_str());
 	return true;
 }
 
-bool Command::InitializeLatestCommandList(std::wstring name)
+bool Command::InitializeLatestCommandList()
 {
-	if (FAILED(commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf())))) {
+	HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to QueryInterface for LatestCommandList : " + to_string(result));
 		return false;
 	}
-	latestCommandList_->SetName((L"LatestCommandList" + name).c_str());
+	latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
 	return true;
 }
 
-bool Command::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE commandType, wstring name)
+bool Command::CreateCommandQueue()
 {
 	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
-	cmdQueueDesc.Type = commandType;
+	cmdQueueDesc.Type = commandType_;
 	cmdQueueDesc.NodeMask = 0;
 	cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	if (FAILED(pDevice_->GetDevice()->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(commandQueue_.ReleaseAndGetAddressOf())))) {
+	HRESULT result = pDevice_->GetDevice()->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(commandQueue_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateCommandQueue : " + to_string(result));
 		return false;
 	}
 	wstring cmdQueueName = L"CommandQueue";
-	commandQueue_->SetName((cmdQueueName	+ name).c_str());
+	commandQueue_->SetName((cmdQueueName	+ name_).c_str());
 
 	return true;
 }
 
-Command::Command()
+Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstring name) : pDevice_(&device), commandType_(commandType), name_(name)
 {
+	CreateCommandList();
 
+	InitializeStableCommandList();
+
+	InitializeLatestCommandList();
+
+	CreateCommandQueue();
 }
 
-bool Command::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
-{
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "Command class pDevice doesn't have any pounter" << endl; ;
-		return false;
-	}
-	if (!CreateCommandList(commandType, name)) {
-		return false;
-	}
-
-	if (!InitializeStableCommandList(name)) {
-		return false;
-	}
-
-	if (!InitializeLatestCommandList(name)) {
-		return false;
-	}
-
-	if (!CreateCommandQueue(commandType, name)) {
-		return false;
-	}
-
-	return true;
-}
+//bool Command::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
+//{
+//	pDevice_ = pDevice;
+//	if (pDevice_ == nullptr) {
+//		cerr << "Command class pDevice doesn't have any pounter" << endl; ;
+//		return false;
+//	}
+//	if (!CreateCommandList(commandType, name)) {
+//		return false;
+//	}
+//
+//	if (!InitializeStableCommandList(name)) {
+//		return false;
+//	}
+//
+//	if (!InitializeLatestCommandList(name)) {
+//		return false;
+//	}
+//
+//	if (!CreateCommandQueue(commandType, name)) {
+//		return false;
+//	}
+//
+//	return true;
+//}
 
 void Command::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
 {

@@ -22,26 +22,27 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	D3D12_COMMAND_LIST_TYPE commandType_;
+	std::wstring name_;
 	// D3D12 command allocator
 	ComPtr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
 	// D3D12 Command list type
-	D3D12_COMMAND_LIST_TYPE commandType_;
 	ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
 	ComPtr<StableCommandList> stableCommandList_ = nullptr;
 	ComPtr<LatestCommandList> latestCommandList_ = nullptr;
 	ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
 
-	bool CreateCommandList(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"Direct");
-	bool InitializeStableCommandList(std::wstring name = L"Direct");
-	bool InitializeLatestCommandList(std::wstring name = L"Direct");
-	bool CreateCommandQueue(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"Direct");
+	bool CreateCommandList();
+	bool InitializeStableCommandList();
+	bool InitializeLatestCommandList();
+	bool CreateCommandQueue();
 
 
 public:
-	Command();
+	Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"");
 	~Command() = default;
-	bool Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"Direct");
+	//bool Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"Direct");
 	void AddDrawIndexed(const Mesh& mesh, UINT numInstances);
 	void AddDrawIndexedLine(const Mesh& mesh, UINT numInstances);
 	void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);

@@ -214,6 +214,11 @@ void Device::ShowUsedVramSize()
 	}
 }
 
+std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandType, std::wstring name)
+{
+	return make_shared<Command>(*this, commandType, name);
+}
+
 ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
 {
 	return dxgiFactory_;
