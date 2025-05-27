@@ -33,14 +33,14 @@ protected:
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
 	virtual bool LoadModel(std::string modelPath);
-	virtual HRESULT CreateVertexBuffer(Command& command_, Fence& fence);
-	HRESULT CreateIndexBuffer(Command& command_, Fence& fence);
+	virtual HRESULT CreateVertexBuffer(Command& command_);
+	HRESULT CreateIndexBuffer(Command& command_);
 
 public:
 	Mesh();
 	~Mesh() = default;
-	bool Init(Device* pDevice, Command& command_, Fence& fence, std::string modelPath);
-	bool Init(Device* pDevice, Command& command_, Fence& fence, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	bool Init(Device* pDevice, Command& command_, std::string modelPath);
+	bool Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	const Buffer& GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
@@ -60,7 +60,7 @@ protected:
 	std::vector<ASVertex> ASVertices_;
 
 	bool LoadModel(std::string modelPath) override;
-	HRESULT CreateVertexBuffer(Command& command, Fence& fence) override;
+	HRESULT CreateVertexBuffer(Command& command) override;
 
 public:
 	ASMesh();

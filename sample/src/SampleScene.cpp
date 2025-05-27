@@ -98,7 +98,7 @@ bool SampleScene::Init(const Application& app)
 
 	// Objects data
 	string modelPath = string(modelPath) + "sphere.gltf";
-	if (!sphere_.Init(&device_, *command_, command_->GetFence(), modelPath)) {
+	if (!sphere_.Init(&device_, *command_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -234,7 +234,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "sphere.gltf";
-	if (!sphere_.Init(&device_, (*command_), command_->GetFence(), modelPath)) {
+	if (!sphere_.Init(&device_, (*command_), modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}

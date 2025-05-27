@@ -75,7 +75,7 @@ bool Mesh::LoadModel(string modelPath)
 	return true;
 }
 
-HRESULT Mesh::CreateVertexBuffer(Command& command, Fence& fence)
+HRESULT Mesh::CreateVertexBuffer(Command& command)
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices_.size() * sizeof(Vertex));
@@ -101,7 +101,8 @@ HRESULT Mesh::CreateVertexBuffer(Command& command, Fence& fence)
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(Vertex), vertices_.size());
 	//vertexBuffer_.Init(pDevice_, sizeof(Vertex), vertices_.size());
 	command.CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
-	fence.WaitCommand(command);
+	command.WaitCommand();
+	//fence.WaitCommand(command);
 	//vbView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
@@ -110,7 +111,7 @@ HRESULT Mesh::CreateVertexBuffer(Command& command, Fence& fence)
 	return S_OK;
 }
 
-HRESULT Mesh::CreateIndexBuffer(Command& command, Fence& fence)
+HRESULT Mesh::CreateIndexBuffer(Command& command)
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
@@ -136,7 +137,8 @@ HRESULT Mesh::CreateIndexBuffer(Command& command, Fence& fence)
 	indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
 	//indexBuffer_.Init(pDevice_, sizeof(uint32_t), indices_.size());
 	command.CopyBuffer(*indexUploadBuffer, *indexBuffer_);
-	fence.WaitCommand(command);
+	command.WaitCommand();
+	//fence.WaitCommand(command);
 	//ibView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress();
 	ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 	ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
@@ -150,7 +152,7 @@ Mesh::Mesh()
 
 }
 
-bool Mesh::Init(Device* pDevice, Command& command_, Fence& fence, std::string modelPath)
+bool Mesh::Init(Device* pDevice, Command& command_, std::string modelPath)
 {
 	pDevice_ = pDevice;
 	if (pDevice_ == nullptr) {
@@ -161,11 +163,11 @@ bool Mesh::Init(Device* pDevice, Command& command_, Fence& fence, std::string mo
 		return false;
 	}
 
-	if (FAILED(CreateVertexBuffer(command_, fence))) {
+	if (FAILED(CreateVertexBuffer(command_))) {
 		return false;
 	}
 
-	if (FAILED(CreateIndexBuffer(command_, fence))) {
+	if (FAILED(CreateIndexBuffer(command_))) {
 		return false;
 	}
 
@@ -173,17 +175,17 @@ bool Mesh::Init(Device* pDevice, Command& command_, Fence& fence, std::string mo
 	return true;
 }
 
-bool Mesh::Init(Device* pDevice, Command& command_, Fence& fence_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+bool Mesh::Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 {
 	pDevice_ = pDevice;
 	vertices_ = vertices;
 	indices_ = indices;
 	
-	if (FAILED(CreateVertexBuffer(command_, fence_))) {
+	if (FAILED(CreateVertexBuffer(command_))) {
 		return false;
 	}
 
-	if (FAILED(CreateIndexBuffer(command_, fence_))) {
+	if (FAILED(CreateIndexBuffer(command_))) {
 		return false;
 	}
 
@@ -274,7 +276,7 @@ bool ASMesh::LoadModel(std::string modelPath)
 	return true;
 }
 
-HRESULT ASMesh::CreateVertexBuffer(Command& command, Fence& fence)
+HRESULT ASMesh::CreateVertexBuffer(Command& command)
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(ASVertices_.size() * sizeof(ASVertex));
@@ -300,7 +302,8 @@ HRESULT ASMesh::CreateVertexBuffer(Command& command, Fence& fence)
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
 	//vertexBuffer_.Init(pDevice_, sizeof(ASVertices_), ASVertices_.size());
 	command.CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
-	fence.WaitCommand(command);
+	command.WaitCommand();
+	//fence.WaitCommand(command);
 	//vbView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
