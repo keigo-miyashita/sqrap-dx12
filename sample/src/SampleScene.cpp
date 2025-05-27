@@ -64,8 +64,8 @@ void SampleScene::Render()
 
 	command_->GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
 	command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
-	command_->GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_.GetDescriptorHeap().GetAddressOf());
-	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	command_->GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_->GetDescriptorHeap().GetAddressOf());
+	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
 	command_->GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
 	command_->AddDrawIndexed(sphere_, 1);
@@ -168,13 +168,17 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	// Descriptor Manager
-	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
-	sphere0DescManager_.CreateCBV(*cameraBuffer_);
-	sphere0DescManager_.CreateCBV(*light0Buffer_);
-	sphere0DescManager_.CreateCBV(*sphere0Buffer_);
+	sphere0DescManager_ = device_.CreateDescriptorManager(
+		HeapType::Buffer, 
+		{
+			{ *cameraBuffer_, ViewType::CBV, 0},
+			{ *light0Buffer_, ViewType::CBV, 1},
+			{ *sphere0Buffer_, ViewType::CBV, 2}
+		}
+	);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
-	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
+	sphere0RootSignature_.AddDescriptorTable(*sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
 	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -298,13 +302,17 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	}
 
 	// Descriptor Manager
-	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
-	sphere0DescManager_.CreateCBV(*cameraBuffer_);
-	sphere0DescManager_.CreateCBV(*light0Buffer_);
-	sphere0DescManager_.CreateCBV(*sphere0Buffer_);
+	sphere0DescManager_ = device_.CreateDescriptorManager(
+		HeapType::Buffer,
+		{
+			{ *cameraBuffer_, ViewType::CBV, 0},
+			{ *light0Buffer_, ViewType::CBV, 1},
+			{ *sphere0Buffer_, ViewType::CBV, 2}
+		}
+	);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
-	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
+	sphere0RootSignature_.AddDescriptorTable(*sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
 	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 

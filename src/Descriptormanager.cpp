@@ -4,103 +4,6 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool DescriptorManager::CreateDescriptorHeap(std::wstring name)
-{
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc;
-	heapDesc.Type = heapType_;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	heapDesc.NodeMask = 0;
-	heapDesc.NumDescriptors = numDescriptor_;
-	if (FAILED(pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(descHeap_.ReleaseAndGetAddressOf())))) {
-		return false;
-	}
-	descHeap_->SetName(name.c_str());
-	return true;
-}
-
-bool DescriptorManager::CreateDescriptorTable()
-{
-	if (heapType_ == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {
-		if (numCBV_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numCBV_, baseRegCBV_, 0, 0);
-			descRanges_.push_back(descRange);
-		}
-		if (numSRV_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV_, baseRegSRV_, 0, numCBV_);
-			descRanges_.push_back(descRange);
-		}
-		if (numUAV_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, numUAV_, baseRegUAV_, 0, numCBV_ + numSRV_);
-			descRanges_.push_back(descRange);
-		}
-	}
-	else if (heapType_ == D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {
-		if (numSampler_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, numSampler_, baseRegSampler_, 0, 0);
-			descRanges_.push_back(descRange);
-		}
-	}
-
-	return true;
-}
-
-DescriptorManager::DescriptorManager()
-{
-
-}
-
-bool DescriptorManager::InitAsBuffer(Device* pDevice, UINT baseRegCBV, UINT numCBV, UINT baseRegSRV, UINT numSRV, UINT baseRegUAV, UINT numUAV, std::wstring name)
-{
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "DescriptorManager class does't have Device class pointer" << endl;
-		return false;
-	}
-	heapType_ = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	baseRegCBV_ = baseRegCBV;
-	numCBV_ = numCBV;
-	baseRegSRV_ = baseRegSRV;
-	numSRV_ = numSRV;
-	baseRegUAV_ = baseRegUAV;
-	numUAV_ = numUAV;
-	numDescriptor_ = numCBV_ + numSRV_ + numUAV_;
-	if (!CreateDescriptorHeap(name)) {
-		return false;
-	}
-
-	if (!CreateDescriptorTable()) {
-		return false;
-	}
-
-	return true;
-}
-
-bool DescriptorManager::InitAsSampler(Device* pDevice, UINT baseRegSampler, UINT numSampler, std::wstring name)
-{
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "DescriptorManager class pDevice doesn't have any pounter" << endl; ;
-		return false;
-	}
-	heapType_ = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-	baseRegSampler_ = baseRegSampler;
-	numSampler_ = numSampler;
-	numDescriptor_ = numSampler_;
-	if (!CreateDescriptorHeap(name)) {
-		return false;
-	}
-
-	if (!CreateDescriptorTable()) {
-		return false;
-	}
-
-	return true;
-}
-
 void DescriptorManager::CreateCBV(const Buffer& buff)
 {
 	D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc = {};
@@ -124,7 +27,7 @@ void DescriptorManager::CreateSRV(const Buffer& buff)
 	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	auto heapHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
 	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset_;
-	pDevice_->GetDevice()->CreateShaderResourceView(buff.GetResource().Get(), & viewDesc, heapHandle);
+	pDevice_->GetDevice()->CreateShaderResourceView(buff.GetResource().Get(), &viewDesc, heapHandle);
 	viewOffset_++;
 }
 
@@ -164,12 +67,100 @@ void DescriptorManager::CreateSampler()
 	viewOffset_++;
 }
 
+DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name)
+	: pDevice_(&device), heapType_(heapType), name_(name)
+{
+	numDescriptor_ = descManagerDesc.size();
+
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	if (heapType_ == HeapType::Buffer) {
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	}
+	else if (heapType_ == HeapType::Sampler) {
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+	}
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.NodeMask = 0;
+	heapDesc.NumDescriptors = numDescriptor_;
+	HRESULT result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(descHeap_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateDescriptorHeap : " + to_string(result));
+	}
+	descHeap_->SetName(name_.c_str());
+
+	ViewType currentType = ViewType::NONE;
+	for (auto desc : descManagerDesc) {
+		if (desc.type == ViewType::CBV) {
+			if (desc.type != currentType) {
+				currentType = ViewType::CBV;
+				baseRegCBV_ = desc.numReg;
+			}
+			numCBV_++;
+			CreateCBV(desc.buffer);
+		}
+		else if (desc.type == ViewType::SRV) {
+			if (desc.type != currentType) {
+				currentType = ViewType::SRV;
+				baseRegSRV_ = desc.numReg;
+			}
+			numSRV_++;
+			CreateSRV(desc.buffer);
+		}
+		else if (desc.type == ViewType::UAV) {
+			if (desc.type != currentType) {
+				currentType = ViewType::UAV;
+				baseRegUAV_ = desc.numReg;
+			}
+			numUAV_++;
+			if (!desc.isCounter) {
+				CreateUAV(desc.buffer);
+			}
+			else {
+				CreateUAVCounter(desc.buffer);
+			}
+		}
+		else if (desc.type == ViewType::SAMPLER) {
+			if (desc.type != currentType) {
+				currentType = ViewType::SAMPLER;
+				baseRegSampler_ = desc.numReg;
+			}
+			numSampler_++;
+			CreateSampler();
+		}
+	}
+
+	if (heapType_ == HeapType::Buffer) {
+		if (numCBV_ != 0) {
+			CD3DX12_DESCRIPTOR_RANGE descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numCBV_, baseRegCBV_, 0, 0);
+			descRanges_.push_back(descRange);
+		}
+		if (numSRV_ != 0) {
+			CD3DX12_DESCRIPTOR_RANGE descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV_, baseRegSRV_, 0, numCBV_);
+			descRanges_.push_back(descRange);
+		}
+		if (numUAV_ != 0) {
+			CD3DX12_DESCRIPTOR_RANGE descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, numUAV_, baseRegUAV_, 0, numCBV_ + numSRV_);
+			descRanges_.push_back(descRange);
+		}
+	}
+	else if (heapType_ == HeapType::Sampler) {
+		if (numSampler_ != 0) {
+			CD3DX12_DESCRIPTOR_RANGE descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, numSampler_, baseRegSampler_, 0, 0);
+			descRanges_.push_back(descRange);
+		}
+	}
+}
+
 ComPtr<ID3D12DescriptorHeap> DescriptorManager::GetDescriptorHeap() const
 {
 	return descHeap_;
 }
 
-D3D12_DESCRIPTOR_HEAP_TYPE DescriptorManager::GetHeapType() const
+HeapType DescriptorManager::GetHeapType() const
 {
 	return heapType_;
 }

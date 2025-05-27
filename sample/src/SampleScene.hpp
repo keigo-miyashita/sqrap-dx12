@@ -55,7 +55,7 @@ private:
 
 	// Descriptor
 	// Constant buffer x 4
-	DescriptorManager sphere0DescManager_;
+	std::shared_ptr<DescriptorManager> sphere0DescManager_;
 	// RootSignature
 	RootSignature sphere0RootSignature_;
 

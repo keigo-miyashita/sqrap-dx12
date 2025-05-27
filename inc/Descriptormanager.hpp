@@ -4,17 +4,41 @@
 
 class Device;
 
+enum class HeapType
+{
+	Buffer,
+	Sampler,
+};
+
+enum class ViewType
+{
+	NONE,
+	CBV,
+	SRV,
+	UAV,
+	SAMPLER,
+};
+
+struct DescriptorManagerDesc
+{
+	const Buffer& buffer;
+	ViewType type;
+	UINT numReg;
+	bool isCounter = false;
+};
+
 class DescriptorManager
 {
 private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
+	HeapType heapType_;
+	std::wstring name_;
 	ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
 	UINT viewOffset_ = 0;
-	// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
-	D3D12_DESCRIPTOR_HEAP_TYPE heapType_;
 	UINT numDescriptor_ = 0;
 	// Descriptor Table
 	std::vector<CD3DX12_DESCRIPTOR_RANGE> descRanges_;
@@ -27,21 +51,17 @@ private:
 	UINT baseRegSampler_ = 0;
 	UINT numSampler_ = 0;
 
-	bool CreateDescriptorHeap(std::wstring name = L"DescriptorHeap");
-	bool CreateDescriptorTable();
-
-public:
-	DescriptorManager();
-	~DescriptorManager() = default;
-	bool InitAsBuffer(Device* pDevice, UINT baseRegCBV, UINT numCBV, UINT baseRegSRV, UINT numSRV, UINT baseRegUAV, UINT numUAV, std::wstring name = L"DescriptorHeap");
-	bool InitAsSampler(Device* pDevice, UINT baseRegSampler, UINT numSampler, std::wstring name = L"DescriptorHeap");
 	void CreateCBV(const Buffer& buff);
 	void CreateSRV(const Buffer& buff);
 	void CreateUAV(const Buffer& buff);
 	void CreateUAVCounter(const Buffer& buff);
 	void CreateSampler();
+
+public:
+	DescriptorManager(const Device& pDevice, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"");
+	~DescriptorManager() = default;
 	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() const;
-	D3D12_DESCRIPTOR_HEAP_TYPE GetHeapType() const;
+	HeapType GetHeapType() const;
 	UINT GetNumDescRanges() const;
 	const CD3DX12_DESCRIPTOR_RANGE* GetPDescRanges() const;
 };

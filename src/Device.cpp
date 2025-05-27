@@ -224,6 +224,11 @@ std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandTy
 	return make_shared<Command>(*this, commandType, name);
 }
 
+std::shared_ptr<DescriptorManager> Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name) const
+{
+	return make_shared<DescriptorManager>(*this, heapType, descManagerDesc, name);
+}
+
 std::shared_ptr<Fence> Device::CreateFence(const Device& device, std::wstring name) const
 {
 	return make_shared<Fence>(*this, name);

@@ -18,9 +18,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <initializer_list>
 #include <iostream>
 #include <map>
 #include <memory>
+#include <ranges>
 #include <string>
 #include <unordered_map>
 #include <variant>
