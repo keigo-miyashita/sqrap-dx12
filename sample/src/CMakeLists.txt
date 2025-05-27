@@ -36,9 +36,9 @@ add_custom_command(TARGET ${PROJECT_NAME}-sample-src POST_BUILD
   "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>")
 
 # シェーダー、モデル用のディレクトリを設定
-set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shader")
+set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../shader/")
 add_compile_definitions(SHADER_DIR=L"${SHADER_DIR}")
-set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/model")
+set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/model/")
 add_compile_definitions(MODEL_DIR="${MODEL_DIR}")
 
 get_cmake_property(_variableNames VARIABLES)

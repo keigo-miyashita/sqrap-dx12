@@ -50,8 +50,8 @@ private:
 	std::shared_ptr<Buffer> sphere0Buffer_;
 
 	// Shaders
-	Shader simpleVS_;
-	Shader lambertPS_;
+	std::shared_ptr<Shader> simpleVS_;
+	std::shared_ptr<Shader> lambertPS_;
 
 	// Descriptor
 	// Constant buffer x 4

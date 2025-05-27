@@ -2,6 +2,8 @@
 
 #include <common.hpp>
 
+class Shader;
+
 struct ShaderType{
 	enum Type {
 		Vertex, Pixel, Geometry, Domain, Hull, Amplification, Mesh, Compute, RayTracing, WorkGraph, Library
@@ -35,13 +37,12 @@ private:
 
 	bool InitializeDxc();
 
-
 public:
 	DXC();
 	~DXC() = default;
 	bool Init();
-	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, const LPCWSTR& includePath, LPCWSTR fileName, ShaderType::Type shaderType, LPCWSTR entry = L"main") const;
-	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR entry = L"main") const;
+	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"") const;
+	std::shared_ptr<Shader> CreateShader(ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"");
 	ComPtr<IDxcCompiler> GetCompiler();
 	ComPtr<IDxcLibrary> GetLibarary();
 	ComPtr<IDxcUtils> GetUtils();

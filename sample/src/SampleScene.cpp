@@ -97,7 +97,7 @@ bool SampleScene::Init(const Application& app)
 	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
 
 	// Objects data
-	string modelPath = string(modelPath) + "\\sphere.gltf";
+	string modelPath = string(modelPath) + "sphere.gltf";
 	if (!sphere_.Init(&device_, *command_, command_->GetFence(), modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
@@ -156,8 +156,10 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	// Shaders
-	wstring shaderPath = wstring(SHADER_DIR) + L"\\lambert.hlsl";
-	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
+	wstring shaderPath = wstring(SHADER_DIR) + L"lambert.hlsl";
+	simpleVS_ = dxc_.CreateShader(ShaderType::Vertex, shaderPath, L"VSmain");
+	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
+	/*if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
 		cerr << "Failed to create simpleVS" << endl;
 		return false;
 	}
@@ -165,7 +167,7 @@ bool SampleScene::Init(const Application& app)
 	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"PSmain")) {
 		cerr << "Failed to create lambertPS_" << endl;
 		return false;
-	}
+	}*/
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
@@ -192,8 +194,8 @@ bool SampleScene::Init(const Application& app)
 	};
 	GraphicsDesc lambertDesc(inputLayouts);
 	lambertDesc.rootSignature_ = &sphere0RootSignature_;
-	lambertDesc.VS_ = &simpleVS_;
-	lambertDesc.PS_ = &lambertPS_;
+	lambertDesc.VS_ = simpleVS_.get();
+	lambertDesc.PS_ = lambertPS_.get();
 	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	lambertDesc.sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
 	lambertDesc.rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -231,7 +233,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
 
 	// Objects data
-	string modelPath = string(MODEL_DIR) + "\\sphere.gltf";
+	string modelPath = string(MODEL_DIR) + "sphere.gltf";
 	if (!sphere_.Init(&device_, (*command_), command_->GetFence(), modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
@@ -290,8 +292,10 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	}
 
 	// Shaders
-	wstring shaderPath = wstring(SHADER_DIR) + L"\\lambert.hlsl";
-	if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
+	wstring shaderPath = wstring(SHADER_DIR) + L"lambert.hlsl";
+	simpleVS_ = dxc_.CreateShader(ShaderType::Vertex, shaderPath, L"VSmain");
+	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
+	/*if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
 		cerr << "Failed to create simpleVS" << endl;
 		return false;
 	}
@@ -299,7 +303,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"PSmain")) {
 		cerr << "Failed to create lambertPS_" << endl;
 		return false;
-	}
+	}*/
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
@@ -326,8 +330,8 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	};
 	GraphicsDesc lambertDesc(inputLayouts);
 	lambertDesc.rootSignature_ = &sphere0RootSignature_;
-	lambertDesc.VS_ = &simpleVS_;
-	lambertDesc.PS_ = &lambertPS_;
+	lambertDesc.VS_ = simpleVS_.get();
+	lambertDesc.PS_ = lambertPS_.get();
 	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	lambertDesc.sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
 	lambertDesc.rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);

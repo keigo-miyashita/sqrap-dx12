@@ -2,21 +2,21 @@
 
 #include <common.hpp>
 
+class DXC;
+
 class Shader
 {
 private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	const DXC* pDxc_ = nullptr;
 	ShaderType::Type shaderType_;
 	// Shader‚ÌByte code‚ðŠi”[
 	ComPtr<IDxcBlob> blob_ = nullptr;
 
-	bool CreateShader(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR entry = L"main");
-
 public:
-	Shader();
+	Shader(const DXC& dxc, ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"");
 	~Shader() = default;
-	bool Init(const DXC& dxc, std::wstring fileName, ShaderType::Type shaderType, LPCWSTR entry = L"main");
 	ComPtr<IDxcBlob> GetBlob() const;
 };
