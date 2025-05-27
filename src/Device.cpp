@@ -219,6 +219,11 @@ std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandTy
 	return make_shared<Command>(*this, commandType, name);
 }
 
+std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name)
+{
+	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
+}
+
 ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
 {
 	return dxgiFactory_;

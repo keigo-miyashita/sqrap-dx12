@@ -4,7 +4,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, wstring name)
+bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 {
 	RECT rc = {};
 	GetWindowRect(hwnd, &rc);
@@ -23,7 +23,7 @@ bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE win
 	swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	swapChainDesc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	if (FAILED(device.GetDXGIFactory()->CreateSwapChainForHwnd(command.GetCommandQueue().Get(),
+	if (FAILED(pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pCommand_->GetCommandQueue().Get(),
 													hwnd,
 													&swapChainDesc1,
 													nullptr,
@@ -41,7 +41,7 @@ bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE win
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	heapDesc.NodeMask = 0;
 	heapDesc.NumDescriptors = 2;
-	if (FAILED(device.GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
 	rtvHeap_->SetName(L"RenderTargetViewHeap");
@@ -68,8 +68,8 @@ bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE win
 		wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
 		backBuffers_[i]->SetName(nameBackBuffer.c_str());
 		rtvDesc.Format = backBuffers_[i]->GetDesc().Format;
-		device.GetDevice()->CreateRenderTargetView(backBuffers_[i].Get(), &rtvDesc, handle);
-		handle.ptr += device.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i].Get(), &rtvDesc, handle);
+		handle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
 	viewport_ = CD3DX12_VIEWPORT(backBuffers_[0].Get());
@@ -78,7 +78,7 @@ bool SwapChain::CreateSwapChain(const Device& device, const HWND& hwnd, SIZE win
 	return true;
 }
 
-bool SwapChain::CreateDepthStencilBuffer(const Device& device, SIZE winSize, wstring name)
+bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 {
 	auto depthResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
 		winSize.cx, winSize.cy, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
@@ -87,7 +87,7 @@ bool SwapChain::CreateDepthStencilBuffer(const Device& device, SIZE winSize, wst
 
 	CD3DX12_CLEAR_VALUE depthClearValue(DXGI_FORMAT_D32_FLOAT, 1.0f, 0);
 
-	if (FAILED(device.GetDevice()->CreateCommittedResource(
+	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(
 		&depthHeapProp, D3D12_HEAP_FLAG_NONE, 
 		&depthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
 		&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf())))) {
@@ -100,7 +100,7 @@ bool SwapChain::CreateDepthStencilBuffer(const Device& device, SIZE winSize, wst
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-	if (FAILED(device.GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf())))) {
+	if (FAILED(pDevice_->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf())))) {
 		return false;
 	}
 	dsvHeap_->SetName(L"DepthStencilHeap");
@@ -110,28 +110,31 @@ bool SwapChain::CreateDepthStencilBuffer(const Device& device, SIZE winSize, wst
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-	device.GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
+	pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 
 	return true;
 }
 
-SwapChain::SwapChain()
+SwapChain::SwapChain(const Device& device, shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) : pDevice_(&device), pCommand_(command), name_(name)
 {
+	
+	CreateSwapChain(hwnd, winSize);
 
+	CreateDepthStencilBuffer(winSize);
 }
 
-bool SwapChain::Init(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, wstring name)
-{
-	if (!CreateSwapChain(device, hwnd, winSize, command, name)) {
-		return false;
-	}
-
-	if (!CreateDepthStencilBuffer(device, winSize, name)) {
-		return false;
-	}
-
-	return true;
-}
+//bool SwapChain::Init(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, wstring name)
+//{
+//	if (!CreateSwapChain(device, hwnd, winSize, command, name)) {
+//		return false;
+//	}
+//
+//	if (!CreateDepthStencilBuffer(device, winSize, name)) {
+//		return false;
+//	}
+//
+//	return true;
+//}
 
 ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain()
 {

@@ -8,15 +8,15 @@ using namespace DirectX;
 
 void SampleScene::BeginRender()
 {
-	auto bbIdx = swapChain_.GetSwapChain()->GetCurrentBackBufferIndex();
+	auto bbIdx = swapChain_->GetSwapChain()->GetCurrentBackBufferIndex();
 
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_.GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_->GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	command_->GetCommandList()->ResourceBarrier(1, &barrier);
 
-	auto rtvHandle = swapChain_.GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
+	auto rtvHandle = swapChain_->GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += bbIdx * device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	auto dsvHandle = swapChain_.GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
+	auto dsvHandle = swapChain_->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
 	command_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 	// Clear depth buffer
@@ -27,8 +27,8 @@ void SampleScene::BeginRender()
 	command_->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 	// Set viewport and scissors
-	auto viewPort = swapChain_.GetViewPort();
-	auto scissorRect = swapChain_.GetRect();
+	auto viewPort = swapChain_->GetViewPort();
+	auto scissorRect = swapChain_->GetRect();
 	command_->GetCommandList()->RSSetViewports(1, &viewPort);
 	command_->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 
@@ -37,10 +37,10 @@ void SampleScene::BeginRender()
 
 void SampleScene::EndRender()
 {
-	auto bbIdx = swapChain_.GetSwapChain()->GetCurrentBackBufferIndex();
+	auto bbIdx = swapChain_->GetSwapChain()->GetCurrentBackBufferIndex();
 
 	// Transit render target to present
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_.GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_->GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	command_->GetCommandList()->ResourceBarrier(1, &barrier);
 
 	fence_.WaitCommand(*command_);
@@ -71,7 +71,7 @@ void SampleScene::Render()
 
 	EndRender();
 
-	swapChain_.GetSwapChain()->Present(1, 0);
+	swapChain_->GetSwapChain()->Present(1, 0);
 }
 
 SampleScene::SampleScene()
@@ -93,10 +93,11 @@ bool SampleScene::Init(const Application& app)
 	command_ = device_.CreateCommand();
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight()};
-	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
+	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
+	/*if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
 		cerr << "Failed to init swapchain" << endl;
 		return false;
-	}
+	}*/
 
 	if (!fence_.Init(&device_)) {
 		return false;
@@ -243,10 +244,11 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	}*/
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight() };
-	if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
+	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
+	/*if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
 		cerr << "Failed to init swapchain" << endl;
 		return false;
-	}
+	}*/
 
 	if (!fence_.Init(&device_)) {
 		return false;

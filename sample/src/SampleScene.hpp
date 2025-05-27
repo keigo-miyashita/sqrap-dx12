@@ -34,7 +34,7 @@ private:
 	Device device_;
 	DXC dxc_;
 	std::shared_ptr<Command> command_;
-	SwapChain swapChain_;
+	std::shared_ptr<SwapChain> swapChain_;
 	Fence fence_;
 	Mesh sphere_;
 
