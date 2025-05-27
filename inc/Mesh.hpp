@@ -26,10 +26,10 @@ protected:
 
 	Device* pDevice_ = nullptr;
 	std::vector<Vertex> vertices_;
-	Buffer vertexBuffer_;
+	std::shared_ptr<Buffer> vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vbView_;
 	std::vector<uint32_t> indices_;
-	Buffer indexBuffer_;
+	std::shared_ptr<Buffer> indexBuffer_;
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
 	virtual bool LoadModel(std::string modelPath);

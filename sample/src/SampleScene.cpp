@@ -43,7 +43,8 @@ void SampleScene::EndRender()
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain_->GetCurrentBackBuffer(bbIdx).Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	command_->GetCommandList()->ResourceBarrier(1, &barrier);
 
-	fence_.WaitCommand(*command_);
+	command_->WaitCommand();
+	//fence_->WaitCommand(*command_);
 
 	//cout << "End Render" << endl;
 }
@@ -53,12 +54,12 @@ void SampleScene::Render()
 	BeginRender();
 
 	camera_.Update();
-	void* rawPtr = cameraBuffer_.Map();
+	void* rawPtr = cameraBuffer_->Map();
 	if (rawPtr) {
 		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
-		cameraBuffer_.Unmap();
+		cameraBuffer_->Unmap();
 	}
 
 	command_->GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
@@ -94,19 +95,10 @@ bool SampleScene::Init(const Application& app)
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight()};
 	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
-	/*if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
-		cerr << "Failed to init swapchain" << endl;
-		return false;
-	}*/
-
-	if (!fence_.Init(&device_)) {
-		return false;
-		cerr << "Failed to init fence" << endl;
-	}
 
 	// Objects data
 	string modelPath = string(modelPath) + "\\sphere.gltf";
-	if (!sphere_.Init(&device_, *command_, fence_, modelPath)) {
+	if (!sphere_.Init(&device_, *command_, command_->GetFence(), modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -138,29 +130,29 @@ bool SampleScene::Init(const Application& app)
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 	
 	// Resources
-	cameraBuffer_.InitAsUpload(&device_,  Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
-	void* rawPtr = cameraBuffer_.Map();
+	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
+	void* rawPtr = cameraBuffer_->Map();
 	if (rawPtr) {
 		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
-		cameraBuffer_.Unmap();
+		cameraBuffer_->Unmap();
 	}
 
-	light0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
-	rawPtr = light0Buffer_.Map();
+	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	rawPtr = light0Buffer_->Map();
 	if (rawPtr) {
 		Light* pLight = static_cast<Light*>(rawPtr);
 		*pLight = light0_;
-		light0Buffer_.Unmap();
+		light0Buffer_->Unmap();
 	}
 
-	sphere0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
-	rawPtr = sphere0Buffer_.Map();
+	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
+	rawPtr = sphere0Buffer_->Map();
 	if (rawPtr) {
 		Object* pObject = static_cast<Object*>(rawPtr);
 		*pObject = sphere0_;
-		sphere0Buffer_.Unmap();
+		sphere0Buffer_->Unmap();
 	}
 
 	// Shaders
@@ -175,18 +167,11 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
-	//// Descriptor Heap
-	//sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
-	//sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
-	//sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
-	//sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
-	//// Descriptor Table
-	//sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
 	// Descriptor Manager
 	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
-	sphere0DescManager_.CreateCBV(cameraBuffer_);
-	sphere0DescManager_.CreateCBV(light0Buffer_);
-	sphere0DescManager_.CreateCBV(sphere0Buffer_);
+	sphere0DescManager_.CreateCBV(*cameraBuffer_);
+	sphere0DescManager_.CreateCBV(*light0Buffer_);
+	sphere0DescManager_.CreateCBV(*sphere0Buffer_);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
@@ -236,28 +221,14 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	command_.reset();
-	command_ = make_shared<Command>(device_);
-	/*if (!command_.Init(&device_)) {
-		cerr << "Failed to init commandmanager" << endl;
-		return false;
-	}*/
+	command_ = device_.CreateCommand();
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight() };
 	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
-	/*if (!swapChain_.Init(device_, app.GetWindowHWND(), size, *command_)) {
-		cerr << "Failed to init swapchain" << endl;
-		return false;
-	}*/
-
-	if (!fence_.Init(&device_)) {
-		return false;
-		cerr << "Failed to init fence" << endl;
-	}
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "\\sphere.gltf";
-	if (!sphere_.Init(&device_, (*command_), fence_, modelPath)) {
+	if (!sphere_.Init(&device_, (*command_), command_->GetFence(), modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
 	}
@@ -289,29 +260,29 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 
 	// Resources
-	cameraBuffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
-	void* rawPtr = cameraBuffer_.Map();
+	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
+	void* rawPtr = cameraBuffer_->Map();
 	if (rawPtr) {
 		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
-		cameraBuffer_.Unmap();
+		cameraBuffer_->Unmap();
 	}
 
-	light0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
-	rawPtr = light0Buffer_.Map();
+	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	rawPtr = light0Buffer_->Map();
 	if (rawPtr) {
 		Light* pLight = static_cast<Light*>(rawPtr);
 		*pLight = light0_;
-		light0Buffer_.Unmap();
+		light0Buffer_->Unmap();
 	}
 
-	sphere0Buffer_.InitAsUpload(&device_, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
-	rawPtr = sphere0Buffer_.Map();
+	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
+	rawPtr = sphere0Buffer_->Map();
 	if (rawPtr) {
 		Object* pObject = static_cast<Object*>(rawPtr);
 		*pObject = sphere0_;
-		sphere0Buffer_.Unmap();
+		sphere0Buffer_->Unmap();
 	}
 
 	// Shaders
@@ -326,18 +297,11 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		return false;
 	}
 
-	//// Descriptor Heap
-	//sphere0DescHeap_.Init(&device_, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3);
-	//sphere0DescHeap_.CreateCBV(cameraBuffer_, 0);
-	//sphere0DescHeap_.CreateCBV(light0Buffer_, 1);
-	//sphere0DescHeap_.CreateCBV(sphere0Buffer_, 2);
-	//// Descriptor Table
-	//sphere0DescTable_.InitAsBuffer(0, 3, 0, 0, 0, 0);
 	// Descriptor Manager
 	sphere0DescManager_.InitAsBuffer(&device_, 0, 3, 0, 0, 0, 0);
-	sphere0DescManager_.CreateCBV(cameraBuffer_);
-	sphere0DescManager_.CreateCBV(light0Buffer_);
-	sphere0DescManager_.CreateCBV(sphere0Buffer_);
+	sphere0DescManager_.CreateCBV(*cameraBuffer_);
+	sphere0DescManager_.CreateCBV(*light0Buffer_);
+	sphere0DescManager_.CreateCBV(*sphere0Buffer_);
 	// RootSignature
 	sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);

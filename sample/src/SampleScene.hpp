@@ -35,7 +35,7 @@ private:
 	DXC dxc_;
 	std::shared_ptr<Command> command_;
 	std::shared_ptr<SwapChain> swapChain_;
-	Fence fence_;
+	//std::shared_ptr<Fence> fence_;
 	Mesh sphere_;
 
 	// Scene Items
@@ -45,9 +45,9 @@ private:
 	Object sphere0_;
 
 	// Resources
-	Buffer cameraBuffer_;
-	Buffer light0Buffer_;
-	Buffer sphere0Buffer_;
+	std::shared_ptr<Buffer> cameraBuffer_;
+	std::shared_ptr<Buffer> light0Buffer_;
+	std::shared_ptr<Buffer> sphere0Buffer_;
 
 	// Shaders
 	Shader simpleVS_;

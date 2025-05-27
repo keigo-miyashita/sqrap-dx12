@@ -10,6 +10,7 @@ class ComputePipeline;
 class DescriptorHeap;
 class DescriptorManager;
 class Device;
+class Fence;
 class GraphicsPipeline;
 class GUI;
 class Indirect;
@@ -32,6 +33,7 @@ private:
 	ComPtr<StableCommandList> stableCommandList_ = nullptr;
 	ComPtr<LatestCommandList> latestCommandList_ = nullptr;
 	ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
+	std::shared_ptr<Fence> fence_;
 
 	bool CreateCommandList();
 	bool InitializeStableCommandList();
@@ -59,6 +61,7 @@ public:
 	void SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
+	void WaitCommand();
 
 	D3D12_COMMAND_LIST_TYPE GetCommandType();
 	ComPtr<ID3D12CommandAllocator> GetCommandAllocator() const;
@@ -66,4 +69,5 @@ public:
 	ComPtr<StableCommandList> GetStableCommandList() const;
 	ComPtr<LatestCommandList> GetLatestCommandList() const;
 	ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
+	Fence& GetFence();
 };

@@ -13,19 +13,20 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	std::wstring name_;
 	// D3D12 fence
 	ComPtr<ID3D12Fence> fence_ = nullptr;
 	// Fence value
 	UINT64 fenceVal_ = 0;
 
-	bool CreateFence(std::wstring = L"Fence");
+	bool CreateFence();
 
 
 public:
-	Fence();
+	Fence(const Device& device, std::wstring name = L"");
 	~Fence() = default;
-	bool Init(Device* pDevice, std::wstring = L"Fence");
+	//bool Init(Device* pDevice, std::wstring = L"Fence");
 	void WaitCommand(Command& command);
 
 	ComPtr<ID3D12Fence> GetFence();

@@ -5,33 +5,35 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Fence::CreateFence(wstring name)
+bool Fence::CreateFence()
 {
-	if (FAILED(pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf())))) {
+	HRESULT result = pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateFence : " + to_string(result));
 		return false;
 	}
-	fence_->SetName(name.c_str());
+	fence_->SetName(name_.c_str());
 	return true;
 }
 
-Fence::Fence()
+Fence::Fence(const Device& device, std::wstring name) : pDevice_(&device), name_(name)
 {
-
+	CreateFence();
 }
 
-bool Fence::Init(Device* pDevice, wstring name)
-{
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "Fence class pDevice doesn't have any pounter" << endl; ;
-		return false;
-	}
-	if (!CreateFence(name)) {
-		return false;
-	}
-
-	return true;
-}
+//bool Fence::Init(Device* pDevice, wstring name)
+//{
+//	pDevice_ = pDevice;
+//	if (pDevice_ == nullptr) {
+//		cerr << "Fence class pDevice doesn't have any pounter" << endl; ;
+//		return false;
+//	}
+//	if (!CreateFence(name)) {
+//		return false;
+//	}
+//
+//	return true;
+//}
 
 void Fence::WaitCommand(Command& command)
 {

@@ -73,6 +73,8 @@ Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstr
 	InitializeLatestCommandList();
 
 	CreateCommandQueue();
+
+	fence_ = pDevice_->CreateFence(device, name);
 }
 
 //bool Command::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
@@ -244,6 +246,11 @@ void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsC
 	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
 }
 
+void Command::WaitCommand()
+{
+	fence_->WaitCommand(*this);
+}
+
 D3D12_COMMAND_LIST_TYPE Command::GetCommandType()
 {
 	return commandType_;
@@ -272,4 +279,9 @@ ComPtr<LatestCommandList> Command::GetLatestCommandList() const
 ComPtr<ID3D12CommandQueue> Command::GetCommandQueue() const
 {
 	return commandQueue_;
+}
+
+Fence& Command::GetFence()
+{
+	return *fence_;
 }

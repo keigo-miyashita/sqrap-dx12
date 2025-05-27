@@ -214,12 +214,22 @@ void Device::ShowUsedVramSize()
 	}
 }
 
-std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandType, std::wstring name)
+std::shared_ptr<Buffer> Device::CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name) const
+{
+	return make_shared<Buffer>(*this, type, strideSize, numElement, name);
+}
+
+std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandType, std::wstring name) const
 {
 	return make_shared<Command>(*this, commandType, name);
 }
 
-std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name)
+std::shared_ptr<Fence> Device::CreateFence(const Device& device, std::wstring name) const
+{
+	return make_shared<Fence>(*this, name);
+}
+
+std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
 }

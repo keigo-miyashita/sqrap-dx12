@@ -2,6 +2,11 @@
 
 #include <common.hpp>
 
+enum class BufferType
+{
+	Default, Upload, Read, Unordered, AS, Counter
+};
+
 class Device;
 
 class Buffer
@@ -10,28 +15,30 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	BufferType type_;
+	std::wstring name_;
 	ComPtr<ID3D12Resource> resource_ = nullptr;
 	D3D12_HEAP_TYPE heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 	D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
 	D3D12_RESOURCE_STATES rscState_ = D3D12_RESOURCE_STATE_COMMON;
-	UINT strideSize_;
-	UINT numElement_;
-	UINT offsetCounter_;
+	UINT strideSize_ = 0;
+	UINT numElement_ = 0;
+	UINT offsetCounter_ = 0;
 
-	bool CreateBuffer(UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, std::wstring name);
-	bool CreateCounterBuffer(UINT strideSize, UINT numElement, std::wstring name);
+	bool CreateBuffer();
+	bool CreateCounterBuffer();
 
 public:
 	static UINT AlignForUAVCounter(UINT size);
 	static UINT AlignForConstantBuffer(UINT size);
 
-	Buffer();
+	Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"");
 	~Buffer() = default;
-	bool Init(Device* pDevice, UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType = D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAGS rscFlag = D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATES initRscState = D3D12_RESOURCE_STATE_COMMON, std::wstring name = L"Default Buffer");
-	bool InitAsCounter(Device* pDevice, UINT strideSize, UINT numElement, std::wstring name = L"Counter Buffer");
-	bool InitAsUpload(Device* pDevice,  UINT strideSize, UINT numElement, std::wstring name = L"Upload Buffer");
-	bool InitAsReadback(Device* pDevice, UINT strideSize, UINT numElement, std::wstring name = L"Readback Buffer");
+	/*bool Init();
+	bool InitAsCounter();
+	bool InitAsUpload();
+	bool InitAsReadback();*/
 	void* Map();
 	void Unmap();
 	void Reset();

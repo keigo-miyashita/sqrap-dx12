@@ -17,8 +17,8 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	Device* pDevice_ = nullptr;
-	Buffer ASBuffer_;
-	Buffer scratchBuffer_;
+	std::shared_ptr<Buffer> ASBuffer_;
+	std::shared_ptr<Buffer> scratchBuffer_;
 	bool CreateBLAS(const ASMesh& mesh, Command& Command,Fence& fence, std::wstring name = L"BLAS");
 
 public:
@@ -46,9 +46,9 @@ private:
 
 	Device* pDevice_ = nullptr;
 	std::vector<TLASDesc> tlasDescs_;
-	Buffer instanceDescBuffer_;
-	Buffer ASBuffer_;
-	Buffer scratchBuffer_;
+	std::shared_ptr<Buffer> instanceDescBuffer_;
+	std::shared_ptr<Buffer> ASBuffer_;
+	std::shared_ptr<Buffer> scratchBuffer_;
 	bool CreateTLAS(Command& command, Fence& fence, std::wstring name = L"TLAS");
 
 public:
