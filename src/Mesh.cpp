@@ -10,7 +10,7 @@ using namespace DirectX;
 
 #include <tiny_gltf.h>
 
-bool Mesh::LoadModel(string modelPath)
+bool Mesh::LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 {
 	tinygltf::Model model;
 	tinygltf::TinyGLTF loader;
@@ -23,8 +23,8 @@ bool Mesh::LoadModel(string modelPath)
 		return false;
 	}
 
-	vertices_.clear();
-	indices_.clear();
+	vertices.clear();
+	indices.clear();
 
 	for (auto& mesh : model.meshes) {
 		for (auto& primitive : mesh.primitives) {
@@ -53,7 +53,7 @@ bool Mesh::LoadModel(string modelPath)
 			float* uvs = reinterpret_cast<float*>(&uvBuffer.data[uvBufferView.byteOffset + uvAccessor.byteOffset]);
 
 			for (int i = 0; i < posAccessor.count; i++) {
-				vertices_.push_back(
+				vertices.push_back(
 					{
 						(XMFLOAT4(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], 1.0f)),
 						(XMFLOAT4(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], 1.0f)),
@@ -68,14 +68,14 @@ bool Mesh::LoadModel(string modelPath)
 			tinygltf::Buffer& indicesBuffer = model.buffers[indicesBufferView.buffer];
 			unsigned short* index = reinterpret_cast<unsigned short*>(&indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset]);
 			for (int i = 0; i < indicesAccessor.count; i++) {
-				indices_.push_back(index[i]);
+				indices.push_back(index[i]);
 			}
 		}
 	}
 	return true;
 }
 
-HRESULT Mesh::CreateVertexBuffer(Command& command)
+HRESULT Mesh::CreateVertexBuffer()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices_.size() * sizeof(Vertex));
@@ -89,8 +89,8 @@ HRESULT Mesh::CreateVertexBuffer(Command& command)
 	}
 
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(Vertex), vertices_.size());
-	command.CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
-	command.WaitCommand();
+	command_->CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
+	command_->WaitCommand();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
 	vbView_.StrideInBytes = sizeof(Vertex);
@@ -98,7 +98,7 @@ HRESULT Mesh::CreateVertexBuffer(Command& command)
 	return S_OK;
 }
 
-HRESULT Mesh::CreateIndexBuffer(Command& command)
+HRESULT Mesh::CreateIndexBuffer()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
@@ -112,8 +112,8 @@ HRESULT Mesh::CreateIndexBuffer(Command& command)
 	}
 
 	indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
-	command.CopyBuffer(*indexUploadBuffer, *indexBuffer_);
-	command.WaitCommand();
+	command_->CopyBuffer(*indexUploadBuffer, *indexBuffer_);
+	command_->WaitCommand();
 	ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 	ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
 	ibView_.Format = DXGI_FORMAT_R32_UINT;
@@ -121,50 +121,60 @@ HRESULT Mesh::CreateIndexBuffer(Command& command)
 	return S_OK;
 }
 
-Mesh::Mesh()
+Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath)
+	: pDevice_(&device), command_(command)
 {
-
+	LoadModel(modelPath, vertices_, indices_);
+	CreateVertexBuffer();
+	CreateIndexBuffer();
 }
 
-bool Mesh::Init(Device* pDevice, Command& command_, std::string modelPath)
+Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+	: pDevice_(&device), command_(command), vertices_(vertices), indices_(indices)
 {
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "Mesh class doesn't have any pointer" << endl;
-		return false;
-	}
-	if (!LoadModel(modelPath)) {
-		return false;
-	}
-
-	if (FAILED(CreateVertexBuffer(command_))) {
-		return false;
-	}
-
-	if (FAILED(CreateIndexBuffer(command_))) {
-		return false;
-	}
-
-
-	return true;
+	CreateVertexBuffer();
+	CreateIndexBuffer();
 }
 
-bool Mesh::Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-{
-	pDevice_ = pDevice;
-	vertices_ = vertices;
-	indices_ = indices;
-	
-	if (FAILED(CreateVertexBuffer(command_))) {
-		return false;
-	}
-
-	if (FAILED(CreateIndexBuffer(command_))) {
-		return false;
-	}
-
-	return true;
-}
+//bool Mesh::Init(Device* pDevice, Command& command_, std::string modelPath)
+//{
+//	pDevice_ = pDevice;
+//	if (pDevice_ == nullptr) {
+//		cerr << "Mesh class doesn't have any pointer" << endl;
+//		return false;
+//	}
+//	if (!LoadModel(modelPath)) {
+//		return false;
+//	}
+//
+//	if (FAILED(CreateVertexBuffer(command_))) {
+//		return false;
+//	}
+//
+//	if (FAILED(CreateIndexBuffer(command_))) {
+//		return false;
+//	}
+//
+//
+//	return true;
+//}
+//
+//bool Mesh::Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+//{
+//	pDevice_ = pDevice;
+//	vertices_ = vertices;
+//	indices_ = indices;
+//	
+//	if (FAILED(CreateVertexBuffer(command_))) {
+//		return false;
+//	}
+//
+//	if (FAILED(CreateIndexBuffer(command_))) {
+//		return false;
+//	}
+//
+//	return true;
+//}
 
 const Buffer& Mesh::GetVertexBuffer() const
 {
@@ -206,7 +216,7 @@ UINT Mesh::GetNumIndices() const
 	return indices_.size();
 }
 
-bool ASMesh::LoadModel(std::string modelPath)
+bool ASMesh::LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices)
 {
 	tinygltf::Model model;
 	tinygltf::TinyGLTF loader;
@@ -219,8 +229,8 @@ bool ASMesh::LoadModel(std::string modelPath)
 		return false;
 	}
 
-	ASVertices_.clear();
-	indices_.clear();
+	ASVertices.clear();
+	indices.clear();
 
 	for (auto& mesh : model.meshes) {
 		for (auto& primitive : mesh.primitives) {
@@ -231,7 +241,7 @@ bool ASMesh::LoadModel(std::string modelPath)
 			float* positions = reinterpret_cast<float*>(&posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset]);
 
 			for (int i = 0; i < posAccessor.count; i++) {
-				ASVertices_.push_back(
+				ASVertices.push_back(
 					{
 						(XMFLOAT3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])),
 					});
@@ -243,14 +253,14 @@ bool ASMesh::LoadModel(std::string modelPath)
 			tinygltf::Buffer& indicesBuffer = model.buffers[indicesBufferView.buffer];
 			unsigned short* index = reinterpret_cast<unsigned short*>(&indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset]);
 			for (int i = 0; i < indicesAccessor.count; i++) {
-				indices_.push_back(index[i]);
+				indices.push_back(index[i]);
 			}
 		}
 	}
 	return true;
 }
 
-HRESULT ASMesh::CreateVertexBuffer(Command& command)
+HRESULT ASMesh::CreateVertexBuffer()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(ASVertices_.size() * sizeof(ASVertex));
@@ -264,8 +274,8 @@ HRESULT ASMesh::CreateVertexBuffer(Command& command)
 	}
 
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
-	command.CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
-	command.WaitCommand();
+	command_->CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
+	command_->WaitCommand();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
 	vbView_.StrideInBytes = sizeof(ASVertex);
@@ -273,12 +283,80 @@ HRESULT ASMesh::CreateVertexBuffer(Command& command)
 	return S_OK;
 }
 
-ASMesh::ASMesh()
+HRESULT ASMesh::CreateIndexBuffer()
 {
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
+	shared_ptr<Buffer> indexUploadBuffer;
+	indexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(uint32_t), indices_.size());
+	void* rawPtr = indexUploadBuffer->Map();
+	if (rawPtr) {
+		uint32_t* pIndex = static_cast<uint32_t*>(rawPtr);
+		memcpy(pIndex, indices_.data(), sizeof(uint32_t) * indices_.size());
+		indexUploadBuffer->Unmap();
+	}
 
+	indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
+	command_->CopyBuffer(*indexUploadBuffer, *indexBuffer_);
+	command_->WaitCommand();
+	ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
+	ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
+	ibView_.Format = DXGI_FORMAT_R32_UINT;
+
+	return S_OK;
+}
+
+ASMesh::ASMesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath)
+	: pDevice_(&device), command_(command)
+{
+	LoadModelForAS(modelPath, ASVertices_, indices_);
+	CreateVertexBuffer();
+	CreateIndexBuffer();
+}
+
+ASMesh::ASMesh(const Device& device, std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices)
+	: pDevice_(&device), command_(command), ASVertices_(ASVertices), indices_(indices)
+{
+	CreateVertexBuffer();
+	CreateIndexBuffer();
+}
+
+const Buffer& ASMesh::GetVertexBuffer() const
+{
+	return *vertexBuffer_;
+}
+
+D3D12_VERTEX_BUFFER_VIEW ASMesh::GetVBView() const
+{
+	return vbView_;
+}
+
+const D3D12_VERTEX_BUFFER_VIEW* ASMesh::GetVBViewPtr() const
+{
+	return &vbView_;
 }
 
 UINT ASMesh::GetVertexCount() const
 {
 	return ASVertices_.size();
+}
+
+const Buffer& ASMesh::GetIndexBuffer() const
+{
+	return *indexBuffer_;
+}
+
+D3D12_INDEX_BUFFER_VIEW ASMesh::GetIBView() const
+{
+	return ibView_;
+}
+
+const D3D12_INDEX_BUFFER_VIEW* ASMesh::GetIBViewPtr() const
+{
+	return &ibView_;
+}
+
+UINT ASMesh::GetNumIndices() const
+{
+	return indices_.size();
 }

@@ -68,7 +68,7 @@ void SampleScene::Render()
 	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
 	command_->GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
-	command_->AddDrawIndexed(sphere_, 1);
+	command_->AddDrawIndexed(*sphere_, 1);
 
 	EndRender();
 
@@ -98,10 +98,11 @@ bool SampleScene::Init(const Application& app)
 
 	// Objects data
 	string modelPath = string(modelPath) + "sphere.gltf";
-	if (!sphere_.Init(&device_, *command_, modelPath)) {
+	sphere_ = device_.CreateMesh(command_, modelPath);
+	/*if (!sphere_.Init(&device_, *command_, modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
-	}
+	}*/
 
 	// Scene Items
 	// Camera
@@ -222,10 +223,11 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "sphere.gltf";
-	if (!sphere_.Init(&device_, (*command_), modelPath)) {
+	sphere_ = device_.CreateMesh(command_, modelPath);
+	/*if (!sphere_.Init(&device_, (*command_), modelPath)) {
 		cerr << "Failed to init sphere" << endl;
 		return false;
-	}
+	}*/
 
 	// Scene Items
 	// Camera

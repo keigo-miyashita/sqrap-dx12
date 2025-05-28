@@ -36,7 +36,7 @@ private:
 	std::shared_ptr<Command> command_;
 	std::shared_ptr<SwapChain> swapChain_;
 	//std::shared_ptr<Fence> fence_;
-	Mesh sphere_;
+	std::shared_ptr<Mesh> sphere_;
 
 	// Scene Items
 	Camera camera_;

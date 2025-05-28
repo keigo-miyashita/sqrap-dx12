@@ -24,7 +24,8 @@ protected:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	std::shared_ptr<Command> command_;
 	std::vector<Vertex> vertices_;
 	std::shared_ptr<Buffer> vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vbView_;
@@ -32,15 +33,16 @@ protected:
 	std::shared_ptr<Buffer> indexBuffer_;
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
-	virtual bool LoadModel(std::string modelPath);
-	virtual HRESULT CreateVertexBuffer(Command& command_);
-	HRESULT CreateIndexBuffer(Command& command_);
+	static bool LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
+	virtual HRESULT CreateVertexBuffer();
+	HRESULT CreateIndexBuffer();
 
 public:
-	Mesh();
+	Mesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
+	Mesh(const Device& device, std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	~Mesh() = default;
-	bool Init(Device* pDevice, Command& command_, std::string modelPath);
-	bool Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	/*bool Init(Device* pDevice, Command& command_, std::string modelPath);
+	bool Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);*/
 	const Buffer& GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
@@ -51,19 +53,35 @@ public:
 	UINT GetNumIndices() const;
 };
 
-class ASMesh : public Mesh
+class ASMesh
 {
 protected:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+	const Device* pDevice_ = nullptr;
+	std::shared_ptr<Command> command_;
 	std::vector<ASVertex> ASVertices_;
+	std::shared_ptr<Buffer> vertexBuffer_;
+	D3D12_VERTEX_BUFFER_VIEW vbView_;
+	std::vector<uint32_t> indices_;
+	std::shared_ptr<Buffer> indexBuffer_;
+	D3D12_INDEX_BUFFER_VIEW ibView_;
 
-	bool LoadModel(std::string modelPath) override;
-	HRESULT CreateVertexBuffer(Command& command) override;
+	static bool LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices);
+	HRESULT CreateVertexBuffer();
+	HRESULT CreateIndexBuffer();
 
 public:
-	ASMesh();
+	ASMesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
+	ASMesh(const Device& device, std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
 	~ASMesh() = default;
-	UINT GetVertexCount() const override;
+	const Buffer& GetVertexBuffer() const;
+	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
+	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
+	virtual UINT GetVertexCount() const;
+	const Buffer& GetIndexBuffer() const;
+	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
+	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
+	UINT GetNumIndices() const;
 };

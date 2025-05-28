@@ -16,16 +16,17 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	std::shared_ptr<Command> command_;
+	std::wstring name_;
 	std::shared_ptr<Buffer> ASBuffer_;
 	std::shared_ptr<Buffer> scratchBuffer_;
-	bool CreateBLAS(const ASMesh& mesh, Command& Command,Fence& fence, std::wstring name = L"BLAS");
+	bool CreateBLAS(const ASMesh& mesh);
 
 public:
 
-	BLAS();
+	BLAS(const Device& device, std::shared_ptr<Command> command, const ASMesh& mesh, std::wstring name = L"");
 	~BLAS() = default;
-	bool Init(Device* pDevice, const ASMesh& mesh, Command& command, Fence& fence, std::wstring name = L"BLAS");
 
 	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 };
@@ -44,18 +45,19 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	std::shared_ptr<Command> command_;
+	std::wstring name_;
 	std::vector<TLASDesc> tlasDescs_;
 	std::shared_ptr<Buffer> instanceDescBuffer_;
 	std::shared_ptr<Buffer> ASBuffer_;
 	std::shared_ptr<Buffer> scratchBuffer_;
-	bool CreateTLAS(Command& command, Fence& fence, std::wstring name = L"TLAS");
+	bool CreateTLAS();
 
 public:
 
-	TLAS();
+	TLAS(const Device& device, std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"");
 	~TLAS() = default;
-	bool Init(Device* pDevice, Command& command, Fence& fence, std::vector<TLASDesc> tlasDescs, std::wstring name = L"TLAS");
 	Buffer GetASBuffer() const;
 	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 };

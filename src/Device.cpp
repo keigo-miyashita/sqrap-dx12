@@ -214,6 +214,21 @@ void Device::ShowUsedVramSize()
 	}
 }
 
+std::shared_ptr<ASMesh> Device::CreateASMesh(std::shared_ptr<Command> command, std::string modelPath) const
+{
+	return make_shared<ASMesh>(*this, command, modelPath);
+}
+
+std::shared_ptr<ASMesh> Device::CreateASMesh(std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const
+{
+	return make_shared<ASMesh>(*this, command, ASVertices, indices);
+}
+
+std::shared_ptr<BLAS> Device::CreateBLAS(std::shared_ptr<Command> command, const ASMesh& mesh, std::wstring name) const
+{
+	return make_shared<BLAS>(*this, command, mesh, name);
+}
+
 std::shared_ptr<Buffer> Device::CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name) const
 {
 	return make_shared<Buffer>(*this, type, strideSize, numElement, name);
@@ -244,6 +259,15 @@ std::shared_ptr<GraphicsPipeline> Device::CreateGraphicsPipeline(const GraphicsD
 	return make_shared<GraphicsPipeline>(*this, desc, name);
 }
 
+std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const
+{
+	return make_shared<Mesh>(*this, command, modelPath);
+;}
+std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
+{
+	return make_shared<Mesh>(*this, command, vertices, indices);
+}
+
 std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const
 {
 	return make_shared<RootSignature>(*this, flag, rootParams, name);
@@ -252,6 +276,11 @@ std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_
 std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
+}
+
+std::shared_ptr<TLAS> Device::CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name) const
+{
+	return make_shared<TLAS>(*this, command, tlasDescs, name);
 }
 
 ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
