@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <initializer_list>
 #include <iostream>
 #include <map>

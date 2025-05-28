@@ -39,7 +39,6 @@ private:
 	Mesh sphere_;
 
 	// Scene Items
-	CameraMatrix cameraTest_;
 	Camera camera_;
 	Light light0_;
 	Object sphere0_;
@@ -57,7 +56,7 @@ private:
 	// Constant buffer x 4
 	std::shared_ptr<DescriptorManager> sphere0DescManager_;
 	// RootSignature
-	RootSignature sphere0RootSignature_;
+	std::shared_ptr<RootSignature> sphere0RootSignature_;
 
 	// Pipeline
 	GraphicsPipeline lambert_;

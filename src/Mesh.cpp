@@ -81,16 +81,6 @@ HRESULT Mesh::CreateVertexBuffer(Command& command)
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices_.size() * sizeof(Vertex));
 	shared_ptr<Buffer> vertexUploadBuffer;
 	vertexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(Vertex), vertices_.size());
-	//vertexUploadBuffer.InitAsUpload(pDevice_, sizeof(Vertex), vertices_.size());
-	//if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(vertexBuffer_.ReleaseAndGetAddressOf())))) {
-	//	return S_FALSE;
-	//}
-	/*Vertex* vertMap = nullptr;
-	if (FAILED(vertexBuffer_->Map(0, nullptr, (void**)&vertMap))) {
-		return S_FALSE;
-	}
-	std::copy(std::begin(vertices_), std::end(vertices_), vertMap);
-	vertexBuffer_->Unmap(0, nullptr);*/
 	void* rawPtr = vertexUploadBuffer->Map();
 	if (rawPtr) {
 		Vertex* pVertex = static_cast<Vertex*>(rawPtr);
@@ -99,11 +89,8 @@ HRESULT Mesh::CreateVertexBuffer(Command& command)
 	}
 
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(Vertex), vertices_.size());
-	//vertexBuffer_.Init(pDevice_, sizeof(Vertex), vertices_.size());
 	command.CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
 	command.WaitCommand();
-	//fence.WaitCommand(command);
-	//vbView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
 	vbView_.StrideInBytes = sizeof(Vertex);
@@ -117,16 +104,6 @@ HRESULT Mesh::CreateIndexBuffer(Command& command)
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
 	shared_ptr<Buffer> indexUploadBuffer;
 	indexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(uint32_t), indices_.size());
-	//indexUploadBuffer.InitAsUpload(pDevice_, sizeof(uint32_t), indices_.size());
-	/*if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(indexBuffer_.ReleaseAndGetAddressOf())))) {
-		return S_FALSE;
-	}*/
-	/*uint32_t* idxMap = nullptr;
-	if (FAILED(indexBuffer_->Map(0, nullptr, (void**)&idxMap))) {
-		return S_FALSE;
-	}
-	std::copy(std::begin(indices_), std::end(indices_), idxMap);
-	indexBuffer_->Unmap(0, nullptr);*/
 	void* rawPtr = indexUploadBuffer->Map();
 	if (rawPtr) {
 		uint32_t* pIndex = static_cast<uint32_t*>(rawPtr);
@@ -135,11 +112,8 @@ HRESULT Mesh::CreateIndexBuffer(Command& command)
 	}
 
 	indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
-	//indexBuffer_.Init(pDevice_, sizeof(uint32_t), indices_.size());
 	command.CopyBuffer(*indexUploadBuffer, *indexBuffer_);
 	command.WaitCommand();
-	//fence.WaitCommand(command);
-	//ibView_.BufferLocation = indexBuffer_->GetGPUVirtualAddress();
 	ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 	ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
 	ibView_.Format = DXGI_FORMAT_R32_UINT;
@@ -282,16 +256,6 @@ HRESULT ASMesh::CreateVertexBuffer(Command& command)
 	auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(ASVertices_.size() * sizeof(ASVertex));
 	shared_ptr<Buffer> vertexUploadBuffer;
 	vertexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(ASVertices_), ASVertices_.size());
-	//vertexUploadBuffer.InitAsUpload(pDevice_, sizeof(ASVertices_), ASVertices_.size());
-	/*if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(vertexBuffer_.ReleaseAndGetAddressOf())))) {
-		return S_FALSE;
-	}*/
-	/*ASVertex* vertMap = nullptr;
-	if (FAILED(vertexBuffer_->Map(0, nullptr, (void**)&vertMap))) {
-		return S_FALSE;
-	}
-	std::copy(std::begin(ASVertices_), std::end(ASVertices_), vertMap);
-	vertexBuffer_->Unmap(0, nullptr);*/
 	void* rawPtr = vertexUploadBuffer->Map();
 	if (rawPtr) {
 		ASVertex* pVertex = static_cast<ASVertex*>(rawPtr);
@@ -300,11 +264,8 @@ HRESULT ASMesh::CreateVertexBuffer(Command& command)
 	}
 
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
-	//vertexBuffer_.Init(pDevice_, sizeof(ASVertices_), ASVertices_.size());
 	command.CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
 	command.WaitCommand();
-	//fence.WaitCommand(command);
-	//vbView_.BufferLocation = vertexBuffer_->GetGPUVirtualAddress();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
 	vbView_.StrideInBytes = sizeof(ASVertex);

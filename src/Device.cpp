@@ -234,6 +234,11 @@ std::shared_ptr<Fence> Device::CreateFence(const Device& device, std::wstring na
 	return make_shared<Fence>(*this, name);
 }
 
+std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const
+{
+	return make_shared<RootSignature>(*this, flag, rootParams, name);
+}
+
 std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);

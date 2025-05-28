@@ -63,7 +63,7 @@ void SampleScene::Render()
 	}
 
 	command_->GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
-	command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_.GetRootSignature().Get());
+	command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_->GetRootSignature().Get());
 	command_->GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_->GetDescriptorHeap().GetAddressOf());
 	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
@@ -105,19 +105,6 @@ bool SampleScene::Init(const Application& app)
 
 	// Scene Items
 	// Camera
-	XMFLOAT3 cameraPos = XMFLOAT3(0.0f, 0.0f, -5.0f);
-	XMFLOAT3 targetPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	XMFLOAT3 upDir = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&cameraPos), XMLoadFloat3(&targetPos), XMLoadFloat3(&upDir));
-
-	float aspectRatio = (float)app.GetWindowWidth() / (float)app.GetWindowHeight();
-	float fovYAngle = XMConvertToRadians(60.0f);
-	float nearZ = 0.1f;
-	float farZ = 100.0f;
-	XMMATRIX proj = XMMatrixPerspectiveFovLH(fovYAngle, aspectRatio, nearZ, farZ);
-	cameraTest_.view = view;
-	cameraTest_.proj = proj;
-
 	camera_.Init((float)app.GetWindowWidth() / (float)app.GetWindowHeight(), XMFLOAT3(0.0f, 0.0f, -5.0f));
 	
 	// Light
@@ -159,15 +146,6 @@ bool SampleScene::Init(const Application& app)
 	wstring shaderPath = wstring(SHADER_DIR) + L"lambert.hlsl";
 	simpleVS_ = dxc_.CreateShader(ShaderType::Vertex, shaderPath, L"VSmain");
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
-	/*if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
-		cerr << "Failed to create simpleVS" << endl;
-		return false;
-	}
-	
-	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"PSmain")) {
-		cerr << "Failed to create lambertPS_" << endl;
-		return false;
-	}*/
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
@@ -179,10 +157,17 @@ bool SampleScene::Init(const Application& app)
 		}
 	);
 	// RootSignature
-	sphere0RootSignature_.Init(&device_);
+	/*sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(*sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
-	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);*/
+	sphere0RootSignature_ = device_.CreateRootSignature(
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
+		{
+			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
+			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
+		}
+		);
 
 	// Graphics pipeline
 	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
@@ -193,7 +178,7 @@ bool SampleScene::Init(const Application& app)
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 	GraphicsDesc lambertDesc(inputLayouts);
-	lambertDesc.rootSignature_ = &sphere0RootSignature_;
+	lambertDesc.rootSignature_ = sphere0RootSignature_.get();
 	lambertDesc.VS_ = simpleVS_.get();
 	lambertDesc.PS_ = lambertPS_.get();
 	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -241,19 +226,6 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Scene Items
 	// Camera
-	XMFLOAT3 cameraPos = XMFLOAT3(0.0f, 0.0f, -5.0f);
-	XMFLOAT3 targetPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	XMFLOAT3 upDir = XMFLOAT3(0.0f, 1.0f, 0.0f);
-	XMMATRIX view = XMMatrixLookAtLH(XMLoadFloat3(&cameraPos), XMLoadFloat3(&targetPos), XMLoadFloat3(&upDir));
-
-	float aspectRatio = (float)app.GetWindowWidth() / (float)app.GetWindowHeight();
-	float fovYAngle = XMConvertToRadians(60.0f);
-	float nearZ = 0.1f;
-	float farZ = 100.0f;
-	XMMATRIX proj = XMMatrixPerspectiveFovLH(fovYAngle, aspectRatio, nearZ, farZ);
-	cameraTest_.view = view;
-	cameraTest_.proj = proj;
-
 	camera_.Init((float)app.GetWindowWidth() / (float)app.GetWindowHeight(), XMFLOAT3(0.0f, 0.0f, -5.0f));
 
 	// Light
@@ -295,15 +267,6 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	wstring shaderPath = wstring(SHADER_DIR) + L"lambert.hlsl";
 	simpleVS_ = dxc_.CreateShader(ShaderType::Vertex, shaderPath, L"VSmain");
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
-	/*if (!simpleVS_.Init(dxc_, shaderPath, ShaderType::Vertex, L"VSmain")) {
-		cerr << "Failed to create simpleVS" << endl;
-		return false;
-	}
-
-	if (!lambertPS_.Init(dxc_, shaderPath, ShaderType::Pixel, L"PSmain")) {
-		cerr << "Failed to create lambertPS_" << endl;
-		return false;
-	}*/
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
@@ -315,10 +278,17 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		}
 	);
 	// RootSignature
-	sphere0RootSignature_.Init(&device_);
+	/*sphere0RootSignature_.Init(&device_);
 	sphere0RootSignature_.AddDescriptorTable(*sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
 	sphere0RootSignature_.AddConstant(3, 4);
-	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);*/
+	sphere0RootSignature_ = device_.CreateRootSignature(
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
+		{
+			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
+			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
+		}
+	);
 
 	// Graphics pipeline
 	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
@@ -329,7 +299,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 	GraphicsDesc lambertDesc(inputLayouts);
-	lambertDesc.rootSignature_ = &sphere0RootSignature_;
+	lambertDesc.rootSignature_ = sphere0RootSignature_.get();
 	lambertDesc.VS_ = simpleVS_.get();
 	lambertDesc.PS_ = lambertPS_.get();
 	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);

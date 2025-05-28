@@ -9,6 +9,9 @@ class Buffer;
 class Command;
 class DescriptorManager;
 class SwapChain;
+class RootSignature;
+
+struct RootParameter;
 
 class Device
 {
@@ -40,6 +43,7 @@ public:
 	std::shared_ptr<Command> CreateCommand(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"") const;
 	std::shared_ptr<DescriptorManager> CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"") const;
 	std::shared_ptr<Fence> CreateFence(const Device& device, std::wstring name = L"") const;
+	std::shared_ptr<RootSignature> CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"") const;
 	std::shared_ptr<SwapChain> CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"") const;
 	ComPtr<IDXGIFactory7> GetDXGIFactory() const;
 	ComPtr<ID3D12Device> GetDevice() const;
