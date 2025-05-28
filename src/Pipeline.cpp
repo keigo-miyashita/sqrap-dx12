@@ -9,68 +9,55 @@ GraphicsDesc::GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts) 
 
 }
 
-bool GraphicsPipeline::CreateGraphicsPipelineState(const GraphicsDesc& desc, wstring name)
+bool GraphicsPipeline::CreateGraphicsPipelineState()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPSDesc = {};
 
-	graphicsPSDesc.InputLayout.pInputElementDescs = desc.inputLayouts_.data();
-	graphicsPSDesc.InputLayout.NumElements = desc.inputLayouts_.size();
-	graphicsPSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
-	if (desc.VS_) {
-		graphicsPSDesc.VS = CD3DX12_SHADER_BYTECODE(desc.VS_->GetBlob()->GetBufferPointer(), desc.VS_->GetBlob()->GetBufferSize());
+	graphicsPSDesc.InputLayout.pInputElementDescs = desc_.inputLayouts_.data();
+	graphicsPSDesc.InputLayout.NumElements = desc_.inputLayouts_.size();
+	graphicsPSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
+	if (desc_.VS_) {
+		graphicsPSDesc.VS = CD3DX12_SHADER_BYTECODE(desc_.VS_->GetBlob()->GetBufferPointer(), desc_.VS_->GetBlob()->GetBufferSize());
 	}
-	if (desc.PS_) {
-		graphicsPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc.PS_->GetBlob()->GetBufferPointer(), desc.PS_->GetBlob()->GetBufferSize());
+	if (desc_.PS_) {
+		graphicsPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc_.PS_->GetBlob()->GetBufferPointer(), desc_.PS_->GetBlob()->GetBufferSize());
 	}
-	if (desc.DS_) {
-		graphicsPSDesc.DS = CD3DX12_SHADER_BYTECODE(desc.DS_->GetBlob()->GetBufferPointer(), desc.DS_->GetBlob()->GetBufferSize());
+	if (desc_.DS_) {
+		graphicsPSDesc.DS = CD3DX12_SHADER_BYTECODE(desc_.DS_->GetBlob()->GetBufferPointer(), desc_.DS_->GetBlob()->GetBufferSize());
 	}
-	if (desc.HS_) {
-		graphicsPSDesc.HS = CD3DX12_SHADER_BYTECODE(desc.HS_->GetBlob()->GetBufferPointer(), desc.HS_->GetBlob()->GetBufferSize());
+	if (desc_.HS_) {
+		graphicsPSDesc.HS = CD3DX12_SHADER_BYTECODE(desc_.HS_->GetBlob()->GetBufferPointer(), desc_.HS_->GetBlob()->GetBufferSize());
 	}
-	if (desc.GS_) {
-		graphicsPSDesc.GS = CD3DX12_SHADER_BYTECODE(desc.GS_->GetBlob()->GetBufferPointer(), desc.GS_->GetBlob()->GetBufferSize());
+	if (desc_.GS_) {
+		graphicsPSDesc.GS = CD3DX12_SHADER_BYTECODE(desc_.GS_->GetBlob()->GetBufferPointer(), desc_.GS_->GetBlob()->GetBufferSize());
 	}
-	graphicsPSDesc.BlendState = desc.blendState_;
-	graphicsPSDesc.SampleMask = desc.sampleMask_;
-	graphicsPSDesc.RasterizerState = desc.rasterizerDesc_;
-	graphicsPSDesc.DepthStencilState = desc.depthStencilDesc_;
-	graphicsPSDesc.DSVFormat = desc.dsvFormat_;
-	graphicsPSDesc.IBStripCutValue = desc.IBStripCutValue_;
-	graphicsPSDesc.PrimitiveTopologyType = desc.primitiveType_;
-	graphicsPSDesc.NumRenderTargets = desc.RTVFormats_.size();
-	for (int i = 0; i < desc.RTVFormats_.size(); i++) {
-		graphicsPSDesc.RTVFormats[i] = desc.RTVFormats_[i];
+	graphicsPSDesc.BlendState = desc_.blendState_;
+	graphicsPSDesc.SampleMask = desc_.sampleMask_;
+	graphicsPSDesc.RasterizerState = desc_.rasterizerDesc_;
+	graphicsPSDesc.DepthStencilState = desc_.depthStencilDesc_;
+	graphicsPSDesc.DSVFormat = desc_.dsvFormat_;
+	graphicsPSDesc.IBStripCutValue = desc_.IBStripCutValue_;
+	graphicsPSDesc.PrimitiveTopologyType = desc_.primitiveType_;
+	graphicsPSDesc.NumRenderTargets = desc_.RTVFormats_.size();
+	for (int i = 0; i < desc_.RTVFormats_.size(); i++) {
+		graphicsPSDesc.RTVFormats[i] = desc_.RTVFormats_[i];
 	}
-	graphicsPSDesc.SampleDesc = desc.sampleDesc_;
+	graphicsPSDesc.SampleDesc = desc_.sampleDesc_;
 
 	auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		cerr << "Failed to create graphics pipeline state" << endl;
 		return false;
 	}
-	pipeline_->SetName(name.c_str());
+	pipeline_->SetName(name_.c_str());
 	
 	return true;
 }
 
-GraphicsPipeline::GraphicsPipeline()
+GraphicsPipeline::GraphicsPipeline(const Device& device, const GraphicsDesc& desc, std::wstring name)
+	: pDevice_(&device), desc_(desc), name_(name)
 {
-
-}
-
-bool GraphicsPipeline::Init(Device* pDevice, const GraphicsDesc& desc, wstring name)
-{
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "GraphicsPipeline class doesn't have any pointer" << endl;
-		return false;
-	}
-	if (!CreateGraphicsPipelineState(desc, name)) {
-		return false;
-	}
-
-	return true;
+	CreateGraphicsPipelineState();
 }
 
 ComPtr<ID3D12PipelineState> GraphicsPipeline::GetPipelineState() const
@@ -78,38 +65,26 @@ ComPtr<ID3D12PipelineState> GraphicsPipeline::GetPipelineState() const
 	return pipeline_;
 }
 
-bool ComputePipeline::CreateComputePipelineState(const ComputeDesc& desc, wstring name)
+bool ComputePipeline::CreateComputePipelineState()
 {
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
-	computePSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
-	computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc.CS_->GetBlob()->GetBufferPointer(), desc.CS_->GetBlob()->GetBufferSize());
-	computePSDesc.NodeMask = desc.nodeMask_;
+	computePSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
+	computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc_.CS_->GetBlob()->GetBufferPointer(), desc_.CS_->GetBlob()->GetBufferSize());
+	computePSDesc.NodeMask = desc_.nodeMask_;
 
-	if (FAILED(pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf())))) {
+	HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
 		return false;
 	}
-	pipeline_->SetName(name.c_str());
+	pipeline_->SetName(name_.c_str());
 
 	return true;
 }
 
-ComputePipeline::ComputePipeline()
+ComputePipeline::ComputePipeline(const Device& device, const ComputeDesc& desc, std::wstring name)
+	: pDevice_(&device), desc_(desc), name_(name)
 {
-
-}
-
-bool ComputePipeline::Init(Device* pDevice, const ComputeDesc& desc, wstring name)
-{
-	pDevice_ = pDevice;
-	if (pDevice_ == nullptr) {
-		cerr << "ComputePipeline class doesn't have any pointer" << endl;
-		return false;
-	}
-	if (!CreateComputePipelineState(desc, name)) {
-		return false;
-	}
-
-	return true;
+	CreateComputePipelineState();
 }
 
 ComPtr<ID3D12PipelineState> ComputePipeline::GetPipelineState() const

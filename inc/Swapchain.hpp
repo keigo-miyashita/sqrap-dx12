@@ -30,7 +30,6 @@ private:
 public:
 	SwapChain(const Device& device, std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
 	~SwapChain() = default;
-	//bool Init(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, std::wstring name = L"SwapChain");
 	ComPtr<IDXGISwapChain4> GetSwapChain();
 	ComPtr<ID3D12Resource> GetCurrentBackBuffer(UINT index);
 	ComPtr<ID3D12DescriptorHeap> GetRtvHeap();

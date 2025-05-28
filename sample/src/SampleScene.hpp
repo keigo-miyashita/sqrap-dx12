@@ -59,7 +59,7 @@ private:
 	std::shared_ptr<RootSignature> sphere0RootSignature_;
 
 	// Pipeline
-	GraphicsPipeline lambert_;
+	std::shared_ptr<GraphicsPipeline> lambert_;
 
 	void BeginRender();
 	void EndRender();

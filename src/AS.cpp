@@ -29,25 +29,9 @@ bool BLAS::CreateBLAS(const ASMesh& mesh, Command& command, Fence& fence, std::w
 
 	cout << "BLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 	scratchBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1);
-	/*if (!scratchBuffer_.Init(
-		pDevice_, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1,
-		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-	))
-	{
-		cerr << "Failed to create scratch buffer of BLAS class" << endl;
-		return false;
-	}*/
 
 	cout << "BLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
 	ASBuffer_ = pDevice_->CreateBuffer(BufferType::AS, (UINT)prebuildInfo.ResultDataMaxSizeInBytes, 1);
-	/*if (!ASBuffer_.Init(
-		pDevice_, (UINT)prebuildInfo.ResultDataMaxSizeInBytes, 1,
-		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE
-	))
-	{
-		cerr << "Failed to create AS buffer of BLAS class" << endl;
-		return false;
-	}*/
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 	buildASDesc.Inputs = buildInputs;
@@ -106,7 +90,6 @@ bool TLAS::CreateTLAS(Command& command, Fence& fence, std::wstring name)
 
 	shared_ptr<Buffer> uploadBuffer;
 	uploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
-	/*uploadBuffer.InitAsUpload(pDevice_, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size(), name);*/
 	void* rawPtr = uploadBuffer->Map();
 	if (rawPtr) {
 		D3D12_RAYTRACING_INSTANCE_DESC* pDesc = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(rawPtr);
@@ -116,14 +99,6 @@ bool TLAS::CreateTLAS(Command& command, Fence& fence, std::wstring name)
 	cout << "uploadBuffer result : stride = " << uploadBuffer->GetResource()->GetDesc().Width << " num = " << uploadBuffer->GetResource()->GetDesc().Height << endl;
 	cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
 	instanceDescBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
-	/*if (!instanceDescBuffer_.Init(
-		pDevice_, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size(),
-		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, name
-	))
-	{
-		cerr << "Failed to create TLAS instanceDescBuffer" << endl;
-		return false;
-	}*/
 	cout << "instanceDescBuffer_r result : stride = " << instanceDescBuffer_->GetResource()->GetDesc().Width << " num = " << instanceDescBuffer_->GetResource()->GetDesc().Height << endl;
 
 	command.CopyBuffer(*uploadBuffer, *instanceDescBuffer_);
@@ -141,25 +116,9 @@ bool TLAS::CreateTLAS(Command& command, Fence& fence, std::wstring name)
 
 	cout << "TLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 	scratchBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, prebuildInfo.ScratchDataSizeInBytes, 1);
-	/*if (!scratchBuffer_.Init(
-		pDevice_, prebuildInfo.ScratchDataSizeInBytes, 1,
-		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-	))
-	{
-		cerr << "Failed to create TLAS scratchBuffer" << endl;
-		return false;
-	}*/
 
 	cout << "TLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
 	ASBuffer_ = pDevice_->CreateBuffer(BufferType::AS, prebuildInfo.ResultDataMaxSizeInBytes, 1);
-	/*if (!ASBuffer_.Init(
-		pDevice_, prebuildInfo.ResultDataMaxSizeInBytes, 1,
-		D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE
-	))
-	{
-		cerr << "Failed to create TLAS ASBuffer" << endl;
-		return false;
-	}*/
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 	buildASDesc.Inputs = buildInputs;

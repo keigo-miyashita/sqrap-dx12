@@ -7,11 +7,15 @@
 
 class Buffer;
 class Command;
+class ComputePipeline;
 class DescriptorManager;
+class GraphicsPipeline;
 class SwapChain;
 class RootSignature;
 
-struct RootParameter;
+struct ComputeDesc;
+struct GraphicsDesc;
+struct RootParameter;;
 
 class Device
 {
@@ -41,8 +45,10 @@ public:
 	void ShowUsedVramSize();
 	std::shared_ptr<Buffer> CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"") const;
 	std::shared_ptr<Command> CreateCommand(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"") const;
+	std::shared_ptr<ComputePipeline> CreateComputePipeline(const ComputeDesc& desc, std::wstring name = L"") const;
 	std::shared_ptr<DescriptorManager> CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"") const;
-	std::shared_ptr<Fence> CreateFence(const Device& device, std::wstring name = L"") const;
+	std::shared_ptr<Fence> CreateFence(std::wstring name = L"") const;
+	std::shared_ptr<GraphicsPipeline> CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name = L"") const;
 	std::shared_ptr<RootSignature> CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"") const;
 	std::shared_ptr<SwapChain> CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"") const;
 	ComPtr<IDXGIFactory7> GetDXGIFactory() const;

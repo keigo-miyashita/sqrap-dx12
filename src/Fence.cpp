@@ -1,5 +1,4 @@
 #include <common.hpp>
-#include <comdef.h>
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -21,21 +20,7 @@ Fence::Fence(const Device& device, std::wstring name) : pDevice_(&device), name_
 	CreateFence();
 }
 
-//bool Fence::Init(Device* pDevice, wstring name)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Fence class pDevice doesn't have any pounter" << endl; ;
-//		return false;
-//	}
-//	if (!CreateFence(name)) {
-//		return false;
-//	}
-//
-//	return true;
-//}
-
-void Fence::WaitCommand(Command& command)
+bool Fence::WaitCommand(Command& command)
 {
 	command.GetCommandList()->Close();
 
@@ -44,12 +29,7 @@ void Fence::WaitCommand(Command& command)
 	HRESULT result = command.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
 
 	if (FAILED(result)) {
-		_com_error err(result);
-		wcerr << L"Error message: " << err.ErrorMessage() << endl;
-		result = pDevice_->GetDevice()->GetDeviceRemovedReason();
-		_com_error DeviceRemovedReason(result);
-		wcerr << L"Device removed reason: " << DeviceRemovedReason.ErrorMessage() << endl;
-		cerr << "Failed to Signal" << endl;
+		return false;
 	}
 
 	if (fence_->GetCompletedValue() < fenceVal_) {

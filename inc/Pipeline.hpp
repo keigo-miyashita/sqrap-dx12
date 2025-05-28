@@ -9,12 +9,12 @@ class Shader;
 struct GraphicsDesc
 {
 	std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts_;
-	RootSignature* rootSignature_ = nullptr;
-	Shader* VS_ = nullptr;
-	Shader* PS_ = nullptr;
-	Shader* DS_ = nullptr;
-	Shader* HS_ = nullptr;
-	Shader* GS_ = nullptr;
+	std::shared_ptr<RootSignature> rootSignature_;
+	std::shared_ptr<Shader> VS_;
+	std::shared_ptr<Shader> PS_;
+	std::shared_ptr<Shader> DS_;
+	std::shared_ptr<Shader> HS_;
+	std::shared_ptr<Shader> GS_;
 	D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	UINT sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
 	D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -35,22 +35,23 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	const GraphicsDesc& desc_;
+	std::wstring name_;
 	ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
-	bool CreateGraphicsPipelineState(const GraphicsDesc& desc, std::wstring name = L"GraphicsPipelineState");
+	bool CreateGraphicsPipelineState();
 
 public:
-	GraphicsPipeline();
+	GraphicsPipeline(const Device& device, const GraphicsDesc& desc, std::wstring name = L"");
 	~GraphicsPipeline() = default;
-	bool Init(Device* pDevice, const GraphicsDesc& desc, std::wstring name = L"GraphicsPipelineState");
 	ComPtr<ID3D12PipelineState> GetPipelineState() const;
 };
 
 struct ComputeDesc
 {
-	RootSignature* rootSignature_ = nullptr;
-	Shader* CS_ = nullptr;
+	std::shared_ptr<RootSignature> rootSignature_;
+	std::shared_ptr<Shader> CS_;
 	UINT nodeMask_ = 0;
 };
 
@@ -60,15 +61,16 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	const ComputeDesc& desc_;
+	std::wstring name_;
 	ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
-	bool CreateComputePipelineState(const ComputeDesc& desc, std::wstring name = L"ComputePipelineState");
+	bool CreateComputePipelineState();
 
 public:
-	ComputePipeline();
+	ComputePipeline(const Device& device, const ComputeDesc& desc, std::wstring name = L"");
 	~ComputePipeline() = default;
-	bool Init(Device* pDevice, const ComputeDesc& desc, std::wstring name = L"ComputePipelineState");
 	ComPtr<ID3D12PipelineState> GetPipelineState() const;
 };
 

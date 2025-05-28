@@ -62,7 +62,7 @@ void SampleScene::Render()
 		cameraBuffer_->Unmap();
 	}
 
-	command_->GetCommandList()->SetPipelineState(lambert_.GetPipelineState().Get());
+	command_->GetCommandList()->SetPipelineState(lambert_->GetPipelineState().Get());
 	command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_->GetRootSignature().Get());
 	command_->GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_->GetDescriptorHeap().GetAddressOf());
 	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
@@ -178,9 +178,9 @@ bool SampleScene::Init(const Application& app)
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 	GraphicsDesc lambertDesc(inputLayouts);
-	lambertDesc.rootSignature_ = sphere0RootSignature_.get();
-	lambertDesc.VS_ = simpleVS_.get();
-	lambertDesc.PS_ = lambertPS_.get();
+	lambertDesc.rootSignature_ = sphere0RootSignature_;
+	lambertDesc.VS_ = simpleVS_;
+	lambertDesc.PS_ = lambertPS_;
 	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	lambertDesc.sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
 	lambertDesc.rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -192,10 +192,13 @@ bool SampleScene::Init(const Application& app)
 	lambertDesc.RTVFormats_ = RTVFormats;
 	lambertDesc.sampleDesc_.Count = 1;
 	lambertDesc.sampleDesc_.Quality = 0;*/
-	if (!lambert_.Init(&device_, lambertDesc)) {
+	lambert_ = device_.CreateGraphicsPipeline(
+		lambertDesc
+	);
+	/*if (!lambert_.Init(&device_, lambertDesc)) {
 		cerr << "Failed to create lambert pipeline state" << endl;
 		return false;
-	}
+	}*/
 
 	
 	return true;
@@ -299,9 +302,9 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 	GraphicsDesc lambertDesc(inputLayouts);
-	lambertDesc.rootSignature_ = sphere0RootSignature_.get();
-	lambertDesc.VS_ = simpleVS_.get();
-	lambertDesc.PS_ = lambertPS_.get();
+	lambertDesc.rootSignature_ = sphere0RootSignature_;
+	lambertDesc.VS_ = simpleVS_;
+	lambertDesc.PS_ = lambertPS_;
 	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	lambertDesc.sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
 	lambertDesc.rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -313,10 +316,13 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	lambertDesc.RTVFormats_ = RTVFormats;
 	lambertDesc.sampleDesc_.Count = 1;
 	lambertDesc.sampleDesc_.Quality = 0;*/
-	if (!lambert_.Init(&device_, lambertDesc)) {
+	lambert_ = device_.CreateGraphicsPipeline(
+		lambertDesc 
+	);
+	/*if (!lambert_.Init(&device_, lambertDesc)) {
 		cerr << "Failed to create lambert pipeline state" << endl;
 		return false;
-	}
+	}*/
 
 
 	return true;

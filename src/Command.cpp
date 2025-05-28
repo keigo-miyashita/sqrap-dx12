@@ -74,34 +74,8 @@ Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstr
 
 	CreateCommandQueue();
 
-	fence_ = pDevice_->CreateFence(device, name);
+	fence_ = pDevice_->CreateFence(name);
 }
-
-//bool Command::Init(Device* pDevice, D3D12_COMMAND_LIST_TYPE commandType, wstring name)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Command class pDevice doesn't have any pounter" << endl; ;
-//		return false;
-//	}
-//	if (!CreateCommandList(commandType, name)) {
-//		return false;
-//	}
-//
-//	if (!InitializeStableCommandList(name)) {
-//		return false;
-//	}
-//
-//	if (!InitializeLatestCommandList(name)) {
-//		return false;
-//	}
-//
-//	if (!CreateCommandQueue(commandType, name)) {
-//		return false;
-//	}
-//
-//	return true;
-//}
 
 void Command::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
 {
@@ -246,9 +220,12 @@ void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsC
 	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
 }
 
-void Command::WaitCommand()
+bool Command::WaitCommand()
 {
-	fence_->WaitCommand(*this);
+	if (!fence_->WaitCommand(*this)) {
+		return false;
+	}
+	return true;
 }
 
 D3D12_COMMAND_LIST_TYPE Command::GetCommandType()

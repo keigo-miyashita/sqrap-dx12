@@ -26,8 +26,7 @@ private:
 public:
 	Fence(const Device& device, std::wstring name = L"");
 	~Fence() = default;
-	//bool Init(Device* pDevice, std::wstring = L"Fence");
-	void WaitCommand(Command& command);
+	bool WaitCommand(Command& command);
 
 	ComPtr<ID3D12Fence> GetFence();
 	UINT64 GetFenceVal();

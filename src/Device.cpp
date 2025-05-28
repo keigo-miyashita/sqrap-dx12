@@ -224,14 +224,24 @@ std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandTy
 	return make_shared<Command>(*this, commandType, name);
 }
 
+std::shared_ptr<ComputePipeline> Device::CreateComputePipeline(const ComputeDesc& desc, std::wstring name) const
+{
+	return make_shared<ComputePipeline>(*this, desc, name);
+}
+
 std::shared_ptr<DescriptorManager> Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name) const
 {
 	return make_shared<DescriptorManager>(*this, heapType, descManagerDesc, name);
 }
 
-std::shared_ptr<Fence> Device::CreateFence(const Device& device, std::wstring name) const
+std::shared_ptr<Fence> Device::CreateFence(std::wstring name) const
 {
 	return make_shared<Fence>(*this, name);
+}
+
+std::shared_ptr<GraphicsPipeline> Device::CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name) const
+{
+	return make_shared<GraphicsPipeline>(*this, desc, name);
 }
 
 std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const

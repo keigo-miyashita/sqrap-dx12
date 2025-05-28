@@ -23,16 +23,20 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 	swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	swapChainDesc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	if (FAILED(pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pCommand_->GetCommandQueue().Get(),
-													hwnd,
-													&swapChainDesc1,
-													nullptr,
-													nullptr,
-													(IDXGISwapChain1**)swapChain_.ReleaseAndGetAddressOf()))) {
+	HRESULT result = pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pCommand_->GetCommandQueue().Get(),
+		hwnd,
+		&swapChainDesc1,
+		nullptr,
+		nullptr,
+		(IDXGISwapChain1**)swapChain_.ReleaseAndGetAddressOf());
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateSwapChainForHwnd : " + to_string(result));
 		return false;
 	}
 
-	if (FAILED(swapChain_->GetDesc1(&swapChainDesc1))) {
+	result = swapChain_->GetDesc1(&swapChainDesc1);
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to get swapChainDesc1 : " + to_string(result));
 		return false;
 	}
 
@@ -41,7 +45,9 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	heapDesc.NodeMask = 0;
 	heapDesc.NumDescriptors = 2;
-	if (FAILED(pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf())))) {
+	result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain : " + to_string(result));
 		return false;
 	}
 	rtvHeap_->SetName(L"RenderTargetViewHeap");
@@ -61,8 +67,9 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
 	for (int i = 0; i < swapChainDesc1.BufferCount; i++) {
-		if (swapChain_->GetBuffer(i, IID_PPV_ARGS(&backBuffers_[i]))) {
-			cerr << "Failed to get buffer of swapchain\n";
+		result = swapChain_->GetBuffer(i, IID_PPV_ARGS(&backBuffers_[i]));
+		if (FAILED(result)) {
+			throw std::runtime_error("Failed to GetBuffer for SwapChain : " + to_string(result));
 			return false;
 		}
 		wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
@@ -87,10 +94,12 @@ bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 
 	CD3DX12_CLEAR_VALUE depthClearValue(DXGI_FORMAT_D32_FLOAT, 1.0f, 0);
 
-	if (FAILED(pDevice_->GetDevice()->CreateCommittedResource(
-		&depthHeapProp, D3D12_HEAP_FLAG_NONE, 
+	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(
+		&depthHeapProp, D3D12_HEAP_FLAG_NONE,
 		&depthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf())))) {
+		&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateCommittedResource for SwapChain's DepthStencilBuffer : " + to_string(result));
 		return false;
 	}
 	depthStencilBuffer_->SetName(L"DepthStencilBuffer");
@@ -100,7 +109,9 @@ bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-	if (FAILED(pDevice_->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf())))) {
+	result = pDevice_->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain's DepthStencilBuffer : " + to_string(result));
 		return false;
 	}
 	dsvHeap_->SetName(L"DepthStencilHeap");
@@ -122,19 +133,6 @@ SwapChain::SwapChain(const Device& device, shared_ptr<Command>& command, const H
 
 	CreateDepthStencilBuffer(winSize);
 }
-
-//bool SwapChain::Init(const Device& device, const HWND& hwnd, SIZE winSize, const Command& command, wstring name)
-//{
-//	if (!CreateSwapChain(device, hwnd, winSize, command, name)) {
-//		return false;
-//	}
-//
-//	if (!CreateDepthStencilBuffer(device, winSize, name)) {
-//		return false;
-//	}
-//
-//	return true;
-//}
 
 ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain()
 {
