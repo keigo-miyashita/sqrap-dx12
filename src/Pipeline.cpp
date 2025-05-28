@@ -46,7 +46,7 @@ bool GraphicsPipeline::CreateGraphicsPipelineState()
 
 	auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
-		cerr << "Failed to create graphics pipeline state" << endl;
+		throw std::runtime_error("Failed to CreateGraphicsPipelineState : " + to_string(result));
 		return false;
 	}
 	pipeline_->SetName(name_.c_str());
@@ -74,6 +74,7 @@ bool ComputePipeline::CreateComputePipelineState()
 
 	HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateComputePipelineState : " + to_string(result));
 		return false;
 	}
 	pipeline_->SetName(name_.c_str());
