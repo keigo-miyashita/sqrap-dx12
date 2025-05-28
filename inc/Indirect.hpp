@@ -2,6 +2,18 @@
 
 #include <common.hpp>
 
+enum class IndirectType
+{
+	Draw, DrawIndexed, Dispatch, VB, IB, Constant, CBV, SRV, UAV, Ray, Mesh
+};
+
+struct IndirectDesc
+{
+	IndirectType type_;
+	UINT rootParameterIndex_ = 0;
+	UINT numConstant_ = 0;
+};
+
 class Device;
 class RootSignature;
 
@@ -11,27 +23,15 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	std::wstring name_;
 	ComPtr<ID3D12CommandSignature> cmdSig_ = nullptr;
 	std::vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgDesc_;
 	D3D12_COMMAND_SIGNATURE_DESC cmdSigDesc_ = {};
 
 public:
-	Indirect();
+	Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name = L"");
 	~Indirect() = default;
-	bool Init(Device* pDevice);
-	bool InitializeCommandSignature(const RootSignature& rootSignature, UINT byteStride);
-	bool InitializeCommandSignature(UINT byteStride);
-	void AddCBV(UINT rootParameterIndex);
-	void AddSRV(UINT rootParameterIndex);
-	void AddUAV(UINT rootParameterIndex);
-	// 頂点バッファを命令ごとに切り替える場合指定
-	void AddVertexBufferView(UINT slot);
-	// インデックスバッファを命令ごとに切り替える場合指定
-	void AddIndexBufferView();
-	void AddDrawIndexed();
-	void AddDraw();
-	void AddDispatch();
 	ComPtr<ID3D12CommandSignature> GetCommandSignature() const;
 
 };

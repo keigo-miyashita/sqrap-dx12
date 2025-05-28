@@ -259,6 +259,11 @@ std::shared_ptr<GraphicsPipeline> Device::CreateGraphicsPipeline(const GraphicsD
 	return make_shared<GraphicsPipeline>(*this, desc, name);
 }
 
+std::shared_ptr<Indirect> Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name) const
+{
+	return make_shared<Indirect>(*this, indirectDescs, rootSignature, byteStride, name);
+}
+
 std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const
 {
 	return make_shared<Mesh>(*this, command, modelPath);

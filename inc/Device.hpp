@@ -21,6 +21,7 @@ struct ASMesh;
 struct ASVertex;
 struct ComputeDesc;
 struct GraphicsDesc;
+struct IndirectDesc;
 struct Mesh;
 struct RootParameter;
 struct Vertex;
@@ -60,6 +61,7 @@ public:
 	std::shared_ptr<DescriptorManager> CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"") const;
 	std::shared_ptr<Fence> CreateFence(std::wstring name = L"") const;
 	std::shared_ptr<GraphicsPipeline> CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name = L"") const;
+	std::shared_ptr<Indirect> CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name = L"") const;
 	std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const;
 	std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 	std::shared_ptr<RootSignature> CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"") const;
