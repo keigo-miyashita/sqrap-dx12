@@ -35,7 +35,6 @@ private:
 	DXC dxc_;
 	std::shared_ptr<Command> command_;
 	std::shared_ptr<SwapChain> swapChain_;
-	//std::shared_ptr<Fence> fence_;
 	std::shared_ptr<Mesh> sphere_;
 
 	// Scene Items
@@ -53,8 +52,8 @@ private:
 	std::shared_ptr<Shader> lambertPS_;
 
 	// Descriptor
-	// Constant buffer x 4
 	std::shared_ptr<DescriptorManager> sphere0DescManager_;
+
 	// RootSignature
 	std::shared_ptr<RootSignature> sphere0RootSignature_;
 

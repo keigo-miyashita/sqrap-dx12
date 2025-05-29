@@ -31,8 +31,6 @@ void SampleScene::BeginRender()
 	auto scissorRect = swapChain_->GetRect();
 	command_->GetCommandList()->RSSetViewports(1, &viewPort);
 	command_->GetCommandList()->RSSetScissorRects(1, &scissorRect);
-
-	//cout << "Begin Render" << endl;
 }
 
 void SampleScene::EndRender()
@@ -44,9 +42,6 @@ void SampleScene::EndRender()
 	command_->GetCommandList()->ResourceBarrier(1, &barrier);
 
 	command_->WaitCommand();
-	//fence_->WaitCommand(*command_);
-
-	//cout << "End Render" << endl;
 }
 
 void SampleScene::Render()
@@ -99,10 +94,6 @@ bool SampleScene::Init(const Application& app)
 	// Objects data
 	string modelPath = string(modelPath) + "sphere.gltf";
 	sphere_ = device_.CreateMesh(command_, modelPath);
-	/*if (!sphere_.Init(&device_, *command_, modelPath)) {
-		cerr << "Failed to init sphere" << endl;
-		return false;
-	}*/
 
 	// Scene Items
 	// Camera
@@ -158,10 +149,6 @@ bool SampleScene::Init(const Application& app)
 		}
 	);
 	// RootSignature
-	/*sphere0RootSignature_.Init(&device_);
-	sphere0RootSignature_.AddDescriptorTable(*sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
-	sphere0RootSignature_.AddConstant(3, 4);
-	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);*/
 	sphere0RootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
@@ -182,24 +169,9 @@ bool SampleScene::Init(const Application& app)
 	lambertDesc.rootSignature_ = sphere0RootSignature_;
 	lambertDesc.VS_ = simpleVS_;
 	lambertDesc.PS_ = lambertPS_;
-	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	lambertDesc.sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
-	lambertDesc.rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	lambertDesc.depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	lambertDesc.dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
-	lambertDesc.IBStripCutValue_ = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-	lambertDesc.primitiveType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	vector<DXGI_FORMAT> RTVFormats = {DXGI_FORMAT_R8G8B8A8_UNORM};
-	lambertDesc.RTVFormats_ = RTVFormats;
-	lambertDesc.sampleDesc_.Count = 1;
-	lambertDesc.sampleDesc_.Quality = 0;*/
 	lambert_ = device_.CreateGraphicsPipeline(
 		lambertDesc
 	);
-	/*if (!lambert_.Init(&device_, lambertDesc)) {
-		cerr << "Failed to create lambert pipeline state" << endl;
-		return false;
-	}*/
 
 	
 	return true;
@@ -224,10 +196,6 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "sphere.gltf";
 	sphere_ = device_.CreateMesh(command_, modelPath);
-	/*if (!sphere_.Init(&device_, (*command_), modelPath)) {
-		cerr << "Failed to init sphere" << endl;
-		return false;
-	}*/
 
 	// Scene Items
 	// Camera
@@ -283,10 +251,6 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		}
 	);
 	// RootSignature
-	/*sphere0RootSignature_.Init(&device_);
-	sphere0RootSignature_.AddDescriptorTable(*sphere0DescManager_, D3D12_SHADER_VISIBILITY_ALL);
-	sphere0RootSignature_.AddConstant(3, 4);
-	sphere0RootSignature_.InitializeRootSignature(D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);*/
 	sphere0RootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
@@ -307,24 +271,9 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 	lambertDesc.rootSignature_ = sphere0RootSignature_;
 	lambertDesc.VS_ = simpleVS_;
 	lambertDesc.PS_ = lambertPS_;
-	/*lambertDesc.blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	lambertDesc.sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
-	lambertDesc.rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	lambertDesc.depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	lambertDesc.dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
-	lambertDesc.IBStripCutValue_ = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-	lambertDesc.primitiveType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	vector<DXGI_FORMAT> RTVFormats = {DXGI_FORMAT_R8G8B8A8_UNORM};
-	lambertDesc.RTVFormats_ = RTVFormats;
-	lambertDesc.sampleDesc_.Count = 1;
-	lambertDesc.sampleDesc_.Quality = 0;*/
 	lambert_ = device_.CreateGraphicsPipeline(
 		lambertDesc 
 	);
-	/*if (!lambert_.Init(&device_, lambertDesc)) {
-		cerr << "Failed to create lambert pipeline state" << endl;
-		return false;
-	}*/
 
 
 	return true;
