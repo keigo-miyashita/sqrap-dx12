@@ -83,28 +83,64 @@ struct StateObjectType
 	};
 };
 
-class StateObjectDesc
+enum class ShaderStage
 {
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-	CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
-	StateObjectType::Type stateObjectType_;
-	std::wstring programName_;
-
-public:
-	StateObjectDesc();
-	~StateObjectDesc() = default;
-	void Init(StateObjectType::Type type);
-	void AddGlobalRootSignature(const RootSignature& rootSignature);
-	void AddShader(const Shader& shader);
-	void AddWorkgraph(std::wstring programName);
-	void AddGenericProgram(std::vector<std::wstring> entries);
-	CD3DX12_STATE_OBJECT_DESC& GetStateObjectDesc();
-	StateObjectType::Type GetStateObjectType() const;
-	std::wstring GetProgramName() const;
+	RayGen, ClosetHit, Anyhit, Intersection, Miss, Callable, Compute, Mesh, Pixel
 };
+
+struct StateObjectDesc
+{
+	struct ExportDesc
+	{
+		std::shared_ptr<Shader> shader;
+		ShaderStage shaderStage;
+		
+	};
+
+	struct LocalRootSigDesc
+	{
+		std::shared_ptr<RootSignature> localRootSig;
+		std::initializer_list<std::shared_ptr<Shader>> shaders;
+	};
+
+	struct ProgramDesc
+	{
+		std::wstring programName;
+		std::initializer_list<std::shared_ptr<Shader>> shaders;
+	};
+
+	StateObjectType::Type stateObjectType;
+	std::shared_ptr<RootSignature> globalRootSig;
+	std::initializer_list<ExportDesc> exportDescs;
+	std::initializer_list<LocalRootSigDesc> localRootSigDescs;
+	// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
+	// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË
+	std::vector<ProgramDesc> programDescs;
+	std::wstring workGraphProgramName = L"Program";
+};
+
+//class StateObjectDescTest
+//{
+//private:
+//	template<typename T>
+//	using ComPtr = Microsoft::WRL::ComPtr<T>;
+//
+//	CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
+//	StateObjectType::Type stateObjectType_;
+//	std::wstring programName_;
+//
+//public:
+//	StateObjectDesc();
+//	~StateObjectDesc() = default;
+//	void Init(StateObjectType::Type type);
+//	void AddGlobalRootSignature(const RootSignature& rootSignature);
+//	void AddShader(const Shader& shader);
+//	void AddWorkgraph(std::wstring programName);
+//	void AddGenericProgram(std::vector<std::wstring> entries);
+//	CD3DX12_STATE_OBJECT_DESC& GetStateObjectDesc();
+//	StateObjectType::Type GetStateObjectType() const;
+//	std::wstring GetProgramName() const;
+//};
 
 class StateObject
 {
@@ -112,17 +148,20 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
+	const Device* pDevice_ = nullptr;
+	const StateObjectDesc soDesc_;
+	std::wstring name_;
+	CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
 	ComPtr<ID3D12StateObject> stateObject_ = nullptr;
-	std::wstring programName_;
-	StateObjectType::Type stateObjectType_;
+	/*std::wstring programName_;
+	StateObjectType::Type stateObjectType_;*/
 
-	bool CreateStateObject(StateObjectDesc& soDesc, std::wstring name = L"StateObject");
+	bool CreateStateObject();
 
 public:
-	StateObject();
+	StateObject(const Device& device, const StateObjectDesc soDesc, std::wstring name = L"");
 	~StateObject() = default;
-	bool Init(Device* pDevice, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
+	//bool Init(Device* pDevice, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
 	StateObjectType::Type GetStateObjectType() const;

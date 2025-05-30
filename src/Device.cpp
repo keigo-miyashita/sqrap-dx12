@@ -278,6 +278,11 @@ std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_
 	return make_shared<RootSignature>(*this, flag, rootParams, name);
 }
 
+std::shared_ptr<StateObject> Device::CreateStateObject(const StateObjectDesc soDesc, std::wstring name) const
+{
+	return make_shared<StateObject>(*this, soDesc, name);
+}
+
 std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
@@ -286,6 +291,11 @@ std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& com
 std::shared_ptr<TLAS> Device::CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name) const
 {
 	return make_shared<TLAS>(*this, command, tlasDescs, name);
+}
+
+std::shared_ptr<WorkGraph> Device::CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name) const
+{
+	return make_shared<WorkGraph>(*this, stateObject, maxInputRecords, maxNodeInputs, name);
 }
 
 ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const

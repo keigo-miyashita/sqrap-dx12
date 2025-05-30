@@ -14,8 +14,10 @@ class DescriptorManager;
 class GraphicsPipeline;
 class Mesh;
 class RootSignature;
+class StateObject;
 class SwapChain;
 class TLAS;
+class WorkGraph;
 
 struct ASMesh;
 struct ASVertex;
@@ -24,6 +26,7 @@ struct GraphicsDesc;
 struct IndirectDesc;
 struct Mesh;
 struct RootParameter;
+struct StateObjectDesc;
 struct Vertex;
 
 class Device
@@ -65,8 +68,10 @@ public:
 	std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const;
 	std::shared_ptr<Mesh> CreateMesh(std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 	std::shared_ptr<RootSignature> CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"") const;
+	std::shared_ptr<StateObject> CreateStateObject(const StateObjectDesc soDesc, std::wstring name = L"") const;
 	std::shared_ptr<SwapChain> CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"") const;
 	std::shared_ptr<TLAS> CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"") const;
+	std::shared_ptr<WorkGraph> CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"") const;
 	ComPtr<IDXGIFactory7> GetDXGIFactory() const;
 	ComPtr<ID3D12Device> GetDevice() const;
 	ComPtr<StableDevice> GetStableDevice() const;
