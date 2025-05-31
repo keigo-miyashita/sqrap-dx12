@@ -17,10 +17,10 @@ target_include_directories(${PROJECT_NAME}-sample-src PRIVATE "${PROJECT_SOURCE_
 # d3d12の機能を使うためのファイルを実行ファイル以下のディレクトリにコピー
 if(TARGET Microsoft::DirectX12-Agility)
 #        file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")
-    add_custom_command(TARGET ${PROJECT_NAME}-sample-src POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>/D3D12")
+    add_custom_command(TARGET ${PROJECT_NAME}-sample-src POST_BUILD COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>/${D3D12_DLL_DIR}")
     add_custom_command(TARGET ${PROJECT_NAME}-sample-src POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:Microsoft::DirectX12-Core,IMPORTED_LOCATION_RELEASE> $<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>/D3D12
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:Microsoft::DirectX12-Layers,IMPORTED_LOCATION_DEBUG> $<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>/D3D12
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:Microsoft::DirectX12-Core,IMPORTED_LOCATION_RELEASE> $<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>/${D3D12_DLL_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_PROPERTY:Microsoft::DirectX12-Layers,IMPORTED_LOCATION_DEBUG> $<TARGET_FILE_DIR:${PROJECT_NAME}-sample-src>/${D3D12_DLL_DIR}
         COMMAND_EXPAND_LISTS
     )
 endif()
