@@ -31,5 +31,6 @@ public:
 	DirectX::XMFLOAT3 GetRight();
 	DirectX::XMMATRIX GetView();
 	DirectX::XMMATRIX GetProj();
+	DirectX::XMMATRIX GetInvViewProj();
 	
 };

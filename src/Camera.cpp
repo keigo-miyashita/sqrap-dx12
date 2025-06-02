@@ -121,3 +121,8 @@ DirectX::XMMATRIX Camera::GetProj()
 {
 	return XMMatrixPerspectiveFovLH(XMConvertToRadians(fovYAngle_), aspectRatio_, nearZ_, farZ_);
 }
+
+DirectX::XMMATRIX Camera::GetInvViewProj()
+{
+	return XMMatrixInverse(nullptr, XMMatrixMultiply(GetView(), GetProj()));
+}

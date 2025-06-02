@@ -62,4 +62,5 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 # ディレクトリへのパスが変数に格納されてから
 # add_subdirectoryする
 # これによって下の階層に正しい値をもった変数がコピーされる
-add_subdirectory(sample/src)
+add_subdirectory(sample/raster)
+add_subdirectory(sample/raytracing)

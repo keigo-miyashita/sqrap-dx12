@@ -35,7 +35,7 @@ struct TLASDesc
 {
 	DirectX::XMFLOAT4X4 transform;
 	UINT instanceMask = 0x0;
-	BLAS* blas = nullptr;
+	std::shared_ptr<BLAS> blas;
 	D3D12_RAYTRACING_INSTANCE_FLAGS flags;
 };
 
