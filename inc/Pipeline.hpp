@@ -85,22 +85,47 @@ struct StateObjectType
 
 enum class ShaderStage
 {
-	RayGen, ClosetHit, Anyhit, Intersection, Miss, Callable, Compute, Mesh, Pixel
+	RayGen, ClosestHit, Anyhit, Intersection, Miss, Callable, Compute, Mesh, Pixel
 };
+
 
 struct StateObjectDesc
 {
-	struct ExportDesc
+	struct ShaderExportDesc
 	{
 		std::shared_ptr<Shader> shader;
 		ShaderStage shaderStage;
-		
+		std::shared_ptr<RootSignature> localRootSig;
 	};
 
-	struct LocalRootSigDesc
+	struct HitGroupExportDesc
 	{
+		struct HitGroupShaderExportDesc
+		{
+			std::shared_ptr<Shader> shader;
+			ShaderStage shaderStage;
+		};
+
+		std::wstring groupName;
+		HitGroupShaderExportDesc closesthit;
+		HitGroupShaderExportDesc anyhit;
+		HitGroupShaderExportDesc intersection;
 		std::shared_ptr<RootSignature> localRootSig;
-		std::initializer_list<std::shared_ptr<Shader>> shaders;
+	};
+
+	struct RayConfigDesc
+	{
+		UINT payloadSize;
+		UINT rayDepth = 1;
+	};
+
+	struct RayTracingDesc
+	{
+		std::shared_ptr<RootSignature> globalRootSig;
+		std::initializer_list<ShaderExportDesc> rayGens;
+		std::initializer_list<ShaderExportDesc> misses;
+		std::initializer_list<HitGroupExportDesc> hitGroups;
+		RayConfigDesc rayConfigDesc;
 	};
 
 	struct ProgramDesc
@@ -109,38 +134,36 @@ struct StateObjectDesc
 		std::initializer_list<std::shared_ptr<Shader>> shaders;
 	};
 
-	StateObjectType::Type stateObjectType;
-	std::shared_ptr<RootSignature> globalRootSig;
-	std::initializer_list<ExportDesc> exportDescs;
-	std::initializer_list<LocalRootSigDesc> localRootSigDescs;
-	// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
-	// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË
-	std::vector<ProgramDesc> programDescs;
-	std::wstring workGraphProgramName = L"Program";
-};
+	struct WorkGraphDesc
+	{
+		std::shared_ptr<RootSignature> globalRootSig;
+		std::initializer_list<ShaderExportDesc> exportDescs;
+		// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
+		// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË
+		std::vector<ProgramDesc> programDescs;
+		std::wstring workGraphProgramName = L"Program";
+	};
 
-//class StateObjectDescTest
-//{
-//private:
-//	template<typename T>
-//	using ComPtr = Microsoft::WRL::ComPtr<T>;
-//
-//	CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
-//	StateObjectType::Type stateObjectType_;
-//	std::wstring programName_;
-//
-//public:
-//	StateObjectDesc();
-//	~StateObjectDesc() = default;
-//	void Init(StateObjectType::Type type);
-//	void AddGlobalRootSignature(const RootSignature& rootSignature);
-//	void AddShader(const Shader& shader);
-//	void AddWorkgraph(std::wstring programName);
-//	void AddGenericProgram(std::vector<std::wstring> entries);
-//	CD3DX12_STATE_OBJECT_DESC& GetStateObjectDesc();
-//	StateObjectType::Type GetStateObjectType() const;
-//	std::wstring GetProgramName() const;
-//};
+	//struct LocalRootSigDesc
+	//{
+	//	std::shared_ptr<RootSignature> localRootSig;
+	//	std::initializer_list<std::shared_ptr<Shader>> shaders;
+	//};
+
+	//StateObjectType::Type stateObjectType;
+	//std::shared_ptr<RootSignature> globalRootSig;
+	//std::initializer_list<ExportDesc> exportDescs;
+	//std::initializer_list<LocalRootSigDesc> localRootSigDescs;
+	//// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
+	//// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË
+	//std::initializer_list<HitGroupDesc> hitGroupDescs;
+	//RaytracingDesc raytracingDesc;
+	//std::vector<ProgramDesc> programDescs;
+	//std::wstring workGraphProgramName = L"Program";
+
+	StateObjectType::Type stateObjectType;
+	std::variant<RayTracingDesc, WorkGraphDesc> typeDesc;
+};
 
 class StateObject
 {
@@ -153,6 +176,9 @@ private:
 	std::wstring name_;
 	CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
 	ComPtr<ID3D12StateObject> stateObject_ = nullptr;
+	std::vector<std::wstring> rayGens;
+	std::vector<std::wstring> misses;
+	std::vector<std::wstring> hitGroups;
 	/*std::wstring programName_;
 	StateObjectType::Type stateObjectType_;*/
 
@@ -165,4 +191,7 @@ public:
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
 	StateObjectType::Type GetStateObjectType() const;
+	std::vector<std::wstring> GetRayGens() const;
+	std::vector<std::wstring> GetMisses() const;
+	std::vector<std::wstring> GetHitGroups() const;
 };

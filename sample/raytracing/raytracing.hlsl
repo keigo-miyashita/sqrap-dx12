@@ -3,6 +3,7 @@ cbuffer Camera : register(b0)
     float4x4 view;
     float4x4 proj;
     float4x4 invViewProj;
+    float4 cameraPosition;
 }
 
 cbuffer Light : register(b1)
@@ -10,6 +11,16 @@ cbuffer Light : register(b1)
     float4 lightPos;
     float4 lightColor;
 }
+
+// Payloadは自分で定義
+struct Payload {
+    float3 color;
+};
+
+// Shader root signature
+RaytracingAccelerationStructure SceneBVH : register(t0);  // TLAS
+
+RWTexture2D<float4> Output : register(u0);  // 出力バッファ
 
 [shader("raygeneration")]
 void rayGeneration()
@@ -23,6 +34,44 @@ void rayGeneration()
     float2 uv = (dispatchID + 0.5f) / dispatchDim * 2.0f - 1.0f;
     // スクリーン上のピクセル位置をカメラ座標系からワールド座標系に変換
     // x, y座標はまだわかるけどz座標は工夫の余地ないか？
+    // NDC空間のz座標は0 - 1 ここで ndcの一番奥までを対象とすることで
+    // 視錐台に対してレイを飛ばせる
     float4 target = mul(invViewProj, float4(uv, 1.0f, 1.0f));
-    float3 direction = normalize(target.xyz - cameraPosition);
+    // カメラからスクリーン方向のレイ
+    float3 direction = normalize(target.xyz - cameraPosition.xyz);
+
+    // RayDescは組み込み型
+    RayDesc ray;
+    ray.Origin = cameraPosition;
+    ray.Direction = direction;
+    ray.TMin = 0.0001f;
+    ray.TMax = 10000.0f;
+
+    Payload payload;
+    payload.color = float3(0.0f, 0.0f, 0.0f);
+
+    // tlas, rayflag, mask, hit id, geometry , miss id ray, payload
+    // geometryはいったん1
+    // hit groupが増えたときに気にする
+    TraceRay(SceneBVH, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
+
+    Output[dispatchID] = float4(payload.color, 1.0f);
+}
+
+[shader("closesthit")]
+void closestHit(inout Payload payload, in BuiltInTriangleIntersectionAttributes attribs)
+{
+    float3 beryCentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
+
+    float3 normal = float3(0.0f, 1.0f, 0.0f);
+
+    float3 hitColor = abs(normal);
+
+    payload.color = hitColor;
+}
+
+[shader("miss")]
+void miss(inout Payload payload)
+{
+    payload.color = float3(0.1f, 0.1f, 0.1f);
 }

@@ -125,6 +125,7 @@ bool SampleScene::Init(const Application& app)
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
 		pCamera->invViewProj = camera_.GetInvViewProj();
+		pCamera->cameraPosition = XMFLOAT4(0.0f, 0.0f, -5.0f, 1.0f);
 		cameraBuffer_->Unmap();
 	}
 
@@ -136,18 +137,11 @@ bool SampleScene::Init(const Application& app)
 		light0Buffer_->Unmap();
 	}
 
-	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
-	rawPtr = sphere0Buffer_->Map();
-	if (rawPtr) {
-		Object* pObject = static_cast<Object*>(rawPtr);
-		*pObject = sphere0_;
-		sphere0Buffer_->Unmap();
-	}
-
 	// Shaders
-	wstring shaderPath = wstring(SHADER_DIR) + L"lambert.hlsl";
-	simpleVS_ = dxc_.CreateShader(ShaderType::Vertex, shaderPath, L"VSmain");
-	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
+	wstring shaderPath = wstring(SHADER_DIR) + L"raytracing.hlsl";
+	rayGen_		= dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"rayGeneration");
+	closestHit_ = dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"closestHit");
+	miss_		= dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"miss");
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
@@ -155,7 +149,6 @@ bool SampleScene::Init(const Application& app)
 		{
 			{ *cameraBuffer_, ViewType::CBV, 0},
 			{ *light0Buffer_, ViewType::CBV, 1},
-			{ *sphere0Buffer_, ViewType::CBV, 2}
 		}
 	);
 	// RootSignature
@@ -163,25 +156,28 @@ bool SampleScene::Init(const Application& app)
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
-			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
 		}
-		);
-
-	// Graphics pipeline
-	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
-	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
-	GraphicsDesc lambertDesc(inputLayouts);
-	lambertDesc.rootSignature_ = sphere0RootSignature_;
-	lambertDesc.VS_ = simpleVS_;
-	lambertDesc.PS_ = lambertPS_;
-	lambert_ = device_.CreateGraphicsPipeline(
-		lambertDesc
 	);
+
+	// StateObject
+	raytracingStates_ = device_.CreateStateObject(
+		{
+			StateObjectType::Raytracing,
+			sphere0RootSignature_,
+			{
+				{rayGen_, ShaderStage::RayGen},
+				{closestHit_, ShaderStage::ClosestHit},
+				{miss_, ShaderStage::Miss},
+			},
+			{},
+			{
+				{L"HitGroup", closestHit_}
+			},
+			{3 * sizeof(float), 1}
+		}
+	);
+
+	
 
 	
 	return true;

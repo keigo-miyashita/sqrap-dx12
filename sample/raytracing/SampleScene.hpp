@@ -8,6 +8,7 @@ struct CameraMatrix
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX proj;
 	DirectX::XMMATRIX invViewProj;
+	DirectX::XMFLOAT4 cameraPosition;
 };
 
 struct Light
@@ -52,7 +53,6 @@ private:
 	// Resources
 	std::shared_ptr<Buffer> cameraBuffer_;
 	std::shared_ptr<Buffer> light0Buffer_;
-	std::shared_ptr<Buffer> sphere0Buffer_;
 
 	// Shaders
 	std::shared_ptr<Shader> rayGen_;
@@ -66,7 +66,7 @@ private:
 	std::shared_ptr<RootSignature> sphere0RootSignature_;
 
 	// Pipeline
-	std::shared_ptr<GraphicsPipeline> lambert_;
+	std::shared_ptr<StateObject> raytracingStates_;
 
 	void BeginRender();
 	void EndRender();

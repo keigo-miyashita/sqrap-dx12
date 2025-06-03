@@ -42,6 +42,7 @@
 #include <Indirect.hpp>
 #include <Mesh.hpp>
 #include <Pipeline.hpp>
+#include <Raytracing.hpp>
 #include <Rootsignature.hpp>
 #include <Shader.hpp>
 #include <Swapchain.hpp>
