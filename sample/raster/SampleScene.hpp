@@ -57,6 +57,8 @@ private:
 	// RootSignature
 	std::shared_ptr<RootSignature> sphere0RootSignature_;
 
+	std::shared_ptr<ResourceSet> sphere0ResourceSet_;
+
 	// Pipeline
 	std::shared_ptr<GraphicsPipeline> lambert_;
 

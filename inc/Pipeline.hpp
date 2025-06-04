@@ -179,8 +179,8 @@ private:
 	std::vector<std::wstring> rayGens;
 	std::vector<std::wstring> misses;
 	std::vector<std::wstring> hitGroups;
-	/*std::wstring programName_;
-	StateObjectType::Type stateObjectType_;*/
+	std::wstring programName_;
+	StateObjectType::Type stateObjectType_;
 
 	bool CreateStateObject();
 
@@ -191,6 +191,7 @@ public:
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
 	StateObjectType::Type GetStateObjectType() const;
+	StateObjectDesc GetStateObjectDesc() const;
 	std::vector<std::wstring> GetRayGens() const;
 	std::vector<std::wstring> GetMisses() const;
 	std::vector<std::wstring> GetHitGroups() const;

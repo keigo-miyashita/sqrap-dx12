@@ -163,17 +163,34 @@ bool SampleScene::Init(const Application& app)
 	raytracingStates_ = device_.CreateStateObject(
 		{
 			StateObjectType::Raytracing,
-			sphere0RootSignature_,
+			StateObjectDesc::RayTracingDesc
 			{
-				{rayGen_, ShaderStage::RayGen},
-				{closestHit_, ShaderStage::ClosestHit},
-				{miss_, ShaderStage::Miss},
-			},
-			{},
-			{
-				{L"HitGroup", closestHit_}
-			},
-			{3 * sizeof(float), 1}
+				sphere0RootSignature_,
+				{
+					{rayGen_, ShaderStage::RayGen},
+				},
+				{
+					{miss_, ShaderStage::Miss},
+				},
+				{
+					{
+						L"HitGroup",
+						{ closestHit_, ShaderStage::ClosestHit },
+					}
+				},
+				{3 * sizeof(float), 1}
+			}
+			//sphere0RootSignature_,
+			//{
+			//	{rayGen_, ShaderStage::RayGen},
+			//	{closestHit_, ShaderStage::ClosestHit},
+			//	{miss_, ShaderStage::Miss},
+			//},
+			//{},
+			//{
+			//	{L"HitGroup", closestHit_}
+			//},
+			//{3 * sizeof(float), 1}
 		}
 	);
 

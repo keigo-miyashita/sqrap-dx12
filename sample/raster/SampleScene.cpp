@@ -58,11 +58,12 @@ void SampleScene::Render()
 	}
 
 	command_->GetCommandList()->SetPipelineState(lambert_->GetPipelineState().Get());
-	command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_->GetRootSignature().Get());
+	/*command_->GetCommandList()->SetGraphicsRootSignature(sphere0RootSignature_->GetRootSignature().Get());
 	command_->GetCommandList()->SetDescriptorHeaps(1, sphere0DescManager_->GetDescriptorHeap().GetAddressOf());
 	command_->GetCommandList()->SetGraphicsRootDescriptorTable(0, sphere0DescManager_->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
-	command_->GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
+	command_->GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);*/
+	command_->SetGraphicsResourceSet(sphere0ResourceSet_);
 	command_->AddDrawIndexed(*sphere_, 1);
 
 	EndRender();
@@ -157,6 +158,16 @@ bool SampleScene::Init(const Application& app)
 		}
 		);
 
+	Color sphere0Color = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
+			sphere0RootSignature_,
+			std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>>
+			{
+				DescriptorManager{*sphere0DescManager_},
+				Constants{reinterpret_cast<void*>(&sphere0Color), 4}
+			}
+	);
+
 	// Graphics pipeline
 	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
 	{
@@ -250,12 +261,23 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 			{ *sphere0Buffer_, ViewType::CBV, 2}
 		}
 	);
+
 	// RootSignature
 	sphere0RootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
 			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
+		}
+	);
+
+	Color sphere0Color = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
+	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
+		sphere0RootSignature_,
+		std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>>
+		{
+			DescriptorManager{ *sphere0DescManager_ },
+				Constants{ reinterpret_cast<void*>(&sphere0Color), 4 }
 		}
 	);
 

@@ -270,27 +270,29 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 			pPipelineConfig->Config(rtDesc.rayConfigDesc.rayDepth);
 		}
 	}
-	else if (soDesc.stateObjectType == StateObjectType::WorkGraph) {
+	//else if (soDesc.stateObjectType == StateObjectType::WorkGraph) {
+	//	stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
+	//	auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
+
+	//	if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
+	//		StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
+
+	//		if (wgDesc.globalRootSig) {
+	//			auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
+	//			pGlobalRootSig->SetRootSignature(wgDesc.globalRootSig->GetRootSignature().Get());
+	//		}
+	//	}
+
+	//	//// Graphics nodeを使うときは下のコメントアウトを外す.
+	//	//pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
+	//}
+	else if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-
-		if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
-			StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
-
-			if (wgDesc.globalRootSig) {
-				auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pGlobalRootSig->SetRootSignature(wgDesc.globalRootSig->GetRootSignature().Get());
-			}
+		if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+			// Graphics nodeを使うときは下のコメントアウトを外す.
+			pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
 		}
-
-		//// Graphics nodeを使うときは下のコメントアウトを外す.
-		//pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
-	}
-	else if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
-		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
-		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-		// Graphics nodeを使うときは下のコメントアウトを外す.
-		pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
 
 		if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
 			StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
@@ -305,15 +307,40 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 				CD3DX12_SHADER_BYTECODE bcLib(exportDesc.shader->GetBlob()->GetBufferPointer(), exportDesc.shader->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
 
-				auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pLocalRootSig->SetRootSignature(exportDesc.localRootSig->GetRootSignature().Get());
+				if (exportDesc.localRootSig) {
+					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+					pLocalRootSig->SetRootSignature(exportDesc.localRootSig->GetRootSignature().Get());
 
-				auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-				association->SetSubobjectToAssociate(*pLocalRootSig);
-				association->AddExport(exportDesc.shader->GetEntryName().c_str());
+					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+					association->SetSubobjectToAssociate(*pLocalRootSig);
+					association->AddExport(exportDesc.shader->GetEntryName().c_str());
+				}
 			}
 
+			if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+				// NOTE : 
+				// This wrapper is designed under the assumption
+				// All program use the same topology and RTFormat
+				auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
+				pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+				auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
+				pRTFormats->SetNumRenderTargets(1);
+				pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
 
+				for (auto programDesc : wgDesc.programDescs) {
+					auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
+					pGenericProgram->SetProgramName(programDesc.programName.c_str());
+					for (auto shader : programDesc.shaders) {
+						pGenericProgram->AddExport(shader->GetEntryName().c_str());
+					}
+					pGenericProgram->AddSubobject(*pPrimitiveTopology);
+					pGenericProgram->AddSubobject(*pRTFormats);
+				}
+			}
+
+			auto pWorkGraph = stateObjectDesc_.CreateSubobject<CD3DX12_WORK_GRAPH_SUBOBJECT>();
+			pWorkGraph->IncludeAllAvailableNodes();
+			pWorkGraph->SetProgramName(wgDesc.workGraphProgramName.c_str());
 		}
 	}
 
@@ -368,41 +395,45 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 	//}
 
 	// NOTE : Execute only Work graph with mesh node
-	if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
-		auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
-		pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-		auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
-		pRTFormats->SetNumRenderTargets(1);
-		pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
+	//if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+	//	auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
+	//	pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+	//	auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
+	//	pRTFormats->SetNumRenderTargets(1);
+	//	pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-		/*auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
-		pGenericProgram->SetProgramName(L"program");
-		for (int i = 0; i < entries.size(); i++) {
-			pGenericProgram->AddExport(entries[i].c_str());
-		}
-		pGenericProgram->AddSubobject(*pPrimitiveTopology);
-		pGenericProgram->AddSubobject(*pRTFormats);*/
+	//	/*auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
+	//	pGenericProgram->SetProgramName(L"program");
+	//	for (int i = 0; i < entries.size(); i++) {
+	//		pGenericProgram->AddExport(entries[i].c_str());
+	//	}
+	//	pGenericProgram->AddSubobject(*pPrimitiveTopology);
+	//	pGenericProgram->AddSubobject(*pRTFormats);*/
 
-		for (auto programDesc : soDesc.programDescs) {
-			auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
-			pGenericProgram->SetProgramName(programDesc.programName.c_str());
-			for (auto shader : programDesc.shaders) {
-				pGenericProgram->AddExport(shader->GetEntryName().c_str());
-			}
-			pGenericProgram->AddSubobject(*pPrimitiveTopology);
-			pGenericProgram->AddSubobject(*pRTFormats);
-		}
-	}
+	//	for (auto programDesc : soDesc.programDescs) {
+	//		auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
+	//		pGenericProgram->SetProgramName(programDesc.programName.c_str());
+	//		for (auto shader : programDesc.shaders) {
+	//			pGenericProgram->AddExport(shader->GetEntryName().c_str());
+	//		}
+	//		pGenericProgram->AddSubobject(*pPrimitiveTopology);
+	//		pGenericProgram->AddSubobject(*pRTFormats);
+	//	}
+	//}
 
-	if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+	/*if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
 		auto pWorkGraph = stateObjectDesc_.CreateSubobject<CD3DX12_WORK_GRAPH_SUBOBJECT>();
 		pWorkGraph->IncludeAllAvailableNodes();
 		pWorkGraph->SetProgramName(soDesc.workGraphProgramName.c_str());
-	}
+	}*/
 
 	if (soDesc.stateObjectType == StateObjectType::Raytracing) {
 		// TODO : Handle raytracing pipeline
 		cout << "StateObjectType::Raytracing" << endl;
+		HRESULT result = pDevice_->GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw std::runtime_error("Failed to CreateStateObject : " + to_string(result));
+		}
 	}
 	else if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
 		cout << "StateObjectType::WorkGraph" << endl;
@@ -420,12 +451,19 @@ ComPtr<ID3D12StateObject> StateObject::GetStateObject() const
 
 std::wstring StateObject::GetProgramName() const
 {
-	return soDesc_.workGraphProgramName;
+	std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
+	StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
+	return wgDesc.workGraphProgramName;
 }
 
 StateObjectType::Type StateObject::GetStateObjectType() const
 {
 	return soDesc_.stateObjectType;
+}
+
+StateObjectDesc StateObject::GetStateObjectDesc() const
+{
+	return soDesc_;
 }
 
 std::vector<std::wstring> StateObject::GetRayGens() const

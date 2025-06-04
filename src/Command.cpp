@@ -220,6 +220,74 @@ void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsC
 	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
 }
 
+void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
+{
+	const std::vector<std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>> resources = resourceSet->GetBindedResources();
+	const std::vector<DescriptorManager> descManagers = resourceSet->GetDescManagers();
+
+	commandList_->SetComputeRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
+
+	std::vector<ID3D12DescriptorHeap*> rawHeaps;
+	for (auto& h : descManagers) {
+		rawHeaps.push_back(h.GetDescriptorHeap().Get());
+	}
+
+	commandList_->SetDescriptorHeaps(rawHeaps.size(), rawHeaps.data());;
+
+	UINT rootParamIndex = 0;
+	for (const std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>& resource : resources) {
+		if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(resource)) {
+			D3D12_GPU_DESCRIPTOR_HANDLE dh = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(resource);
+			commandList_->SetComputeRootDescriptorTable(rootParamIndex, dh);
+			rootParamIndex++;
+		}
+		else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(resource)) {
+			D3D12_GPU_VIRTUAL_ADDRESS add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(resource);
+			// NOTE : Add bind descriptor
+			rootParamIndex++;
+		}
+		else if (std::holds_alternative<Constants>(resource)) {
+			Constants cs = std::get<Constants>(resource);
+			commandList_->SetComputeRoot32BitConstants(rootParamIndex, cs.numConstans, cs.constants, cs.numOffset);
+			rootParamIndex++;
+		}
+	}
+}
+
+void Command::SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet)
+{
+	const std::vector<std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>> resources = resourceSet->GetBindedResources();
+	const std::vector<DescriptorManager> descManagers = resourceSet->GetDescManagers();
+
+	commandList_->SetGraphicsRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
+
+	std::vector<ID3D12DescriptorHeap*> rawHeaps;
+	for (auto& h : descManagers) {
+		rawHeaps.push_back(h.GetDescriptorHeap().Get());
+	}
+
+	commandList_->SetDescriptorHeaps(rawHeaps.size(), rawHeaps.data());;
+
+	UINT rootParamIndex = 0;
+	for (const std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>& resource : resources) {
+		if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(resource)) {
+			D3D12_GPU_DESCRIPTOR_HANDLE dh = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(resource);
+			commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, dh);
+			rootParamIndex++;
+		}
+		else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(resource)) {
+			D3D12_GPU_VIRTUAL_ADDRESS add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(resource);
+			// NOTE : Add bind descriptor
+			rootParamIndex++;
+		}
+		else if (std::holds_alternative<Constants>(resource)) {
+			Constants cs = std::get<Constants>(resource);
+			commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, cs.numConstans, cs.constants, cs.numOffset);
+			rootParamIndex++;
+		}
+	}
+}
+
 bool Command::WaitCommand()
 {
 	if (!fence_->WaitCommand(*this)) {

@@ -15,7 +15,10 @@ class GraphicsPipeline;
 class GUI;
 class Indirect;
 class Mesh;
+class ResourceSet;
 class RootSignature;
+
+struct Constants;
 
 class Command
 {
@@ -60,6 +63,8 @@ public:
 	void SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
+	void SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet);
+	void SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet);
 	bool WaitCommand();
 
 	D3D12_COMMAND_LIST_TYPE GetCommandType();
