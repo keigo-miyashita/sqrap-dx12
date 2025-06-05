@@ -32,7 +32,6 @@
 
 #include <AS.hpp>
 #include <Application.hpp>
-#include <Buffer.hpp>
 #include <Camera.hpp>
 #include <Command.hpp>
 #include <Descriptormanager.hpp>
@@ -44,6 +43,7 @@
 #include <Mesh.hpp>
 #include <Pipeline.hpp>
 #include <Raytracing.hpp>
+#include <Resource.hpp>
 #include <Rootsignature.hpp>
 #include <Shader.hpp>
 #include <Swapchain.hpp>

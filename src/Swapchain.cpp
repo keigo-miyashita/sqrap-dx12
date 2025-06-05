@@ -67,19 +67,23 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
 	for (int i = 0; i < swapChainDesc1.BufferCount; i++) {
-		result = swapChain_->GetBuffer(i, IID_PPV_ARGS(&backBuffers_[i]));
+		backBuffers_[i] = make_shared<Texture>();
+		ComPtr<ID3D12Resource> resource;
+		result = swapChain_->GetBuffer(i, IID_PPV_ARGS(resource.ReleaseAndGetAddressOf()));
+		backBuffers_[i]->SetResource(resource);
+		backBuffers_[i]->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to GetBuffer for SwapChain : " + to_string(result));
 			return false;
 		}
 		wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
 		backBuffers_[i]->SetName(nameBackBuffer.c_str());
-		rtvDesc.Format = backBuffers_[i]->GetDesc().Format;
-		pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i].Get(), &rtvDesc, handle);
+		rtvDesc.Format = backBuffers_[i]->GetResource()->GetDesc().Format;
+		pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &rtvDesc, handle);
 		handle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
-	viewport_ = CD3DX12_VIEWPORT(backBuffers_[0].Get());
+	viewport_ = CD3DX12_VIEWPORT(backBuffers_[0]->GetResource().Get());
 	scissorsRect_ = CD3DX12_RECT(0, 0, swapChainDesc1.Width, swapChainDesc1.Height);
 
 	return true;
@@ -139,9 +143,10 @@ ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain()
 	return swapChain_;
 }
 
-ComPtr<ID3D12Resource> SwapChain::GetCurrentBackBuffer(UINT index)
+std::shared_ptr<Texture> SwapChain::GetCurrentBackBuffer()
 {
-	return backBuffers_[index];
+	auto bbIndex = swapChain_->GetCurrentBackBufferIndex();
+	return backBuffers_[bbIndex];
 }
 
 ComPtr<ID3D12DescriptorHeap> SwapChain::GetRtvHeap()

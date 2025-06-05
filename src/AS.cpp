@@ -31,7 +31,7 @@ bool BLAS::CreateBLAS(const ASMesh& mesh)
 	scratchBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1);
 
 	cout << "BLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-	ASBuffer_ = pDevice_->CreateBuffer(BufferType::AS, (UINT)prebuildInfo.ResultDataMaxSizeInBytes, 1);
+	ASBuffer_ = pDevice_->CreateAS((UINT)prebuildInfo.ResultDataMaxSizeInBytes);
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 	buildASDesc.Inputs = buildInputs;
@@ -89,7 +89,6 @@ bool TLAS::CreateTLAS()
 	cout << "uploadBuffer result : stride = " << uploadBuffer->GetResource()->GetDesc().Width << " num = " << uploadBuffer->GetResource()->GetDesc().Height << endl;
 	cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
 	instanceDescBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
-	cout << "instanceDescBuffer_r result : stride = " << instanceDescBuffer_->GetResource()->GetDesc().Width << " num = " << instanceDescBuffer_->GetResource()->GetDesc().Height << endl;
 
 	command_->CopyBuffer(*uploadBuffer, *instanceDescBuffer_);
 	command_->WaitCommand();
@@ -108,7 +107,7 @@ bool TLAS::CreateTLAS()
 	scratchBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, prebuildInfo.ScratchDataSizeInBytes, 1);
 
 	cout << "TLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-	ASBuffer_ = pDevice_->CreateBuffer(BufferType::AS, prebuildInfo.ResultDataMaxSizeInBytes, 1);
+	ASBuffer_ = pDevice_->CreateAS(prebuildInfo.ResultDataMaxSizeInBytes);
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 	buildASDesc.Inputs = buildInputs;
@@ -130,7 +129,7 @@ TLAS::TLAS(const Device& device, std::shared_ptr<Command> command, const std::ve
 	CreateTLAS();
 }
 
-std::shared_ptr<Buffer> TLAS::GetASBuffer() const
+std::shared_ptr<AS> TLAS::GetASBuffer() const
 {
 	return ASBuffer_;
 }

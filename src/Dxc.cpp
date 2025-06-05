@@ -39,7 +39,7 @@ bool DXC::Init()
 	return true;
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath) const
+bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath) const
 {
 	ComPtr<IDxcIncludeHandler> incHandler_ = nullptr;
 	ComPtr<IDxcBlob> incBlob_ = nullptr;
@@ -88,10 +88,10 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType::Type shaderTyp
 
 	ComPtr<IDxcOperationResult> dxcResult = nullptr;
 	if (!entry.empty()) {
-		result = compiler_->Compile(source.Get(), fileName.c_str(), entry.c_str(), ShaderModel[shaderType].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
+		result = compiler_->Compile(source.Get(), fileName.c_str(), entry.c_str(), ShaderModel[ToInt(shaderType)].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
 	}
 	else {
-		result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[shaderType].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
+		result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[ToInt(shaderType)].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
 	}
 	ComPtr<IDxcBlobEncoding> err;
 	if (FAILED(result)) {
@@ -118,7 +118,7 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType::Type shaderTyp
 
 }
 
-std::shared_ptr<Shader> DXC::CreateShader(ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)
+std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)
 {
 	return make_shared<Shader>(*this, shaderType, fileName, entry, includePath);
 }

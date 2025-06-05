@@ -214,6 +214,11 @@ void Device::ShowUsedVramSize()
 	}
 }
 
+std::shared_ptr<AS> Device::CreateAS(UINT size, std::wstring name) const
+{
+	return make_shared<AS>(*this, size, name);
+}
+
 std::shared_ptr<ASMesh> Device::CreateASMesh(std::shared_ptr<Command> command, std::string modelPath) const
 {
 	return make_shared<ASMesh>(*this, command, modelPath);

@@ -29,7 +29,6 @@ struct GraphicsDesc
 	GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts);
 };
 
-
 class GraphicsPipeline
 {
 private:
@@ -75,20 +74,15 @@ public:
 	ComPtr<ID3D12PipelineState> GetPipelineState() const;
 };
 
-struct StateObjectType
+enum class StateObjectType
 {
-	enum Type {
-		Raytracing,
-		WorkGraph,
-		WorkGraphMesh
-	};
+	Raytracing, WorkGraph, WorkGraphMesh
 };
 
 enum class ShaderStage
 {
 	RayGen, ClosestHit, Anyhit, Intersection, Miss, Callable, Compute, Mesh, Pixel
 };
-
 
 struct StateObjectDesc
 {
@@ -147,24 +141,7 @@ struct StateObjectDesc
 		std::wstring workGraphProgramName = L"Program";
 	};
 
-	//struct LocalRootSigDesc
-	//{
-	//	std::shared_ptr<RootSignature> localRootSig;
-	//	std::initializer_list<std::shared_ptr<Shader>> shaders;
-	//};
-
-	//StateObjectType::Type stateObjectType;
-	//std::shared_ptr<RootSignature> globalRootSig;
-	//std::initializer_list<ExportDesc> exportDescs;
-	//std::initializer_list<LocalRootSigDesc> localRootSigDescs;
-	//// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
-	//// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË
-	//std::initializer_list<HitGroupDesc> hitGroupDescs;
-	//RaytracingDesc raytracingDesc;
-	//std::vector<ProgramDesc> programDescs;
-	//std::wstring workGraphProgramName = L"Program";
-
-	StateObjectType::Type stateObjectType;
+	StateObjectType stateObjectType;
 	std::variant<RayTracingDesc, WorkGraphDesc> typeDesc;
 };
 
@@ -183,7 +160,7 @@ private:
 	std::vector<std::wstring> misses;
 	std::vector<std::wstring> hitGroups;
 	std::wstring programName_;
-	StateObjectType::Type stateObjectType_;
+	StateObjectType stateObjectType_;
 
 	bool CreateStateObject();
 
@@ -192,7 +169,7 @@ public:
 	~StateObject() = default;
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
-	StateObjectType::Type GetStateObjectType() const;
+	StateObjectType GetStateObjectType() const;
 	StateObjectDesc GetStateObjectDesc() const;
 	std::vector<std::wstring> GetRayGens() const;
 	std::vector<std::wstring> GetMisses() const;

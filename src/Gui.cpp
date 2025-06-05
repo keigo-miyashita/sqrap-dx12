@@ -13,17 +13,18 @@ bool GUI::InitializeGUI(const HWND& hwnd)
 	heapDesc.NumDescriptors = 1;
 	auto result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(imguiDescHeap_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateDescriptorHeap for GUI : " + to_string(result));
 		return false;
 	}
 
 	if (ImGui::CreateContext() == nullptr) {
-		cerr << "Failed to create imgui context\n";
+		throw std::runtime_error("Failed to ImGui::CreateContext : " + to_string(result));
 		return false;
 	}
 
 	bool binResult = ImGui_ImplWin32_Init(hwnd);
 	if (!binResult) {
-		cerr << "Failed to initialize implWin32\n";
+		throw std::runtime_error("Failed to ImGui_ImplWin32_Init");
 		return false;
 	}
 
@@ -31,16 +32,17 @@ bool GUI::InitializeGUI(const HWND& hwnd)
 	auto imguiGPUHandle = imguiDescHeap_->GetGPUDescriptorHandleForHeapStart();
 	binResult = ImGui_ImplDX12_Init(pDevice_->GetDevice().Get(), 2, DXGI_FORMAT_R8G8B8A8_UNORM, imguiDescHeap_.Get(), imguiCPUHandle, imguiGPUHandle);
 	if (!binResult) {
-		cerr << "Failed to initialize implDX112\n";
+		throw std::runtime_error("Failed to ImGui_ImplDX12_Init");
 		return false;
 	}
 
 	return true;
 }
 
-GUI::GUI()
+GUI::GUI(const Device& device, const HWND& hwnd)
+	: pDevice_(&device)
 {
-
+	InitializeGUI(hwnd);
 }
 
 GUI::~GUI()
@@ -50,21 +52,21 @@ GUI::~GUI()
 	ImGui::DestroyContext();
 }
 
-bool GUI::Init(Device* pDevice, const HWND& hwnd)
-{
-	pDevice_ = pDevice;
-	if (pDevice == nullptr) {
-		cerr << "Class GUI does not have device" << endl;
-		return false;
-	}
-
-	if (!InitializeGUI(hwnd)) {
-		cerr << "Failed to InitializeGUI" << endl;
-		return false;
-	}
-
-	return true;
-}
+//bool GUI::Init(Device* pDevice, const HWND& hwnd)
+//{
+//	pDevice_ = pDevice;
+//	if (pDevice == nullptr) {
+//		cerr << "Class GUI does not have device" << endl;
+//		return false;
+//	}
+//
+//	if (!InitializeGUI(hwnd)) {
+//		cerr << "Failed to InitializeGUI" << endl;
+//		return false;
+//	}
+//
+//	return true;
+//}
 
 void GUI::BeginCommand()
 {

@@ -15,6 +15,7 @@ class GraphicsPipeline;
 class GUI;
 class Indirect;
 class Mesh;
+class Resource;
 class ResourceSet;
 class RootSignature;
 
@@ -29,9 +30,7 @@ private:
 	const Device* pDevice_ = nullptr;
 	D3D12_COMMAND_LIST_TYPE commandType_;
 	std::wstring name_;
-	// D3D12 command allocator
 	ComPtr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
-	// D3D12 Command list type
 	ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
 	ComPtr<StableCommandList> stableCommandList_ = nullptr;
 	ComPtr<LatestCommandList> latestCommandList_ = nullptr;
@@ -50,7 +49,7 @@ public:
 	void AddDrawIndexed(const Mesh& mesh, UINT numInstances);
 	void AddDrawIndexedLine(const Mesh& mesh, UINT numInstances);
 	void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
-	void CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer);
+	void CopyBuffer(Resource& srcBuffer, Resource& destBuffer);
 	void CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBuffer, UINT destOffset, UINT numBytes);
 	void DrawIndirect(const Mesh& mesh, const Indirect& indirect, const Buffer& buffer, UINT maxCommandNum);
 	void Dispatch(UINT threadX, UINT threadY, UINT threadZ);

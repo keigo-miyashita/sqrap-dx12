@@ -4,20 +4,13 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Fence::CreateFence()
+Fence::Fence(const Device& device, std::wstring name) : pDevice_(&device), name_(name)
 {
 	HRESULT result = pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateFence : " + to_string(result));
-		return false;
 	}
 	fence_->SetName(name_.c_str());
-	return true;
-}
-
-Fence::Fence(const Device& device, std::wstring name) : pDevice_(&device), name_(name)
-{
-	CreateFence();
 }
 
 bool Fence::WaitCommand(Command& command)

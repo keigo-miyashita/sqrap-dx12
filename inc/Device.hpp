@@ -1,10 +1,28 @@
 #pragma once
 
-#include <common.hpp>
+#include <AS.hpp>
+#include <Application.hpp>
+#include <Camera.hpp>
+#include <Command.hpp>
+#include <Descriptormanager.hpp>
+#include <Device.hpp>
+#include <Dxc.hpp>
+#include <Fence.hpp>
+#include <Gui.hpp>
+#include <Indirect.hpp>
+#include <Mesh.hpp>
+#include <Pipeline.hpp>
+#include <Raytracing.hpp>
+#include <Resource.hpp>
+#include <Rootsignature.hpp>
+#include <Shader.hpp>
+#include <Swapchain.hpp>
+#include <Workgraph.hpp>
 
 #define StableDevice ID3D12Device13
 #define LatestDevice ID3D12Device14
 
+class AS;
 class ASMesh;
 class Buffer;
 class BLAS;
@@ -30,6 +48,7 @@ struct IndirectDesc;
 struct Mesh;
 struct RootParameter;
 struct StateObjectDesc;
+struct TLASDesc;
 struct Vertex;
 
 class Device
@@ -58,6 +77,7 @@ public:
 	bool Init(std::wstring gpuVenorName);
 	bool Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 	void ShowUsedVramSize();
+	std::shared_ptr<AS>					CreateAS(UINT size, std::wstring name = L"") const;
 	std::shared_ptr<ASMesh>				CreateASMesh(std::shared_ptr<Command> command, std::string modelPath) const;
 	std::shared_ptr<ASMesh>				CreateASMesh(std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
 	std::shared_ptr<BLAS>				CreateBLAS(std::shared_ptr<Command> command, const ASMesh& mesh, std::wstring name = L"") const;
@@ -77,6 +97,7 @@ public:
 	std::shared_ptr<Texture>			CreateTexture(TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
 	std::shared_ptr<TLAS>				CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"") const;
 	std::shared_ptr<WorkGraph>			CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"") const;
+	
 	ComPtr<IDXGIFactory7> GetDXGIFactory() const;
 	ComPtr<ID3D12Device> GetDevice() const;
 	ComPtr<StableDevice> GetStableDevice() const;

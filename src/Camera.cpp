@@ -131,3 +131,8 @@ DirectX::XMMATRIX Camera::GetInvViewProj()
 {
 	return XMMatrixInverse(nullptr, XMMatrixMultiply(GetView(), GetProj()));
 }
+
+DirectX::XMMATRIX Camera::GetInvView()
+{
+	return XMMatrixInverse(nullptr, GetView());
+}

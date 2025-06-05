@@ -23,21 +23,6 @@ bool SampleApplication::Init()
 	return true;
 };
 
-//bool SampleApplication::Init(ComPtr<ID3D12DebugDevice>& debugDevice)
-//{
-//	if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
-//		std::cerr << "Failed to CoInitializeEx" << std::endl;
-//		return false;
-//	}
-//	CreateGameWindow(windowName_);
-//
-//	if (!sampleScene_.Init(*this, debugDevice)) {
-//		return false;
-//	}
-//
-//	return true;
-//};
-
 void SampleApplication::Run()
 {
 	ShowWindow(hwnd_, SW_SHOW);

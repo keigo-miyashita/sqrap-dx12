@@ -7,11 +7,7 @@ class Device;
 
 enum class RootParamType
 {
-	DescTable,
-	CBV,
-	SRV,
-	UAV,
-	Constant,
+	DescTable, CBV, SRV, UAV, Constant,
 };
 
 struct DescTableRootParamDesc

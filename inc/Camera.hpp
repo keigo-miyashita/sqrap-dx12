@@ -33,5 +33,6 @@ public:
 	DirectX::XMMATRIX GetView();
 	DirectX::XMMATRIX GetProj();
 	DirectX::XMMATRIX GetInvViewProj();
+	DirectX::XMMATRIX GetInvView();
 	
 };

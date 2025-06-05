@@ -4,11 +4,13 @@
 
 class Shader;
 
-struct ShaderType{
-	enum Type {
-		Vertex, Pixel, Geometry, Domain, Hull, Amplification, Mesh, Compute, RayTracing, WorkGraph, Library
-	};
+enum class ShaderType{
+	Vertex, Pixel, Geometry, Domain, Hull, Amplification, Mesh, Compute, RayTracing, WorkGraph, Library
 };
+
+inline int ToInt(ShaderType type) {
+	return static_cast<int>(type);
+}
 
 static std::wstring ShaderModel[] = {
 	L"vs_6_6",
@@ -30,7 +32,6 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	// D3D12 descriptor heap
 	ComPtr<IDxcCompiler> compiler_ = nullptr;
 	ComPtr<IDxcLibrary> library_ = nullptr;
 	ComPtr<IDxcUtils> utils_ = nullptr;
@@ -41,8 +42,8 @@ public:
 	DXC();
 	~DXC() = default;
 	bool Init();
-	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"") const;
-	std::shared_ptr<Shader> CreateShader(ShaderType::Type shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"");
+	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"") const;
+	std::shared_ptr<Shader> CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"");
 	ComPtr<IDxcCompiler> GetCompiler();
 	ComPtr<IDxcLibrary> GetLibarary();
 	ComPtr<IDxcUtils> GetUtils();

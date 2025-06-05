@@ -1,13 +1,13 @@
 #pragma once
 
-#include <common.hpp>
-#include <Command.hpp>
+#include <sqrap.hpp>
 
 struct CameraMatrix
 {
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX proj;
 	DirectX::XMMATRIX invViewProj;
+	DirectX::XMMATRIX invView;
 	DirectX::XMFLOAT4 cameraPosition;
 };
 
@@ -40,6 +40,7 @@ private:
 
 	// Mesh
 	ASMeshHandle sphereASMesh_;
+	ASMeshHandle teapotASMesh_;
 
 	// Scene Items
 	Camera camera_;
@@ -47,6 +48,7 @@ private:
 
 	// AccelerationStructure
 	BLASHandle sphereBLAS_;
+	BLASHandle teapotBLAS_;
 	TLASHandle sceneTLAS_;
 
 	// Resources
@@ -81,7 +83,5 @@ public:
 	SampleScene();
 	~SampleScene() = default;
 	bool Init(const Application& app);
-	//bool Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugDevice);
-	/*virtual int Input(UINT msg, WPARAM wparam, LPARAM lparam) override;*/
 	void Render();
 };

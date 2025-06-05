@@ -4,8 +4,13 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-Resource::Resource(const Device& device, ResourceType rscType, UINT strideSize, std::wstring name)
-	: pDevice_(&device), rscType_(rscType), strideSize_(strideSize), name_(name)
+Resource::Resource(const Device& device, ResourceType rscType, std::wstring name)
+	: pDevice_(&device), rscType_(rscType), name_(name)
+{
+
+}
+
+Resource::Resource()
 {
 
 }
@@ -14,6 +19,13 @@ void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
 {
 	if (rscType_ == ResourceType::Texture) {
 		std::runtime_error("Cannot create CBV for texture !");
+	}
+}
+
+void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
+{
+	if (rscType_ == ResourceType::AS) {
+		std::runtime_error("Cannot create CBV for AS !");
 	}
 }
 
@@ -52,11 +64,6 @@ ComPtr<ID3D12Resource> Resource::GetResource() const
 D3D12_GPU_VIRTUAL_ADDRESS Resource::GetGPUAddress() const
 {
 	return resource_->GetGPUVirtualAddress();
-}
-
-UINT Resource::GetStrideSize() const
-{
-	return strideSize_;
 }
 
 void Resource::SetResourceState(D3D12_RESOURCE_STATES rscState)
@@ -106,7 +113,7 @@ UINT Buffer::AlignForConstantBuffer(UINT size)
 }
 
 Buffer::Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name)
-	: Resource(device, ResourceType::Buffer, strideSize, name), type_(type), numElement_(numElement)
+	: Resource(device, ResourceType::Buffer, name), type_(type), strideSize_(strideSize), numElement_(numElement)
 {
 	if (type == BufferType::Counter) {
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -219,6 +226,11 @@ void Buffer::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
 	pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), resource_.Get(), &viewDesc, heapHandle);
 }
 
+UINT Buffer::GetStrideSize() const
+{
+	return strideSize_;
+}
+
 UINT Buffer::GetNumElement() const
 {
 	return numElement_;
@@ -230,7 +242,7 @@ UINT Buffer::GetOffsetCounter() const
 }
 
 Texture::Texture(const Device& device, TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
-	: Resource(device, ResourceType::Texture, strideSize, name), format_(format), texDim_(texDim), type_(type), width_(width), height_(height), depth_(depth)
+	: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth)
 {
 	if (type_ == TextureType::Default) {
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -256,13 +268,16 @@ Texture::Texture(const Device& device, TextureDimention texDim, TextureType type
 	CD3DX12_RESOURCE_DESC rscDesc;
 	if (texDim_ == TextureDimention::Tex1D) {
 		rscDesc = CD3DX12_RESOURCE_DESC::Tex1D(format_, width_);
+		rscDesc.MipLevels = 1;
 	}
 	else if (texDim_ == TextureDimention::Tex2D)
 	{
 		rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_);
+		rscDesc.MipLevels = 1;
 	}
 	else if (texDim_ == TextureDimention::Tex3D) {
 		rscDesc = CD3DX12_RESOURCE_DESC::Tex3D(format_, width_, height_, depth_);
+		rscDesc.MipLevels = 1;
 	}
 	rscDesc.Flags = rscFlag_;
 	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
@@ -270,6 +285,12 @@ Texture::Texture(const Device& device, TextureDimention texDim, TextureType type
 		throw std::runtime_error("Failed to create buffer : " + to_string(result));
 	}
 	resource_->SetName(name_.c_str());
+}
+
+Texture::Texture()
+	: Resource()
+{
+
 }
 
 void* Texture::Map()
@@ -345,7 +366,7 @@ void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
 		viewDesc.Texture3D.MipSlice = 0;
 		viewDesc.Texture3D.FirstWSlice = 0;
-		viewDesc.Texture3D.WSize = -1;
+		viewDesc.Texture3D.WSize = 1;
 	}
 	/*viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 	viewDesc.Buffer.StructureByteStride = strideSize_;
@@ -355,4 +376,46 @@ void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
 	pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), nullptr, &viewDesc, heapHandle);
+}
+
+UINT Texture::GetStrideSize() const
+{
+	return strideSize_;
+}
+
+void Texture::SetName(std::wstring name)
+{
+	name_ = name;
+}
+
+void Texture::SetResource(ComPtr<ID3D12Resource> resource)
+{
+	resource_ = resource;
+}
+
+AS::AS(const Device& device, UINT size, std::wstring name)
+	: Resource(device, ResourceType::AS, name), size_(size)
+{
+	heapType_ = D3D12_HEAP_TYPE_DEFAULT;
+	rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	rscState_ = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
+	auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(size_, rscFlag_);
+	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to CreateCommittedResource for AS : " + to_string(result));
+	}
+	resource_->SetName(name_.c_str());
+}
+
+void AS::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
+	viewDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	viewDesc.RaytracingAccelerationStructure.Location = resource_->GetGPUVirtualAddress();
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateShaderResourceView(nullptr, &viewDesc, heapHandle);
 }

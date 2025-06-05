@@ -6,62 +6,24 @@ using namespace DirectX;
 
 void DescriptorManager::CreateCBV(std::shared_ptr<Resource> resource)
 {
-	/*D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc = {};
-	viewDesc.BufferLocation = buffer.GetResource()->GetGPUVirtualAddress();
-	viewDesc.SizeInBytes = buffer.GetStrideSize() * buffer.GetNumElement();
-	auto heapHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
-	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset_;
-	pDevice_->GetDevice()->CreateConstantBufferView(&viewDesc, heapHandle);*/
 	resource->CreateCBV(*this, viewOffset_);
 	viewOffset_++;
 }
 
 void DescriptorManager::CreateSRV(std::shared_ptr<Resource> resource)
 {
-	/*D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
-	viewDesc.Format = DXGI_FORMAT_UNKNOWN;
-	viewDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	viewDesc.Buffer.StructureByteStride = buff.GetStrideSize();
-	viewDesc.Buffer.NumElements = buff.GetNumElement();
-	viewDesc.Buffer.FirstElement = 0;
-	viewDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	auto heapHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
-	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset_;
-	pDevice_->GetDevice()->CreateShaderResourceView(buff.GetResource().Get(), &viewDesc, heapHandle);*/
 	resource->CreateSRV(*this, viewOffset_);
 	viewOffset_++;
 }
 
 void DescriptorManager::CreateUAV(std::shared_ptr<Resource> resource)
 {
-	/*D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-	viewDesc.Format = DXGI_FORMAT_UNKNOWN;
-	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-	viewDesc.Buffer.StructureByteStride = buff.GetStrideSize();
-	viewDesc.Buffer.NumElements = buff.GetNumElement();
-	viewDesc.Buffer.FirstElement = 0;
-	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	auto heapHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
-	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset_;
-	pDevice_->GetDevice()->CreateUnorderedAccessView(buff.GetResource().Get(), nullptr, &viewDesc, heapHandle);*/
 	resource->CreateUAV(*this, viewOffset_);
 	viewOffset_++;
 }
 
 void DescriptorManager::CreateUAVCounter(std::shared_ptr<Resource> resource)
 {
-	/*D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-	viewDesc.Format = DXGI_FORMAT_UNKNOWN;
-	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-	viewDesc.Buffer.StructureByteStride = buff.GetStrideSize();
-	viewDesc.Buffer.NumElements = buff.GetNumElement();
-	viewDesc.Buffer.FirstElement = 0;
-	viewDesc.Buffer.CounterOffsetInBytes = buff.GetOffsetCounter();
-	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-	auto heapHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
-	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset_;
-	pDevice_->GetDevice()->CreateUnorderedAccessView(buff.GetResource().Get(), buff.GetResource().Get(), &viewDesc, heapHandle);*/
 	resource->CreateUAVCounter(*this, viewOffset_);
 	viewOffset_++;
 }

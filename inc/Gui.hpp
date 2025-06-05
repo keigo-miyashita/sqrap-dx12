@@ -11,17 +11,16 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	Device* pDevice_ = nullptr;
-	// D3D12 descriptor heap
+	const Device* pDevice_ = nullptr;
 	ComPtr<ID3D12DescriptorHeap> imguiDescHeap_ = nullptr;
 
 	bool InitializeGUI(const HWND& hwnd);
 
 
 public:
-	GUI();
+	GUI(const Device& device, const HWND& hwnd);
 	~GUI();
-	bool Init(Device* pDevice, const HWND& hwnd);
+	//bool Init(Device* pDevice, const HWND& hwnd);
 	void BeginCommand();
 	void EndCommand();
 	void Draw(Command& command);

@@ -204,7 +204,8 @@ RayTracing::RayTracing(const Device& device, const StateObject& stateObject, UIN
 			startAddress += sumMissRegionSize;
 
 			raysDesc_.HitGroupTable.StartAddress = startAddress;
-			raysDesc_.HitGroupTable.StrideInBytes = sumHitGroupRegionSize;
+			raysDesc_.HitGroupTable.SizeInBytes = sumHitGroupRegionSize;
+			raysDesc_.HitGroupTable.StrideInBytes = eachHitGroupSize;
 			startAddress += sumHitGroupRegionSize;
 
 			raysDesc_.Width = width;
@@ -213,23 +214,6 @@ RayTracing::RayTracing(const Device& device, const StateObject& stateObject, UIN
 		}
 
 	}
-
-	/*for (auto rayGensName : stateObject.GetStateObjectDesc()) {
-		void* id = soProp_->GetShaderIdentifier(rayGensName.c_str());
-		rayGenIDs.push_back(id);
-	}
-
-	for (auto missName : stateObject.GetMisses()) {
-		void* id = soProp_->GetShaderIdentifier(missName.c_str());
-		missIDs.push_back(id);
-	}
-
-	for (auto hitGroupName : stateObject.GetHitGroups()) {
-		void* id = soProp_->GetShaderIdentifier(hitGroupName.c_str());
-		hitGroupIDs.push_back(id);
-	}*/
-
-
 }
 
 D3D12_DISPATCH_RAYS_DESC RayTracing::GetDispatchRayDesc() const

@@ -7,17 +7,12 @@ class Resource;
 
 enum class HeapType
 {
-	Resource,
-	Sampler,
+	Resource, Sampler,
 };
 
 enum class ViewType
 {
-	NONE,
-	CBV,
-	SRV,
-	UAV,
-	SAMPLER,
+	NONE, CBV, SRV, UAV, SAMPLER,
 };
 
 struct DescriptorManagerDesc

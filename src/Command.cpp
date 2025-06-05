@@ -98,7 +98,7 @@ void Command::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
 	commandList_->ResourceBarrier(numBarriers, pBarriers);
 }
 
-void Command::CopyBuffer(Buffer& srcBuffer, Buffer& destBuffer)
+void Command::CopyBuffer(Resource& srcBuffer, Resource& destBuffer)
 {
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {

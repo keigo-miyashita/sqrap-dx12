@@ -1,5 +1,3 @@
-#include <common.hpp>
-
 #include "SampleApplication.hpp"
 
 SampleApplication::SampleApplication(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
@@ -17,21 +15,6 @@ bool SampleApplication::Init()
 	CreateGameWindow(windowName_);
 
 	sampleScene_.Init(*this);
-};
-
-bool SampleApplication::Init(ComPtr<ID3D12DebugDevice>& debugDevice)
-{
-	if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
-		std::cerr << "Failed to CoInitializeEx" << std::endl;
-		return false;
-	}
-	CreateGameWindow(windowName_);
-
-	if (!sampleScene_.Init(*this, debugDevice)) {
-		return false;
-	}
-
-	return true;
 };
 
 void SampleApplication::Run()

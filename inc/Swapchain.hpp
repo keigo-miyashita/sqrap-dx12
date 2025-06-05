@@ -4,6 +4,8 @@
 
 class Command;
 class Device;
+class Resource;
+class Texture;
 
 class SwapChain
 {
@@ -15,7 +17,7 @@ private:
 	std::shared_ptr<Command> pCommand_;
 
 	ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
-	std::vector<ComPtr<ID3D12Resource>> backBuffers_;
+	std::vector<std::shared_ptr<Texture>> backBuffers_;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap_ = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_;
 	ComPtr<ID3D12Resource> depthStencilBuffer_ = nullptr;
@@ -31,7 +33,7 @@ public:
 	SwapChain(const Device& device, std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
 	~SwapChain() = default;
 	ComPtr<IDXGISwapChain4> GetSwapChain();
-	ComPtr<ID3D12Resource> GetCurrentBackBuffer(UINT index);
+	std::shared_ptr<Texture> GetCurrentBackBuffer();
 	ComPtr<ID3D12DescriptorHeap> GetRtvHeap();
 	D3D12_VIEWPORT GetViewPort();
 	D3D12_RECT GetRect();

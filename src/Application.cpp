@@ -75,9 +75,9 @@ namespace {
 		ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
 
 		switch (msg) {
-		case WM_DESTROY:
-			PostQuitMessage(0);
-			return 0;
+			case WM_DESTROY:
+				PostQuitMessage(0);
+				return 0;
 		}
 
 		if (appPtr) {

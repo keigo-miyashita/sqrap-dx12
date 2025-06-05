@@ -24,16 +24,12 @@ private:
 
 	UINT CreateSBTBuffer(UINT numRecords);
 
-
-	//bool InitWorkGraphContext(const StateObject& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0);
-
 public:
 	static UINT AlignForSBTRecord(UINT size);
 	static UINT AlignForSBT(UINT size);
 	static UINT CopyMem(void* dest, const void* data, UINT size);
 	RayTracing(const Device& device, const StateObject& stateObject, UINT width, UINT height, UINT depth, std::wstring name = L"");
 	~RayTracing() = default;
-	//bool Init(Device* pDevice, const StateObject& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0);
 
 	D3D12_DISPATCH_RAYS_DESC GetDispatchRayDesc() const;
 };

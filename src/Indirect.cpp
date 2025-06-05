@@ -38,7 +38,6 @@ Indirect::Indirect(const Device& device, std::initializer_list<IndirectDesc> ind
 			indirectArgDesc_.push_back(desc);
 		}
 		else if (indirectDesc.type_ == IndirectType::CBV) {
-			cout << "has CBV" << endl;
 			desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
 			desc.ConstantBufferView.RootParameterIndex = indirectDesc.rootParameterIndex_;
 			indirectArgDesc_.push_back(desc);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <common.hpp>
-#include <Command.hpp>
+#include <pch.hpp>
+#include <sqrap.hpp>
 
 struct CameraMatrix
 {
@@ -69,7 +69,5 @@ public:
 	SampleScene();
 	~SampleScene() = default;
 	bool Init(const Application& app);
-	bool Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugDevice);
-	/*virtual int Input(UINT msg, WPARAM wparam, LPARAM lparam) override;*/
 	void Render();
 };

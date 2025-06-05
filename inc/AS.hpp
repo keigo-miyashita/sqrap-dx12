@@ -1,14 +1,14 @@
 #pragma once
 
 #include <common.hpp>
-#include "Buffer.hpp"
+#include "Resource.hpp"
 
+class ASMesh;
 class Buffer;
 class Command;
 class Device;
 class Fence;
 class Mesh;
-class ASMesh;
 
 class BLAS
 {
@@ -19,7 +19,7 @@ private:
 	const Device* pDevice_ = nullptr;
 	std::shared_ptr<Command> command_;
 	std::wstring name_;
-	std::shared_ptr<Buffer> ASBuffer_;
+	std::shared_ptr<AS> ASBuffer_;
 	std::shared_ptr<Buffer> scratchBuffer_;
 	bool CreateBLAS(const ASMesh& mesh);
 
@@ -50,7 +50,7 @@ private:
 	std::wstring name_;
 	std::vector<TLASDesc> tlasDescs_;
 	std::shared_ptr<Buffer> instanceDescBuffer_;
-	std::shared_ptr<Buffer> ASBuffer_;
+	std::shared_ptr<AS> ASBuffer_;
 	std::shared_ptr<Buffer> scratchBuffer_;
 	bool CreateTLAS();
 
@@ -58,6 +58,6 @@ public:
 
 	TLAS(const Device& device, std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"");
 	~TLAS() = default;
-	std::shared_ptr<Buffer> GetASBuffer() const;
+	std::shared_ptr<AS> GetASBuffer() const;
 	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 };

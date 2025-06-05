@@ -2,8 +2,6 @@
 
 #include <common.hpp>
 
-#include <Command.hpp>
-
 class Command;
 class Device;
 
@@ -15,13 +13,8 @@ private:
 
 	const Device* pDevice_ = nullptr;
 	std::wstring name_;
-	// D3D12 fence
 	ComPtr<ID3D12Fence> fence_ = nullptr;
-	// Fence value
 	UINT64 fenceVal_ = 0;
-
-	bool CreateFence();
-
 
 public:
 	Fence(const Device& device, std::wstring name = L"");

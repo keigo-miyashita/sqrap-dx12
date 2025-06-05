@@ -369,12 +369,14 @@ ComPtr<ID3D12StateObject> StateObject::GetStateObject() const
 
 std::wstring StateObject::GetProgramName() const
 {
-	std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
-	StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
-	return wgDesc.workGraphProgramName;
+	if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
+		StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
+		return wgDesc.workGraphProgramName;
+	}
+	// TODO : Throw exception
 }
 
-StateObjectType::Type StateObject::GetStateObjectType() const
+StateObjectType StateObject::GetStateObjectType() const
 {
 	return soDesc_.stateObjectType;
 }
