@@ -9,6 +9,26 @@ Camera::Camera()
 
 }
 
+bool Camera::Init(
+	float aspectRatio,
+	DirectX::XMFLOAT3 position,
+	float rotateX,
+	float rotateY,
+	float fovYAngle,
+	float nearZ,
+	float farZ
+)
+{
+	aspectRatio_ = aspectRatio;
+	position_ = { position.x, position.y, position.z, 1.0f };
+	rotation_ = XMFLOAT3(rotateX, rotateY, 0.0f);
+	fovYAngle_ = fovYAngle;
+	nearZ_ = nearZ;
+	farZ_ = farZ;
+
+	return true;
+}
+
 void Camera::Update()
 {
 	XMFLOAT3 front = GetFront();
@@ -55,24 +75,9 @@ void Camera::Update()
 	}
 }
 
-bool Camera::Init(
-	float aspectRatio,
-	DirectX::XMFLOAT3 position,
-	float rotateX,
-	float rotateY,
-	float fovYAngle,
-	float nearZ,
-	float farZ
-)
+DirectX::XMFLOAT4 Camera::GetPos()
 {
-	aspectRatio_ = aspectRatio;
-	position_ = { position.x, position.y, position. z, 1.0f };
-	rotation_ = XMFLOAT3(rotateX, rotateY, 0.0f);
-	fovYAngle_ = fovYAngle;
-	nearZ_ = nearZ;
-	farZ_ = farZ;
-
-	return true;
+	return position_;
 }
 
 DirectX::XMFLOAT3 Camera::GetFront()

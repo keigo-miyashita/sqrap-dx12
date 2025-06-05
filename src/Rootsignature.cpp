@@ -91,6 +91,7 @@ ResourceSet::ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::ini
 	: pRootSignature_(pRootSignature)
 {
 	cout << "Make ResourceSet" << endl;
+	// TODO : Integrate object and pointer
 	for (auto bindedResource : bindedResources) {
 		if (std::holds_alternative<DescriptorManager>(bindedResource)) {
 			DescriptorManager dm = std::get<DescriptorManager>(bindedResource);
@@ -113,7 +114,7 @@ std::shared_ptr<RootSignature> ResourceSet::GetRootSignature() const
 	return pRootSignature_;
 }
 
-const std::vector<std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>> ResourceSet::GetBindedResources() const
+const std::vector<BindResource> ResourceSet::GetBindedResources() const
 {
 	return bindedResources_;
 }

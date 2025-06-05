@@ -208,84 +208,85 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 				CD3DX12_SHADER_BYTECODE bcLib(raygen.shader->GetBlob()->GetBufferPointer(), raygen.shader->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
+				// NOTE : エントリ名を指定してコンパイルしているはずだがSetDXILLibraryだけだとファイル内のエクスポートが全部登録されてしまう
+				// 毎回明示しないと登録が重複しちゃった
+				pLib->DefineExport(raygen.shader->GetEntryName().c_str());
 				rayGens.push_back(raygen.shader->GetEntryName().c_str());
 
-				auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pLocalRootSig->SetRootSignature(raygen.localRootSig->GetRootSignature().Get());
+				if (raygen.localResourceSet) {
+					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+					pLocalRootSig->SetRootSignature(raygen.localResourceSet->GetRootSignature()->GetRootSignature().Get());
 
-				auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-				association->SetSubobjectToAssociate(*pLocalRootSig);
-				association->AddExport(raygen.shader->GetEntryName().c_str());
+					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+					association->SetSubobjectToAssociate(*pLocalRootSig);
+					association->AddExport(raygen.shader->GetEntryName().c_str());
+				}
 			}
 
 			for (auto miss : rtDesc.misses) {
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 				CD3DX12_SHADER_BYTECODE bcLib(miss.shader->GetBlob()->GetBufferPointer(), miss.shader->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
+				pLib->DefineExport(miss.shader->GetEntryName().c_str());
 				rayGens.push_back(miss.shader->GetEntryName().c_str());
 
-				auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pLocalRootSig->SetRootSignature(miss.localRootSig->GetRootSignature().Get());
+				if (miss.localResourceSet) {
+					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+					pLocalRootSig->SetRootSignature(miss.localResourceSet->GetRootSignature()->GetRootSignature().Get());
 
-				auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-				association->SetSubobjectToAssociate(*pLocalRootSig);
-				association->AddExport(miss.shader->GetEntryName().c_str());
+					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+					association->SetSubobjectToAssociate(*pLocalRootSig);
+					association->AddExport(miss.shader->GetEntryName().c_str());
+				}
 			}
 
 			for (auto hitGroup : rtDesc.hitGroups) {
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-				CD3DX12_SHADER_BYTECODE closesthitBcLib(hitGroup.closesthit.shader->GetBlob()->GetBufferPointer(),	hitGroup.closesthit.shader->GetBlob()->GetBufferSize());
-				CD3DX12_SHADER_BYTECODE anyhitBcLib(hitGroup.anyhit.shader->GetBlob()->GetBufferPointer(),		hitGroup.anyhit.shader->GetBlob()->GetBufferSize());
-				CD3DX12_SHADER_BYTECODE intersectionBcLib(hitGroup.intersection.shader->GetBlob()->GetBufferPointer(),	hitGroup.intersection.shader->GetBlob()->GetBufferSize());
+				CD3DX12_SHADER_BYTECODE closesthitBcLib(hitGroup.closesthit.shader->GetBlob()->GetBufferPointer(),		hitGroup.closesthit.shader->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&closesthitBcLib);
-				pLib->SetDXILLibrary(&anyhitBcLib);
-				pLib->SetDXILLibrary(&intersectionBcLib);
+				pLib->DefineExport(hitGroup.closesthit.shader->GetEntryName().c_str());
+				if (hitGroup.anyhit.shader) {
+					CD3DX12_SHADER_BYTECODE anyhitBcLib(hitGroup.anyhit.shader->GetBlob()->GetBufferPointer(), hitGroup.anyhit.shader->GetBlob()->GetBufferSize());
+					pLib->SetDXILLibrary(&anyhitBcLib);
+					pLib->DefineExport(hitGroup.anyhit.shader->GetEntryName().c_str());
+				}
+				if (hitGroup.intersection.shader) {
+					CD3DX12_SHADER_BYTECODE intersectionBcLib(hitGroup.intersection.shader->GetBlob()->GetBufferPointer(), hitGroup.intersection.shader->GetBlob()->GetBufferSize());
+					pLib->SetDXILLibrary(&intersectionBcLib);
+					pLib->DefineExport(hitGroup.intersection.shader->GetEntryName().c_str());
+				}
 
 				auto pHitGroup = stateObjectDesc_.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
 				pHitGroup->SetClosestHitShaderImport(hitGroup.closesthit.shader->GetEntryName().c_str());
-				if (hitGroup.anyhit.shader != nullptr) {
+				if (hitGroup.anyhit.shader) {
 					pHitGroup->SetAnyHitShaderImport(hitGroup.anyhit.shader->GetEntryName().c_str());
 				}
-				if (hitGroup.intersection.shader != nullptr) {
+				if (hitGroup.intersection.shader) {
 					pHitGroup->SetIntersectionShaderImport(hitGroup.intersection.shader->GetEntryName().c_str());
 				}
 				pHitGroup->SetHitGroupExport(hitGroup.groupName.c_str());
 
 				hitGroups.push_back(hitGroup.groupName.c_str());
 
-				auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pLocalRootSig->SetRootSignature(hitGroup.localRootSig->GetRootSignature().Get());
+				if (hitGroup.localResourceSet) {
+					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
+					pLocalRootSig->SetRootSignature(hitGroup.localResourceSet->GetRootSignature()->GetRootSignature().Get());
 
-				auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-				association->SetSubobjectToAssociate(*pLocalRootSig);
-				association->AddExport(hitGroup.groupName.c_str());
+					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
+					association->SetSubobjectToAssociate(*pLocalRootSig);
+					association->AddExport(hitGroup.groupName.c_str());
+				}
 			}
 
 			auto pShaderConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
 			// payload size, setting for intersection
-			pShaderConfig->Config(rtDesc.rayConfigDesc.payloadSize, 0);
+			pShaderConfig->Config(rtDesc.rayConfigDesc.payloadSize, rtDesc.rayConfigDesc.attributeSize);
 
 			auto pPipelineConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
 			// ray depth
 			pPipelineConfig->Config(rtDesc.rayConfigDesc.rayDepth);
 		}
 	}
-	//else if (soDesc.stateObjectType == StateObjectType::WorkGraph) {
-	//	stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
-	//	auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-
-	//	if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
-	//		StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
-
-	//		if (wgDesc.globalRootSig) {
-	//			auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-	//			pGlobalRootSig->SetRootSignature(wgDesc.globalRootSig->GetRootSignature().Get());
-	//		}
-	//	}
-
-	//	//// Graphics nodeを使うときは下のコメントアウトを外す.
-	//	//pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
-	//}
 	else if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
@@ -307,9 +308,9 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 				CD3DX12_SHADER_BYTECODE bcLib(exportDesc.shader->GetBlob()->GetBufferPointer(), exportDesc.shader->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
 
-				if (exportDesc.localRootSig) {
+				if (exportDesc.localResourceSet) {
 					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-					pLocalRootSig->SetRootSignature(exportDesc.localRootSig->GetRootSignature().Get());
+					pLocalRootSig->SetRootSignature(exportDesc.localResourceSet->GetRootSignature()->GetRootSignature().Get());
 
 					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
 					association->SetSubobjectToAssociate(*pLocalRootSig);
@@ -343,89 +344,6 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 			pWorkGraph->SetProgramName(wgDesc.workGraphProgramName.c_str());
 		}
 	}
-
-	/*auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-	pGlobalRootSig->SetRootSignature(soDesc.globalRootSig->GetRootSignature().Get());*/
-
-	// TODO : Handle raytracing pipeline
-	//for (auto exportDesc : soDesc.exportDescs) {
-	//	auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-	//	CD3DX12_SHADER_BYTECODE bcLib(exportDesc.shader->GetBlob()->GetBufferPointer(), exportDesc.shader->GetBlob()->GetBufferSize());
-	//	pLib->SetDXILLibrary(&bcLib);
-	//	if (exportDesc.shaderStage == ShaderStage::RayGen) {
-	//		rayGens.push_back(exportDesc.shader->GetEntryName().c_str());
-	//	}
-	//	else if (exportDesc.shaderStage == ShaderStage::Miss) {
-	//		misses.push_back(exportDesc.shader->GetEntryName().c_str());
-	//	}
-	//}
-
-	//for (auto localRootSigDesc : soDesc.localRootSigDescs) {
-	//	auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-	//	pLocalRootSig->SetRootSignature(localRootSigDesc.localRootSig->GetRootSignature().Get());
-	//	
-	//	auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
-	//	association->SetSubobjectToAssociate(*pLocalRootSig);
-	//	for (auto shader : localRootSigDesc.shaders) {
-	//		association->AddExport(shader->GetEntryName().c_str());
-	//	}
-	//}
-
-	//if (soDesc.stateObjectType == StateObjectType::Raytracing) {
-	//	for (auto hitGroupDesc : soDesc.hitGroupDescs) {
-	//		auto pHitGroup = stateObjectDesc_.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-	//		pHitGroup->SetClosestHitShaderImport(hitGroupDesc.closesthit->GetEntryName().c_str());
-	//		if (hitGroupDesc.anyhit != nullptr) {
-	//			pHitGroup->SetAnyHitShaderImport(hitGroupDesc.closesthit->GetEntryName().c_str());
-	//		}
-	//		if (hitGroupDesc.intersection != nullptr) {
-	//			pHitGroup->SetIntersectionShaderImport(hitGroupDesc.intersection->GetEntryName().c_str());
-	//		}
-	//		pHitGroup->SetHitGroupExport(hitGroupDesc.groupName.c_str());
-	//		hitGroups.push_back(hitGroupDesc.groupName.c_str());
-	//	}
-
-	//	auto pShaderConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
-	//	// payload size, setting for intersection
-	//	pShaderConfig->Config(soDesc_.raytracingDesc.payloadSize, 0);
-
-	//	auto pPipelineConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
-	//	// ray depth
-	//	pPipelineConfig->Config(soDesc_.raytracingDesc.rayDepth);
-	//}
-
-	// NOTE : Execute only Work graph with mesh node
-	//if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
-	//	auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
-	//	pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-	//	auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
-	//	pRTFormats->SetNumRenderTargets(1);
-	//	pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
-
-	//	/*auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
-	//	pGenericProgram->SetProgramName(L"program");
-	//	for (int i = 0; i < entries.size(); i++) {
-	//		pGenericProgram->AddExport(entries[i].c_str());
-	//	}
-	//	pGenericProgram->AddSubobject(*pPrimitiveTopology);
-	//	pGenericProgram->AddSubobject(*pRTFormats);*/
-
-	//	for (auto programDesc : soDesc.programDescs) {
-	//		auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
-	//		pGenericProgram->SetProgramName(programDesc.programName.c_str());
-	//		for (auto shader : programDesc.shaders) {
-	//			pGenericProgram->AddExport(shader->GetEntryName().c_str());
-	//		}
-	//		pGenericProgram->AddSubobject(*pPrimitiveTopology);
-	//		pGenericProgram->AddSubobject(*pRTFormats);
-	//	}
-	//}
-
-	/*if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
-		auto pWorkGraph = stateObjectDesc_.CreateSubobject<CD3DX12_WORK_GRAPH_SUBOBJECT>();
-		pWorkGraph->IncludeAllAvailableNodes();
-		pWorkGraph->SetProgramName(soDesc.workGraphProgramName.c_str());
-	}*/
 
 	if (soDesc.stateObjectType == StateObjectType::Raytracing) {
 		// TODO : Handle raytracing pipeline

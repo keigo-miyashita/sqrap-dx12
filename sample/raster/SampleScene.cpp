@@ -142,11 +142,11 @@ bool SampleScene::Init(const Application& app)
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
-		HeapType::Buffer, 
+		HeapType::Resource, 
 		{
-			{ *cameraBuffer_, ViewType::CBV, 0},
-			{ *light0Buffer_, ViewType::CBV, 1},
-			{ *sphere0Buffer_, ViewType::CBV, 2}
+			{ cameraBuffer_, ViewType::CBV, 0},
+			{ light0Buffer_, ViewType::CBV, 1},
+			{ sphere0Buffer_, ViewType::CBV, 2}
 		}
 	);
 	// RootSignature
@@ -254,11 +254,11 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
-		HeapType::Buffer,
+		HeapType::Resource,
 		{
-			{ *cameraBuffer_, ViewType::CBV, 0},
-			{ *light0Buffer_, ViewType::CBV, 1},
-			{ *sphere0Buffer_, ViewType::CBV, 2}
+			{ cameraBuffer_, ViewType::CBV, 0},
+			{ light0Buffer_, ViewType::CBV, 1},
+			{ sphere0Buffer_, ViewType::CBV, 2}
 		}
 	);
 
@@ -277,7 +277,7 @@ bool SampleScene::Init(const Application& app, ComPtr<ID3D12DebugDevice>& debugD
 		std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>>
 		{
 			DescriptorManager{ *sphere0DescManager_ },
-				Constants{ reinterpret_cast<void*>(&sphere0Color), 4 }
+			Constants{ reinterpret_cast<void*>(&sphere0Color), 4 }
 		}
 	);
 

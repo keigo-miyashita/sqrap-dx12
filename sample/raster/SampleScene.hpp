@@ -33,9 +33,9 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 	Device device_;
 	DXC dxc_;
-	std::shared_ptr<Command> command_;
-	std::shared_ptr<SwapChain> swapChain_;
-	std::shared_ptr<Mesh> sphere_;
+	CommandHandle command_;
+	SwapChainHandle swapChain_;
+	MeshHandle sphere_;
 
 	// Scene Items
 	Camera camera_;
@@ -43,24 +43,24 @@ private:
 	Object sphere0_;
 
 	// Resources
-	std::shared_ptr<Buffer> cameraBuffer_;
-	std::shared_ptr<Buffer> light0Buffer_;
-	std::shared_ptr<Buffer> sphere0Buffer_;
+	BufferHandle cameraBuffer_;
+	BufferHandle light0Buffer_;
+	BufferHandle sphere0Buffer_;
 
 	// Shaders
-	std::shared_ptr<Shader> simpleVS_;
-	std::shared_ptr<Shader> lambertPS_;
+	ShaderHandle simpleVS_;
+	ShaderHandle lambertPS_;
 
 	// Descriptor
-	std::shared_ptr<DescriptorManager> sphere0DescManager_;
+	DescriptorManagerHandle sphere0DescManager_;
 
 	// RootSignature
-	std::shared_ptr<RootSignature> sphere0RootSignature_;
+	RootSignatureHandle sphere0RootSignature_;
 
 	std::shared_ptr<ResourceSet> sphere0ResourceSet_;
 
 	// Pipeline
-	std::shared_ptr<GraphicsPipeline> lambert_;
+	GraphicsPipelineHandle lambert_;
 
 	void BeginRender();
 	void EndRender();

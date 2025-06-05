@@ -33,7 +33,7 @@ public:
 
 struct TLASDesc
 {
-	DirectX::XMFLOAT4X4 transform;
+	DirectX::XMMATRIX transform;
 	UINT instanceMask = 0x0;
 	std::shared_ptr<BLAS> blas;
 	D3D12_RAYTRACING_INSTANCE_FLAGS flags;
@@ -58,6 +58,6 @@ public:
 
 	TLAS(const Device& device, std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"");
 	~TLAS() = default;
-	Buffer GetASBuffer() const;
+	std::shared_ptr<Buffer> GetASBuffer() const;
 	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 };

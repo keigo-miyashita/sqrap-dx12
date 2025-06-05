@@ -26,6 +26,7 @@ public:
 	);
 
 	void Update();
+	DirectX::XMFLOAT4 GetPos();
 	DirectX::XMFLOAT3 GetFront();
 	DirectX::XMFLOAT3 GetUp();
 	DirectX::XMFLOAT3 GetRight();

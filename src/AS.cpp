@@ -66,9 +66,11 @@ bool TLAS::CreateTLAS()
 	instanceDesc.resize(tlasDescs_.size());
 	for (int numDescs = 0; numDescs < tlasDescs_.size(); numDescs++) {
 		D3D12_RAYTRACING_INSTANCE_DESC desc = {};
+		XMFLOAT4X4 transform;
+		XMStoreFloat4x4(&transform, tlasDescs_[numDescs].transform);
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 4; j++) {
-				instanceDesc[numDescs].Transform[i][j] = tlasDescs_[numDescs].transform.m[i][j];
+				instanceDesc[numDescs].Transform[i][j] = transform.m[i][j];
 			}
 		}
 		instanceDesc[numDescs].InstanceMask = 0xFF;
@@ -128,9 +130,9 @@ TLAS::TLAS(const Device& device, std::shared_ptr<Command> command, const std::ve
 	CreateTLAS();
 }
 
-Buffer TLAS::GetASBuffer() const
+std::shared_ptr<Buffer> TLAS::GetASBuffer() const
 {
-	return *ASBuffer_;
+	return ASBuffer_;
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS TLAS::GetASAddress()

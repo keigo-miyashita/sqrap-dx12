@@ -4,6 +4,66 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
+Resource::Resource(const Device& device, ResourceType rscType, UINT strideSize, std::wstring name)
+	: pDevice_(&device), rscType_(rscType), strideSize_(strideSize), name_(name)
+{
+
+}
+
+void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
+{
+	if (rscType_ == ResourceType::Texture) {
+		std::runtime_error("Cannot create CBV for texture !");
+	}
+}
+
+void Resource::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
+{
+	if (rscType_ == ResourceType::Texture) {
+		std::runtime_error("Cannot create UAVCounter for texture !");
+	}
+}
+
+D3D12_HEAP_TYPE Resource::GetHeapType() const
+{
+	return heapType_;
+}
+
+ResourceType Resource::GetResourceType() const
+{
+	return rscType_;
+}
+
+D3D12_RESOURCE_FLAGS Resource::GetResourceFlag() const
+{
+	return rscFlag_;
+}
+
+D3D12_RESOURCE_STATES Resource::GetResourceState() const
+{
+	return rscState_;
+}
+
+ComPtr<ID3D12Resource> Resource::GetResource() const
+{
+	return resource_;
+}
+
+D3D12_GPU_VIRTUAL_ADDRESS Resource::GetGPUAddress() const
+{
+	return resource_->GetGPUVirtualAddress();
+}
+
+UINT Resource::GetStrideSize() const
+{
+	return strideSize_;
+}
+
+void Resource::SetResourceState(D3D12_RESOURCE_STATES rscState)
+{
+	rscState_ = rscState;
+}
+
 bool Buffer::CreateBuffer()
 {
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
@@ -46,7 +106,7 @@ UINT Buffer::AlignForConstantBuffer(UINT size)
 }
 
 Buffer::Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name)
-	: pDevice_(&device), type_(type), strideSize_(strideSize), numElement_(numElement), name_(name)
+	: Resource(device, ResourceType::Buffer, strideSize, name), type_(type), numElement_(numElement)
 {
 	if (type == BufferType::Counter) {
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -84,64 +144,6 @@ Buffer::Buffer(const Device& device, BufferType type, UINT strideSize, UINT numE
 	}
 }
 
-//bool Buffer::Init(Device* pDevice, UINT strideSize, UINT numElement, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_FLAGS rscFlag, D3D12_RESOURCE_STATES initRscState, wstring name)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Buffer class pDevice doesn't have any pounter" << endl; ;
-//		return false;
-//	}
-//	if (!CreateBuffer(strideSize, numElement, heapType, rscFlag, initRscState, name)) {
-//		cerr << "Failed to create buffer" << endl;
-//		return false;
-//	}
-//
-//	return true;
-//}
-//
-//bool Buffer::InitAsCounter(Device* pDevice, UINT strideSize, UINT numElement, wstring name)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Buffer class pDevice doesn't have any pounter" << endl; ;
-//		return false;
-//	}
-//	if (!CreateCounterBuffer(strideSize, numElement, name)) {
-//		return false;
-//	}
-//
-//	return true;
-//}
-//
-//bool Buffer::InitAsUpload(Device* pDevice, UINT strideSize, UINT numElement, wstring name)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Buffer class pDevice doesn't have any pounter" << endl; ;
-//		return false;
-//	}
-//	if (!CreateBuffer(strideSize, numElement, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_SOURCE, name)) {
-//		cerr << "Failed to CreateBuffer" << endl;
-//		return false;
-//	}
-//
-//	return true;
-//}
-//
-//bool Buffer::InitAsReadback(Device* pDevice, UINT strideSize, UINT numElement, wstring name)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Buffer class pDevice doesn't have any pounter" << endl; ;
-//		return false;
-//	}
-//	if (!CreateBuffer(strideSize, numElement, D3D12_HEAP_TYPE_READBACK, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COPY_DEST, name)) {
-//		return false;
-//	}
-//
-//	return true;
-//}
-
 void* Buffer::Map()
 {
 	void* pData = nullptr;
@@ -163,34 +165,58 @@ void Buffer::Reset()
 	resource_.Reset();
 }
 
-ComPtr<ID3D12Resource> Buffer::GetResource() const
+void Buffer::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
 {
-	return resource_;
+	D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc = {};
+	viewDesc.BufferLocation = resource_->GetGPUVirtualAddress();
+	viewDesc.SizeInBytes = strideSize_ * numElement_;
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateConstantBufferView(&viewDesc, heapHandle);
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS Buffer::GetGPUAddress() const
+void Buffer::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
 {
-	return resource_->GetGPUVirtualAddress();
+	D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
+	viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+	viewDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	viewDesc.Buffer.StructureByteStride = strideSize_;
+	viewDesc.Buffer.NumElements = numElement_;
+	viewDesc.Buffer.FirstElement = 0;
+	viewDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateShaderResourceView(resource_.Get(), &viewDesc, heapHandle);
 }
 
-D3D12_HEAP_TYPE Buffer::GetHeapType() const
+void Buffer::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 {
-	return heapType_;
+	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
+	viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+	viewDesc.Buffer.StructureByteStride = strideSize_;
+	viewDesc.Buffer.NumElements = numElement_;
+	viewDesc.Buffer.FirstElement = 0;
+	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), nullptr, &viewDesc, heapHandle);
 }
 
-D3D12_RESOURCE_FLAGS Buffer::GetResourceFlag() const
+void Buffer::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
 {
-	return rscFlag_;
-}
-
-D3D12_RESOURCE_STATES Buffer::GetResourceState() const
-{
-	return rscState_;
-}
-
-UINT Buffer::GetStrideSize() const
-{
-	return strideSize_;
+	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
+	viewDesc.Format = DXGI_FORMAT_UNKNOWN;
+	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+	viewDesc.Buffer.StructureByteStride = strideSize_;
+	viewDesc.Buffer.NumElements = numElement_;
+	viewDesc.Buffer.FirstElement = 0;
+	viewDesc.Buffer.CounterOffsetInBytes = offsetCounter_;
+	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), resource_.Get(), &viewDesc, heapHandle);
 }
 
 UINT Buffer::GetNumElement() const
@@ -203,7 +229,130 @@ UINT Buffer::GetOffsetCounter() const
 	return offsetCounter_;
 }
 
-void Buffer::SetResourceState(D3D12_RESOURCE_STATES rscState)
+Texture::Texture(const Device& device, TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+	: Resource(device, ResourceType::Texture, strideSize, name), format_(format), texDim_(texDim), type_(type), width_(width), height_(height), depth_(depth)
 {
-	rscState_ = rscState;
+	if (type_ == TextureType::Default) {
+		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
+		rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+		rscState_ = D3D12_RESOURCE_STATE_COMMON;
+	}
+	else if (type_ == TextureType::Upload) {
+		heapType_ = D3D12_HEAP_TYPE_UPLOAD;
+		rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+		rscState_ = D3D12_RESOURCE_STATE_COPY_SOURCE;
+	}
+	else if (type_ == TextureType::Read) {
+		heapType_ = D3D12_HEAP_TYPE_READBACK;
+		rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+		rscState_ = D3D12_RESOURCE_STATE_COPY_DEST;
+	}
+	else if (type_ == TextureType::Unordered) {
+		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
+		rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		rscState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	}
+	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
+	CD3DX12_RESOURCE_DESC rscDesc;
+	if (texDim_ == TextureDimention::Tex1D) {
+		rscDesc = CD3DX12_RESOURCE_DESC::Tex1D(format_, width_);
+	}
+	else if (texDim_ == TextureDimention::Tex2D)
+	{
+		rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_);
+	}
+	else if (texDim_ == TextureDimention::Tex3D) {
+		rscDesc = CD3DX12_RESOURCE_DESC::Tex3D(format_, width_, height_, depth_);
+	}
+	rscDesc.Flags = rscFlag_;
+	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to create buffer : " + to_string(result));
+	}
+	resource_->SetName(name_.c_str());
+}
+
+void* Texture::Map()
+{
+	void* pData = nullptr;
+	HRESULT result = resource_->Map(0, nullptr, &pData);
+	if (FAILED(result)) {
+		cerr << "Failed to map buffer" << endl;;
+		return nullptr;
+	}
+	return pData;
+}
+
+void Texture::Unmap()
+{
+	resource_->Unmap(0, nullptr);
+}
+
+void Texture::Reset()
+{
+	resource_.Reset();
+}
+
+void Texture::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
+{
+	D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
+	viewDesc.Format = format_;
+	if (texDim_ == TextureDimention::Tex1D) {
+		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+		viewDesc.Texture1D.MostDetailedMip = 0;
+		viewDesc.Texture1D.MipLevels = 1;
+	}
+	else if (texDim_ == TextureDimention::Tex2D) {
+		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		viewDesc.Texture2D.MostDetailedMip = 0;
+		viewDesc.Texture2D.MipLevels = 1;
+		viewDesc.Texture2D.PlaneSlice = 0;
+		viewDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+	}
+	else if (texDim_ == TextureDimention::Tex3D) {
+		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+		viewDesc.Texture3D.MostDetailedMip = 0;
+		viewDesc.Texture3D.MipLevels = 1;
+		viewDesc.Texture3D.ResourceMinLODClamp = 0.0f;
+	}
+	/*viewDesc.Buffer.StructureByteStride = strideSize_;
+	viewDesc.Buffer.NumElements = numElement_;
+	viewDesc.Buffer.FirstElement = 0;
+	viewDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;*/
+	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateShaderResourceView(resource_.Get(), &viewDesc, heapHandle);
+}
+
+void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
+{
+	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
+	/*viewDesc.Format = DXGI_FORMAT_UNKNOWN;*/
+	viewDesc.Format = format_;
+	if (texDim_ == TextureDimention::Tex1D) {
+		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+		viewDesc.Texture1D.MipSlice = 0;
+	}
+	else if (texDim_ == TextureDimention::Tex2D) {
+		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+		viewDesc.Texture2D.MipSlice = 0;
+		viewDesc.Texture2D.PlaneSlice = 0;
+
+	}
+	else if (texDim_ == TextureDimention::Tex3D) {
+		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+		viewDesc.Texture3D.MipSlice = 0;
+		viewDesc.Texture3D.FirstWSlice = 0;
+		viewDesc.Texture3D.WSize = -1;
+	}
+	/*viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+	viewDesc.Buffer.StructureByteStride = strideSize_;
+	viewDesc.Buffer.NumElements = numElement_;
+	viewDesc.Buffer.FirstElement = 0;
+	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;*/
+	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+	pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), nullptr, &viewDesc, heapHandle);
 }

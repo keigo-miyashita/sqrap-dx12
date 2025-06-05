@@ -3,6 +3,7 @@
 #include <common.hpp>
 
 class Device;
+class ResourceSet;
 class RootSignature;
 class Shader;
 
@@ -95,7 +96,7 @@ struct StateObjectDesc
 	{
 		std::shared_ptr<Shader> shader;
 		ShaderStage shaderStage;
-		std::shared_ptr<RootSignature> localRootSig;
+		std::shared_ptr<ResourceSet> localResourceSet;
 	};
 
 	struct HitGroupExportDesc
@@ -110,21 +111,23 @@ struct StateObjectDesc
 		HitGroupShaderExportDesc closesthit;
 		HitGroupShaderExportDesc anyhit;
 		HitGroupShaderExportDesc intersection;
-		std::shared_ptr<RootSignature> localRootSig;
+		std::shared_ptr<ResourceSet> localResourceSet;
 	};
 
 	struct RayConfigDesc
 	{
 		UINT payloadSize;
+		UINT attributeSize = 1;
 		UINT rayDepth = 1;
 	};
 
 	struct RayTracingDesc
 	{
 		std::shared_ptr<RootSignature> globalRootSig;
-		std::initializer_list<ShaderExportDesc> rayGens;
-		std::initializer_list<ShaderExportDesc> misses;
-		std::initializer_list<HitGroupExportDesc> hitGroups;
+		// NOTE : HitGroupExportDesc‚ªwstring‚ðŠÜ‚ñ‚Å‚¢‚é‚©‚ç‚©initializer_list‚¾‚Æ‚¤‚Ü‚­‚¢‚©‚È‚¢
+		std::vector<ShaderExportDesc> rayGens;
+		std::vector<ShaderExportDesc> misses;
+		std::vector<HitGroupExportDesc> hitGroups;
 		RayConfigDesc rayConfigDesc;
 	};
 
@@ -187,7 +190,6 @@ private:
 public:
 	StateObject(const Device& device, const StateObjectDesc soDesc, std::wstring name = L"");
 	~StateObject() = default;
-	//bool Init(Device* pDevice, StateObjectDesc& soDesc, std::wstring name = L"StateObject");
 	ComPtr<ID3D12StateObject> GetStateObject() const;
 	std::wstring GetProgramName() const;
 	StateObjectType::Type GetStateObjectType() const;

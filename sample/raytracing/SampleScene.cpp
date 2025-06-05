@@ -54,6 +54,8 @@ void SampleScene::Render()
 		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
+		pCamera->invViewProj = camera_.GetInvViewProj();
+		pCamera->cameraPosition = camera_.GetPos();
 		cameraBuffer_->Unmap();
 	}
 
@@ -64,6 +66,11 @@ void SampleScene::Render()
 	Color sphere0Color = {XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f)};
 	command_->GetCommandList()->SetGraphicsRoot32BitConstants(1, 4, reinterpret_cast<void *>(&sphere0Color), 0);
 	command_->AddDrawIndexed(*sphere_, 1);*/
+
+	command_->SetComputeResourceSet(sphere0ResourceSet_);
+	command_->GetStableCommandList()->SetPipelineState1(raytracingStates_->GetStateObject().Get());
+	D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing_->GetDispatchRayDesc();
+	command_->GetStableCommandList()->DispatchRays(&dispatchRaysDesc);
 
 	EndRender();
 
@@ -91,7 +98,7 @@ bool SampleScene::Init(const Application& app)
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight()};
 	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
 
-	// Mesh
+	// ASMesh
 	string modelPath = string(MODEL_DIR) + "sphere.gltf";
 	sphereASMesh_ = device_.CreateASMesh(command_, modelPath);
 
@@ -101,19 +108,12 @@ bool SampleScene::Init(const Application& app)
 	// Light
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-	// Sphere0
-	XMFLOAT4 sphere0Pos = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	sphere0_.model = XMMatrixTranslation(sphere0Pos.x, sphere0Pos.y, sphere0Pos.z);
-	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
-
 
 	sphereBLAS_ = device_.CreateBLAS(command_, *sphereASMesh_);
-	XMFLOAT4X4 transform;
-	XMStoreFloat4x4(&transform, XMMatrixIdentity());
 	sceneTLAS_ = device_.CreateTLAS(
 		command_,
 		{
-			{transform, 0, sphereBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
+			{XMMatrixIdentity(), 0, sphereBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
 		}
 	);
 	
@@ -137,6 +137,12 @@ bool SampleScene::Init(const Application& app)
 		light0Buffer_->Unmap();
 	}
 
+	outputTexture_ = device_.CreateTexture(
+		TextureDimention::Tex2D,
+		TextureType::Unordered,
+		0, DXGI_FORMAT_R32G32B32A32_FLOAT, app.GetWindowWidth(), app.GetWindowHeight(), 1
+	);
+
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"raytracing.hlsl";
 	rayGen_		= dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"rayGeneration");
@@ -145,10 +151,13 @@ bool SampleScene::Init(const Application& app)
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
-		HeapType::Buffer, 
+		HeapType::Resource, 
 		{
-			{ *cameraBuffer_, ViewType::CBV, 0},
-			{ *light0Buffer_, ViewType::CBV, 1},
+			{ cameraBuffer_,				ViewType::CBV, 0},
+			{ light0Buffer_,				ViewType::CBV, 1},
+			{ sceneTLAS_->GetASBuffer(),	ViewType::SRV, 0},
+			// NOTE : Need output UAV
+			{ outputTexture_,				ViewType::UAV, 0}
 		}
 	);
 	// RootSignature
@@ -156,6 +165,15 @@ bool SampleScene::Init(const Application& app)
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
+		}
+	);
+
+	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
+		sphere0RootSignature_,
+		// NOTE : Error occur whtn substitute BindResource
+		std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>>
+		{
+			DescriptorManager{ *sphere0DescManager_ },
 		}
 	);
 
@@ -178,7 +196,7 @@ bool SampleScene::Init(const Application& app)
 						{ closestHit_, ShaderStage::ClosestHit },
 					}
 				},
-				{3 * sizeof(float), 1}
+				{3 * sizeof(float), 2 * sizeof(float), 1}
 			}
 			//sphere0RootSignature_,
 			//{
@@ -194,7 +212,12 @@ bool SampleScene::Init(const Application& app)
 		}
 	);
 
-	
+	rayTracing_ = device_.CreateRaytracing(
+		*raytracingStates_,
+		app.GetWindowWidth(),
+		app.GetWindowHeight(),
+		1
+	);
 
 	
 	return true;

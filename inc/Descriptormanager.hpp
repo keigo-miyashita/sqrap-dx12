@@ -3,10 +3,11 @@
 #include <common.hpp>
 
 class Device;
+class Resource;
 
 enum class HeapType
 {
-	Buffer,
+	Resource,
 	Sampler,
 };
 
@@ -21,7 +22,7 @@ enum class ViewType
 
 struct DescriptorManagerDesc
 {
-	const Buffer& buffer;
+	std::shared_ptr<Resource> resource;
 	ViewType type;
 	UINT numReg;
 	bool isCounter = false;
@@ -51,10 +52,10 @@ private:
 	UINT baseRegSampler_ = 0;
 	UINT numSampler_ = 0;
 
-	void CreateCBV(const Buffer& buff);
-	void CreateSRV(const Buffer& buff);
-	void CreateUAV(const Buffer& buff);
-	void CreateUAVCounter(const Buffer& buff);
+	void CreateCBV(std::shared_ptr<Resource> resource);
+	void CreateSRV(std::shared_ptr<Resource> resource);
+	void CreateUAV(std::shared_ptr<Resource> resource);
+	void CreateUAVCounter(std::shared_ptr<Resource> resource);
 	void CreateSampler();
 
 public:

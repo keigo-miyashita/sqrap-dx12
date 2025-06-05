@@ -61,9 +61,11 @@ public:
 struct Constants
 {
 	void* constants;
-	UINT numConstans = 0;
+	UINT numConstants = 0;
 	UINT numOffset = 0;
 };
+
+using BindResource = std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>;
 
 class ResourceSet
 {
@@ -73,13 +75,13 @@ private:
 
 	const std::shared_ptr<RootSignature> pRootSignature_;
 	std::vector<DescriptorManager> descriptorManagers_;
-	std::vector<std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>> bindedResources_;
+	std::vector<BindResource> bindedResources_;
 
 public:
 	ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>> bindedResources);
 	~ResourceSet() = default;
 
 	std::shared_ptr<RootSignature> GetRootSignature() const;
-	const std::vector<std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>> GetBindedResources() const;
+	const std::vector<BindResource> GetBindedResources() const;
 	const std::vector<DescriptorManager> GetDescManagers() const;
 };

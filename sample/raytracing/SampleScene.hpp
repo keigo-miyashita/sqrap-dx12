@@ -35,38 +35,44 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 	Device device_;
 	DXC dxc_;
-	std::shared_ptr<Command> command_;
-	std::shared_ptr<SwapChain> swapChain_;
+	CommandHandle command_;
+	SwapChainHandle swapChain_;
 
 	// Mesh
-	std::shared_ptr<ASMesh> sphereASMesh_;
+	ASMeshHandle sphereASMesh_;
 
 	// Scene Items
 	Camera camera_;
 	Light light0_;
-	Object sphere0_;
 
 	// AccelerationStructure
-	std::shared_ptr<BLAS> sphereBLAS_;
-	std::shared_ptr<TLAS> sceneTLAS_;
+	BLASHandle sphereBLAS_;
+	TLASHandle sceneTLAS_;
 
 	// Resources
-	std::shared_ptr<Buffer> cameraBuffer_;
-	std::shared_ptr<Buffer> light0Buffer_;
+	BufferHandle cameraBuffer_;
+	BufferHandle light0Buffer_;
+	TextureHandle outputTexture_;
 
 	// Shaders
-	std::shared_ptr<Shader> rayGen_;
-	std::shared_ptr<Shader> closestHit_;
-	std::shared_ptr<Shader> miss_;
+	ShaderHandle rayGen_;
+	ShaderHandle closestHit_;
+	ShaderHandle miss_;
 
 	// Descriptor
-	std::shared_ptr<DescriptorManager> sphere0DescManager_;
+	DescriptorManagerHandle sphere0DescManager_;
 
 	// RootSignature
-	std::shared_ptr<RootSignature> sphere0RootSignature_;
+	RootSignatureHandle sphere0RootSignature_;
+
+	// Resource Set
+	std::shared_ptr<ResourceSet> sphere0ResourceSet_;
 
 	// Pipeline
-	std::shared_ptr<StateObject> raytracingStates_;
+	StateObjectHandle raytracingStates_;
+
+	// RayTracing
+	RayTracingHandle rayTracing_;
 
 	void BeginRender();
 	void EndRender();

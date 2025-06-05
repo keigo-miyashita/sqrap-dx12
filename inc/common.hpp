@@ -49,4 +49,25 @@
 #include <Swapchain.hpp>
 #include <Workgraph.hpp>
 
+using ASMeshHandle = std::shared_ptr<ASMesh>;
+using BLASHandle = std::shared_ptr<BLAS>;
+using BufferHandle = std::shared_ptr<Buffer>;
+using CommandHandle = std::shared_ptr<Command>;
+using ComputePipelineHandle = std::shared_ptr<ComputePipeline>;
+using DescriptorManagerHandle = std::shared_ptr<DescriptorManager>;
+using FenceHandle = std::shared_ptr<Fence>;
+using GraphicsPipelineHandle = std::shared_ptr<GraphicsPipeline>;
+using IndirectHandle = std::shared_ptr<Indirect>;
+using MeshHandle = std::shared_ptr<Mesh>;
+using RayTracingHandle = std::shared_ptr<RayTracing>;
+using ResourceHandle = std::shared_ptr<Resource>;
+using RootSignatureHandle = std::shared_ptr<RootSignature>;
+using ShaderHandle = std::shared_ptr<Shader>;
+using StateObjectHandle = std::shared_ptr<StateObject>;
+using SwapChainHandle = std::shared_ptr<SwapChain>;
+using TLASHandle = std::shared_ptr<TLAS>;
+using TextureHandle = std::shared_ptr<Texture>;
+using WorkGraphHandle = std::shared_ptr<WorkGraph>;
+
+
 void DebugOutputFormatString(const char* format, ...);

@@ -273,6 +273,11 @@ std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, const
 	return make_shared<Mesh>(*this, command, vertices, indices);
 }
 
+std::shared_ptr<RayTracing> Device::CreateRaytracing(const StateObject& stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
+{
+	return make_shared<RayTracing>(*this, stateObject, width, height, depth, name);
+}
+
 std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const
 {
 	return make_shared<RootSignature>(*this, flag, rootParams, name);
@@ -286,6 +291,11 @@ std::shared_ptr<StateObject> Device::CreateStateObject(const StateObjectDesc soD
 std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
+}
+
+std::shared_ptr<Texture> Device::CreateTexture(TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+{
+	return make_shared<Texture>(*this, texDim, type, strideSize, format, width, height, depth, name);
 }
 
 std::shared_ptr<TLAS> Device::CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name) const
