@@ -1,4 +1,7 @@
-#include <common.hpp>
+#include "Gui.hpp"
+
+#include "Command.hpp"
+#include "Device.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

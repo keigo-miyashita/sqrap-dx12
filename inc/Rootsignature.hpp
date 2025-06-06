@@ -1,6 +1,8 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
+
+#include "Descriptormanager.hpp"
 
 class DescriptorManager;
 class Device;
@@ -70,14 +72,14 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	const std::shared_ptr<RootSignature> pRootSignature_;
-	std::vector<DescriptorManager> descriptorManagers_;
+	std::vector<std::shared_ptr<DescriptorManager>> descriptorManagers_;
 	std::vector<BindResource> bindedResources_;
 
 public:
-	ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>> bindedResources);
+	ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>> bindedResources);
 	~ResourceSet() = default;
 
 	std::shared_ptr<RootSignature> GetRootSignature() const;
 	const std::vector<BindResource> GetBindedResources() const;
-	const std::vector<DescriptorManager> GetDescManagers() const;
+	const std::vector<std::shared_ptr<DescriptorManager>> GetDescManagers() const;
 };

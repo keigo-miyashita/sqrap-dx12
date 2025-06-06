@@ -1,5 +1,10 @@
-#include <common.hpp>
-#include <comdef.h>
+#include "Device.hpp"
+
+#include "Command.hpp"
+#include "Fence.hpp"
+#include "Gui.hpp"
+#include "Shader.hpp"
+#include "Swapchain.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -20,8 +25,6 @@ bool Device::EnableFeatures(vector<UUID>& features) const
 	auto result = D3D12EnableExperimentalFeatures(features.size(), features.data(), nullptr, nullptr);
 	if (FAILED(result)) {
 		cerr << "Failed to enable features\n";
-		_com_error err(result);
-		std::wcout << L"Error: " << err.ErrorMessage() << std::endl;
 		return false;
 	}
 	return true;
@@ -272,7 +275,8 @@ std::shared_ptr<Indirect> Device::CreateIndirect(std::initializer_list<IndirectD
 std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const
 {
 	return make_shared<Mesh>(*this, command, modelPath);
-;}
+}
+
 std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
 {
 	return make_shared<Mesh>(*this, command, vertices, indices);
@@ -298,7 +302,7 @@ std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& com
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
 }
 
-std::shared_ptr<Texture> Device::CreateTexture(TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+std::shared_ptr<Texture> Device::CreateTexture(TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
 {
 	return make_shared<Texture>(*this, texDim, type, strideSize, format, width, height, depth, name);
 }

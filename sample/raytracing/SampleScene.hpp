@@ -40,7 +40,7 @@ private:
 
 	// Mesh
 	ASMeshHandle sphereASMesh_;
-	ASMeshHandle teapotASMesh_;
+	ASMeshHandle suzanneASMesh_;
 
 	// Scene Items
 	Camera camera_;
@@ -48,7 +48,7 @@ private:
 
 	// AccelerationStructure
 	BLASHandle sphereBLAS_;
-	BLASHandle teapotBLAS_;
+	BLASHandle suzanneBLAS_;
 	TLASHandle sceneTLAS_;
 
 	// Resources

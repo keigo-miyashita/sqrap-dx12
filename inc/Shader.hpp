@@ -1,6 +1,8 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
+
+#include "Dxc.hpp"
 
 class DXC;
 

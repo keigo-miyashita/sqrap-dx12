@@ -1,19 +1,14 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
+
+class DescriptorManager;
+class Device;
 
 enum class ResourceType
 {
 	Buffer, Texture, AS
 };
-
-enum class BufferType
-{
-	Default, Upload, Read, Unordered, AS, Counter
-};
-
-class DescriptorManager;
-class Device;
 
 class Resource
 {
@@ -47,6 +42,11 @@ public:
 	D3D12_RESOURCE_STATES GetResourceState() const;
 
 	void SetResourceState(D3D12_RESOURCE_STATES rscState);
+};
+
+enum class BufferType
+{
+	Default, Upload, Read, Unordered, AS, Counter
 };
 
 class Buffer : public Resource
@@ -84,14 +84,14 @@ public:
 	UINT GetOffsetCounter() const;;
 };
 
-enum class TextureDimention
-{
-	Tex1D, Tex2D, Tex3D,
-};
-
 enum class TextureType
 {
 	Default, Upload, Read, Unordered
+};
+
+enum class TextureDim
+{
+	Tex1D, Tex2D, Tex3D,
 };
 
 class Texture : public Resource
@@ -101,7 +101,7 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	TextureType type_;
-	TextureDimention texDim_;
+	TextureDim texDim_;
 	UINT strideSize_ = 0;
 	UINT width_ = 1;
 	UINT height_ = 1;
@@ -109,7 +109,7 @@ private:
 	DXGI_FORMAT format_;
 
 public:
-	Texture(const Device& device, TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
+	Texture(const Device& device, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
 	Texture();
 	~Texture() = default;
 	void* Map();

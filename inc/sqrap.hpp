@@ -1,3 +1,5 @@
+#pragma once
+
 #include <AS.hpp>
 #include <Application.hpp>
 #include <Camera.hpp>

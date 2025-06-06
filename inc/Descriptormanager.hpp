@@ -1,9 +1,11 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
 
+class Buffer;
 class Device;
 class Resource;
+class Texture;
 
 enum class HeapType
 {

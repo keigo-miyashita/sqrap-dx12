@@ -1,9 +1,10 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
 
 class Buffer;
 class Device;
+class StateObject;
 
 class WorkGraph
 {

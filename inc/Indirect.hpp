@@ -1,6 +1,9 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
+
+class Device;
+class RootSignature;
 
 enum class IndirectType
 {
@@ -13,9 +16,6 @@ struct IndirectDesc
 	UINT rootParameterIndex_ = 0;
 	UINT numConstant_ = 0;
 };
-
-class Device;
-class RootSignature;
 
 class Indirect
 {

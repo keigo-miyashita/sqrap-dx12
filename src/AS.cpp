@@ -1,4 +1,9 @@
-#include <common.hpp>
+#include "AS.hpp"
+
+#include "Command.hpp"
+#include "Device.hpp"
+#include "Resource.hpp"
+#include "Mesh.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

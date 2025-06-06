@@ -1,4 +1,6 @@
-#include <common.hpp>
+#include "Rootsignature.hpp"
+
+#include "Device.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -87,15 +89,15 @@ const std::vector<CD3DX12_ROOT_PARAMETER>& RootSignature::GetRootParameters() co
 	return rps_;
 }
 
-ResourceSet::ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>> bindedResources)
+ResourceSet::ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>> bindedResources)
 	: pRootSignature_(pRootSignature)
 {
 	cout << "Make ResourceSet" << endl;
 	// TODO : Integrate object and pointer
 	for (auto bindedResource : bindedResources) {
-		if (std::holds_alternative<DescriptorManager>(bindedResource)) {
-			DescriptorManager dm = std::get<DescriptorManager>(bindedResource);
-			bindedResources_.push_back(dm.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+		if (std::holds_alternative<std::shared_ptr<DescriptorManager>>(bindedResource)) {
+			std::shared_ptr<DescriptorManager> dm = std::get<std::shared_ptr<DescriptorManager>>(bindedResource);
+			bindedResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			descriptorManagers_.push_back(dm);
 		}
 		else if (std::holds_alternative<std::shared_ptr<Buffer>>(bindedResource)) {
@@ -119,7 +121,7 @@ const std::vector<BindResource> ResourceSet::GetBindedResources() const
 	return bindedResources_;
 }
 
-const std::vector<DescriptorManager> ResourceSet::GetDescManagers() const
+const std::vector<std::shared_ptr<DescriptorManager>> ResourceSet::GetDescManagers() const
 {
 	return descriptorManagers_;
 }

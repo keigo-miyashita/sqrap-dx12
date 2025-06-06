@@ -1,4 +1,7 @@
-#include <common.hpp>
+#include "Resource.hpp"
+
+#include "Descriptormanager.hpp"
+#include "Device.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -18,21 +21,21 @@ Resource::Resource()
 void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
 {
 	if (rscType_ == ResourceType::Texture) {
-		std::runtime_error("Cannot create CBV for texture !");
+		throw std::runtime_error("Cannot create CBV for texture !");
 	}
 }
 
 void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 {
 	if (rscType_ == ResourceType::AS) {
-		std::runtime_error("Cannot create CBV for AS !");
+		throw std::runtime_error("Cannot create CBV for AS !");
 	}
 }
 
 void Resource::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
 {
 	if (rscType_ == ResourceType::Texture) {
-		std::runtime_error("Cannot create UAVCounter for texture !");
+		throw std::runtime_error("Cannot create UAVCounter for texture !");
 	}
 }
 
@@ -241,7 +244,7 @@ UINT Buffer::GetOffsetCounter() const
 	return offsetCounter_;
 }
 
-Texture::Texture(const Device& device, TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+Texture::Texture(const Device& device, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
 	: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth)
 {
 	if (type_ == TextureType::Default) {
@@ -266,16 +269,16 @@ Texture::Texture(const Device& device, TextureDimention texDim, TextureType type
 	}
 	auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 	CD3DX12_RESOURCE_DESC rscDesc;
-	if (texDim_ == TextureDimention::Tex1D) {
+	if (texDim_ == TextureDim::Tex1D) {
 		rscDesc = CD3DX12_RESOURCE_DESC::Tex1D(format_, width_);
 		rscDesc.MipLevels = 1;
 	}
-	else if (texDim_ == TextureDimention::Tex2D)
+	else if (texDim_ == TextureDim::Tex2D)
 	{
 		rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_);
 		rscDesc.MipLevels = 1;
 	}
-	else if (texDim_ == TextureDimention::Tex3D) {
+	else if (texDim_ == TextureDim::Tex3D) {
 		rscDesc = CD3DX12_RESOURCE_DESC::Tex3D(format_, width_, height_, depth_);
 		rscDesc.MipLevels = 1;
 	}
@@ -318,12 +321,12 @@ void Texture::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
 	viewDesc.Format = format_;
-	if (texDim_ == TextureDimention::Tex1D) {
+	if (texDim_ == TextureDim::Tex1D) {
 		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
 		viewDesc.Texture1D.MostDetailedMip = 0;
 		viewDesc.Texture1D.MipLevels = 1;
 	}
-	else if (texDim_ == TextureDimention::Tex2D) {
+	else if (texDim_ == TextureDim::Tex2D) {
 		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		viewDesc.Texture2D.MostDetailedMip = 0;
 		viewDesc.Texture2D.MipLevels = 1;
@@ -331,16 +334,12 @@ void Texture::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
 		viewDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
 	}
-	else if (texDim_ == TextureDimention::Tex3D) {
+	else if (texDim_ == TextureDim::Tex3D) {
 		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
 		viewDesc.Texture3D.MostDetailedMip = 0;
 		viewDesc.Texture3D.MipLevels = 1;
 		viewDesc.Texture3D.ResourceMinLODClamp = 0.0f;
 	}
-	/*viewDesc.Buffer.StructureByteStride = strideSize_;
-	viewDesc.Buffer.NumElements = numElement_;
-	viewDesc.Buffer.FirstElement = 0;
-	viewDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;*/
 	viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
@@ -352,27 +351,22 @@ void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 	/*viewDesc.Format = DXGI_FORMAT_UNKNOWN;*/
 	viewDesc.Format = format_;
-	if (texDim_ == TextureDimention::Tex1D) {
+	if (texDim_ == TextureDim::Tex1D) {
 		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
 		viewDesc.Texture1D.MipSlice = 0;
 	}
-	else if (texDim_ == TextureDimention::Tex2D) {
+	else if (texDim_ == TextureDim::Tex2D) {
 		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 		viewDesc.Texture2D.MipSlice = 0;
 		viewDesc.Texture2D.PlaneSlice = 0;
 
 	}
-	else if (texDim_ == TextureDimention::Tex3D) {
+	else if (texDim_ == TextureDim::Tex3D) {
 		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
 		viewDesc.Texture3D.MipSlice = 0;
 		viewDesc.Texture3D.FirstWSlice = 0;
 		viewDesc.Texture3D.WSize = 1;
 	}
-	/*viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-	viewDesc.Buffer.StructureByteStride = strideSize_;
-	viewDesc.Buffer.NumElements = numElement_;
-	viewDesc.Buffer.FirstElement = 0;
-	viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;*/
 	auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
 	pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), nullptr, &viewDesc, heapHandle);

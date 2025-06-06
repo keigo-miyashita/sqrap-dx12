@@ -98,7 +98,7 @@ bool SampleScene::Init(const Application& app)
 	string modelPath = string(MODEL_DIR) + "sphere.gltf";
 	sphereASMesh_ = device_.CreateASMesh(command_, modelPath);
 	modelPath = string(MODEL_DIR) + "Suzanne.gltf";
-	teapotASMesh_ = device_.CreateASMesh(command_, modelPath);
+	suzanneASMesh_ = device_.CreateASMesh(command_, modelPath);
 
 	// Scene Items
 	// Camera
@@ -108,11 +108,11 @@ bool SampleScene::Init(const Application& app)
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	sphereBLAS_ = device_.CreateBLAS(command_, *sphereASMesh_);
-	teapotBLAS_ = device_.CreateBLAS(command_, *teapotASMesh_);
+	suzanneBLAS_ = device_.CreateBLAS(command_, *suzanneASMesh_);
 	sceneTLAS_ = device_.CreateTLAS(
 		command_,
 		{
-			{XMMatrixIdentity(), 0, teapotBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
+			{XMMatrixIdentity(), 0, suzanneBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
 		}
 	);
 	
@@ -138,7 +138,7 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	outputTexture_ = device_.CreateTexture(
-		TextureDimention::Tex2D,
+		TextureDim::Tex2D,
 		TextureType::Unordered,
 		0, DXGI_FORMAT_R8G8B8A8_UNORM, app.GetWindowWidth(), app.GetWindowHeight(), 1
 	);
@@ -171,9 +171,9 @@ bool SampleScene::Init(const Application& app)
 	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
 		sphere0RootSignature_,
 		// NOTE : Error occur when substitute BindResource
-		std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>>
+		std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>>
 		{
-			DescriptorManager{ *sphere0DescManager_ },
+			std::shared_ptr<DescriptorManager>{ sphere0DescManager_ },
 		}
 	);
 

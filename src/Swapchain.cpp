@@ -1,4 +1,8 @@
-#include <common.hpp>
+#include "Swapchain.hpp"
+
+#include "Command.hpp"
+#include "Device.hpp"
+#include "Resource.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

@@ -1,4 +1,14 @@
-#include <common.hpp>
+#include "Command.hpp"
+
+#include "Descriptormanager.hpp"
+#include "Device.hpp"
+#include "Fence.hpp"
+#include "Indirect.hpp"
+#include "Gui.hpp"
+#include "Mesh.hpp"
+#include "Pipeline.hpp"
+#include "Resource.hpp"
+#include "Rootsignature.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -223,13 +233,13 @@ void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsC
 void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 {
 	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
-	const std::vector<DescriptorManager> descManagers = resourceSet->GetDescManagers();
+	const std::vector<std::shared_ptr<DescriptorManager>> descManagers = resourceSet->GetDescManagers();
 
 	commandList_->SetComputeRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
 
 	std::vector<ID3D12DescriptorHeap*> rawHeaps;
 	for (auto& h : descManagers) {
-		rawHeaps.push_back(h.GetDescriptorHeap().Get());
+		rawHeaps.push_back(h->GetDescriptorHeap().Get());
 	}
 
 	commandList_->SetDescriptorHeaps(rawHeaps.size(), rawHeaps.data());;
@@ -257,14 +267,14 @@ void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 void Command::SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 {
 	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
-	const std::vector<DescriptorManager> descManagers = resourceSet->GetDescManagers();
+	const std::vector<std::shared_ptr<DescriptorManager>> descManagers = resourceSet->GetDescManagers();
 
 	commandList_->SetGraphicsRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
 
 	// NOTE : Using raw ptr (memory leaks may occur)
 	std::vector<ID3D12DescriptorHeap*> rawHeaps;
 	for (auto& h : descManagers) {
-		rawHeaps.push_back(h.GetDescriptorHeap().Get());
+		rawHeaps.push_back(h->GetDescriptorHeap().Get());
 	}
 
 	commandList_->SetDescriptorHeaps(rawHeaps.size(), rawHeaps.data());;

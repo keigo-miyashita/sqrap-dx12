@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
 
 #define StableCommandList ID3D12GraphicsCommandList9
 #define LatestCommandList ID3D12GraphicsCommandList10

@@ -1,4 +1,7 @@
-#include <common.hpp>
+#include "Indirect.hpp"
+
+#include "Device.hpp"
+#include "Rootsignature.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

@@ -1,10 +1,14 @@
 #pragma once
 
-#include <common.hpp>
+#include "pch.hpp"
+
+class Buffer;
+class Command;
+class Device;
 
 struct Vertex
 {
-	DirectX::XMFLOAT4 position = {0.0f, 0.0f, 0.0f, 1.0f};
+	DirectX::XMFLOAT4 position = { 0.0f, 0.0f, 0.0f, 1.0f };
 	DirectX::XMFLOAT4 normal = { 0.0f, 0.0f, 0.0f, 1.0f };
 	DirectX::XMFLOAT4 tangent = { 0.0f, 0.0f, 0.0f, 1.0f };
 	DirectX::XMFLOAT2 uv = { 0.0f, 0.0f };
@@ -14,9 +18,6 @@ struct ASVertex
 {
 	DirectX::XMFLOAT3 position = { 0.0f, 0.0f, 0.0f };
 };
-
-class Command;
-class Device;
 
 class Mesh
 {
@@ -41,8 +42,6 @@ public:
 	Mesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
 	Mesh(const Device& device, std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	~Mesh() = default;
-	/*bool Init(Device* pDevice, Command& command_, std::string modelPath);
-	bool Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);*/
 	const Buffer& GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;

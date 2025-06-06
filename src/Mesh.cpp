@@ -1,4 +1,8 @@
-#include <common.hpp>
+#include "Mesh.hpp"
+
+#include "Command.hpp"
+#include "Device.hpp"
+#include "Resource.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -135,46 +139,6 @@ Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, const std::ve
 	CreateVertexBuffer();
 	CreateIndexBuffer();
 }
-
-//bool Mesh::Init(Device* pDevice, Command& command_, std::string modelPath)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice_ == nullptr) {
-//		cerr << "Mesh class doesn't have any pointer" << endl;
-//		return false;
-//	}
-//	if (!LoadModel(modelPath)) {
-//		return false;
-//	}
-//
-//	if (FAILED(CreateVertexBuffer(command_))) {
-//		return false;
-//	}
-//
-//	if (FAILED(CreateIndexBuffer(command_))) {
-//		return false;
-//	}
-//
-//
-//	return true;
-//}
-//
-//bool Mesh::Init(Device* pDevice, Command& command_, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-//{
-//	pDevice_ = pDevice;
-//	vertices_ = vertices;
-//	indices_ = indices;
-//	
-//	if (FAILED(CreateVertexBuffer(command_))) {
-//		return false;
-//	}
-//
-//	if (FAILED(CreateIndexBuffer(command_))) {
-//		return false;
-//	}
-//
-//	return true;
-//}
 
 const Buffer& Mesh::GetVertexBuffer() const
 {

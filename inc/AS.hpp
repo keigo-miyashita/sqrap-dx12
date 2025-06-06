@@ -1,14 +1,15 @@
 #pragma once
 
-#include <common.hpp>
-#include "Resource.hpp"
+#include "pch.hpp"
 
+class AS;
 class ASMesh;
 class Buffer;
 class Command;
 class Device;
 class Fence;
 class Mesh;
+class Resouce;
 
 class BLAS
 {

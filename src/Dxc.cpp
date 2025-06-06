@@ -1,4 +1,7 @@
 #include <common.hpp>
+#include "Dxc.hpp"
+
+#include "Shader.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

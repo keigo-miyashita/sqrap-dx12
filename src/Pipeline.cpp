@@ -1,4 +1,8 @@
-#include <common.hpp>
+#include "Pipeline.hpp"
+
+#include "Device.hpp"
+#include "Rootsignature.hpp"
+#include "Shader.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

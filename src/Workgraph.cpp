@@ -1,4 +1,8 @@
-#include <common.hpp>
+#include "Workgraph.hpp"
+
+#include "Device.hpp"
+#include "Resource.hpp"
+#include "Pipeline.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

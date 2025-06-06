@@ -1,55 +1,45 @@
 #pragma once
 
-#include <AS.hpp>
-#include <Application.hpp>
-#include <Camera.hpp>
-#include <Command.hpp>
-#include <Descriptormanager.hpp>
-#include <Device.hpp>
-#include <Dxc.hpp>
-#include <Fence.hpp>
-#include <Gui.hpp>
-#include <Indirect.hpp>
-#include <Mesh.hpp>
-#include <Pipeline.hpp>
-#include <Raytracing.hpp>
-#include <Resource.hpp>
-#include <Rootsignature.hpp>
-#include <Shader.hpp>
-#include <Swapchain.hpp>
-#include <Workgraph.hpp>
+#include "pch.hpp"
+
+#include "AS.hpp"
+#include "Descriptormanager.hpp"
+#include "Indirect.hpp"
+#include "Mesh.hpp"
+#include "Pipeline.hpp"
+#include "Raytracing.hpp"
+#include "Resource.hpp"
+#include "Rootsignature.hpp"
+#include "Workgraph.hpp"
 
 #define StableDevice ID3D12Device13
 #define LatestDevice ID3D12Device14
 
-class AS;
-class ASMesh;
-class Buffer;
-class BLAS;
 class Command;
-class ComputePipeline;
-class DescriptorManager;
-class GraphicsPipeline;
-class Mesh;
-class RayTracing;
-class RootSignature;
-class StateObject;
+class Fence;
+class GUI;
+class Shader;
 class SwapChain;
-class Texture;
-class TLAS;
-class WorkGraph;
 
-struct ASMesh;
-struct ASVertex;
-struct Constants;
-struct ComputeDesc;
-struct GraphicsDesc;
-struct IndirectDesc;
-struct Mesh;
-struct RootParameter;
-struct StateObjectDesc;
-struct TLASDesc;
-struct Vertex;
+using ASMeshHandle = std::shared_ptr<ASMesh>;
+using BLASHandle = std::shared_ptr<BLAS>;
+using BufferHandle = std::shared_ptr<Buffer>;
+using CommandHandle = std::shared_ptr<Command>;
+using ComputePipelineHandle = std::shared_ptr<ComputePipeline>;
+using DescriptorManagerHandle = std::shared_ptr<DescriptorManager>;
+using FenceHandle = std::shared_ptr<Fence>;
+using GraphicsPipelineHandle = std::shared_ptr<GraphicsPipeline>;
+using IndirectHandle = std::shared_ptr<Indirect>;
+using MeshHandle = std::shared_ptr<Mesh>;
+using RayTracingHandle = std::shared_ptr<RayTracing>;
+using ResourceHandle = std::shared_ptr<Resource>;
+using RootSignatureHandle = std::shared_ptr<RootSignature>;
+using ShaderHandle = std::shared_ptr<Shader>;
+using StateObjectHandle = std::shared_ptr<StateObject>;
+using SwapChainHandle = std::shared_ptr<SwapChain>;
+using TLASHandle = std::shared_ptr<TLAS>;
+using TextureHandle = std::shared_ptr<Texture>;
+using WorkGraphHandle = std::shared_ptr<WorkGraph>;
 
 class Device
 {
@@ -94,7 +84,7 @@ public:
 	std::shared_ptr<RootSignature>		CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"") const;
 	std::shared_ptr<StateObject>		CreateStateObject(const StateObjectDesc soDesc, std::wstring name = L"") const;
 	std::shared_ptr<SwapChain>			CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"") const;
-	std::shared_ptr<Texture>			CreateTexture(TextureDimention texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
+	std::shared_ptr<Texture>			CreateTexture(TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
 	std::shared_ptr<TLAS>				CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"") const;
 	std::shared_ptr<WorkGraph>			CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"") const;
 	

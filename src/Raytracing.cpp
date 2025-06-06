@@ -1,4 +1,9 @@
-#include <common.hpp>
+#include "Raytracing.hpp"
+
+#include "Device.hpp"
+#include "Resource.hpp"
+#include "Shader.hpp"
+#include "Pipeline.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

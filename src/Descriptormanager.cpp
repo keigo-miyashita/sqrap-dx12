@@ -1,4 +1,6 @@
-#include <common.hpp>
+#include "Descriptormanager.hpp"
+#include "Device.hpp"
+#include "Resource.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;

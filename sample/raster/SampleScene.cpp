@@ -154,9 +154,9 @@ bool SampleScene::Init(const Application& app)
 	Color sphere0Color = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
 	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
 			sphere0RootSignature_,
-			std::initializer_list<std::variant<DescriptorManager, std::shared_ptr<Buffer>, Constants>>
+			std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>>
 			{
-				DescriptorManager{*sphere0DescManager_},
+			std::shared_ptr<DescriptorManager>{sphere0DescManager_},
 				Constants{reinterpret_cast<void*>(&sphere0Color), 4}
 			}
 	);
