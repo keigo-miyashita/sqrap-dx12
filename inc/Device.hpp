@@ -41,6 +41,8 @@ using TLASHandle = std::shared_ptr<TLAS>;
 using TextureHandle = std::shared_ptr<Texture>;
 using WorkGraphHandle = std::shared_ptr<WorkGraph>;
 
+void DebugOutputFormatString(const char* format, ...);
+
 class Device
 {
 private:
@@ -77,6 +79,7 @@ public:
 	std::shared_ptr<DescriptorManager>	CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"") const;
 	std::shared_ptr<Fence>				CreateFence(std::wstring name = L"") const;
 	std::shared_ptr<GraphicsPipeline>	CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name = L"") const;
+	std::shared_ptr<GUI>				CreateGUI(const HWND& hwnd) const;
 	std::shared_ptr<Indirect>			CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name = L"") const;
 	std::shared_ptr<Mesh>				CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const;
 	std::shared_ptr<Mesh>				CreateMesh(std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;

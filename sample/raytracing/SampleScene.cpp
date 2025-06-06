@@ -1,5 +1,3 @@
-#include <common.hpp>
-
 #include "SampleScene.hpp"
 
 using namespace Microsoft::WRL;

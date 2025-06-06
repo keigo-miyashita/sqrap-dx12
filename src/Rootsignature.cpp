@@ -49,7 +49,7 @@ RootSignature::RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS fl
 	}
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-	// NOTE : 
+	// TODO : 
 	// 第3引数はSampler関係 Samplerリソースは別のメソッド定義が必要？
 	rootSignatureDesc.Init(rps_.size(), rps_.data(), 0, nullptr, flag_);
 

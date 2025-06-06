@@ -1,6 +1,6 @@
-#include <common.hpp>
 #include "Dxc.hpp"
 
+#include "Device.hpp"
 #include "Shader.hpp"
 
 using namespace Microsoft::WRL;

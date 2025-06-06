@@ -25,9 +25,6 @@ if(TARGET Microsoft::DirectX12-Agility)
     )
 endif()
 
-# message(STATUS "${VCPKG_INSTALLED}/${VCPKG_TARGET_TRIPLET}/bin/dxcompiler.dll")
-message(STATUS "dxcompiler.dll path: ${VCPKG_INSTALLED}/${VCPKG_TARGET_TRIPLET}/bin/dxcompiler.dll")
-message(STATUS "vcpkg_installed path: " ${VCPKG_INSTALLED})
  # dxilはなぜか設定しないと参照されないので、実行ファイルと同じ階層にコピー
 add_custom_command(TARGET ${PROJECT_NAME}-sample-raster POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -40,8 +37,3 @@ set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 add_compile_definitions(SHADER_DIR=L"${SHADER_DIR}")
 set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/model/")
 add_compile_definitions(MODEL_DIR="${MODEL_DIR}")
-
-get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()

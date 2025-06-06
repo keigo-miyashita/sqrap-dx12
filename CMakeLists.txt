@@ -46,8 +46,8 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
 
 if (NOT DEFINED ENABLE_VERSION_ASSIGNMENT)
-    set(D3D12_DLL_DIR "D3D12")
     set(D3D12_SDK_VERSION 715)
+    set(D3D12_DLL_DIR "D3D12")
     set(D3D12_SDK_PATH "\".\\\\${D3D12_DLL_DIR}\\\\\"")
 endif()
 

@@ -1,3 +1,4 @@
+#include <pch.hpp>
 #include <sqrap.hpp>
 
 #include "SampleApplication.hpp"

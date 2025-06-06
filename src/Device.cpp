@@ -10,6 +10,19 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
+extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = D3D12_SDK_VERSION_MACRO; }
+extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = D3D12_SDK_PATH_MACRO; }
+
+void DebugOutputFormatString(const char* format, ...)
+{
+#ifdef _DEBUG
+	va_list valist;
+	va_start(valist, format);
+	printf(format, valist);
+	va_end(valist);
+#endif
+}
+
 namespace {
 	void EnableDebugLayer()
 	{
@@ -265,6 +278,11 @@ std::shared_ptr<Fence> Device::CreateFence(std::wstring name) const
 std::shared_ptr<GraphicsPipeline> Device::CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name) const
 {
 	return make_shared<GraphicsPipeline>(*this, desc, name);
+}
+
+std::shared_ptr<GUI> Device::CreateGUI(const HWND& hwnd) const
+{
+	return make_shared<GUI>(*this, hwnd);
 }
 
 std::shared_ptr<Indirect> Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name) const

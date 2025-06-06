@@ -1,5 +1,6 @@
 #pragma once
 
+#include <pch.hpp>
 #include <sqrap.hpp>
 
 #include "SampleScene.hpp"
