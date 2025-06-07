@@ -42,11 +42,11 @@ public:
 	Mesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
 	Mesh(const Device& device, std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	~Mesh() = default;
-	const Buffer& GetVertexBuffer() const;
+	std::shared_ptr<Buffer> GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
 	virtual UINT GetVertexCount() const;
-	const Buffer& GetIndexBuffer() const;
+	std::shared_ptr<Buffer> GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
 	UINT GetNumIndices() const;
@@ -75,11 +75,11 @@ public:
 	ASMesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
 	ASMesh(const Device& device, std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
 	~ASMesh() = default;
-	const Buffer& GetVertexBuffer() const;
+	std::shared_ptr<Buffer> GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
 	virtual UINT GetVertexCount() const;
-	const Buffer& GetIndexBuffer() const;
+	std::shared_ptr<Buffer> GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
 	UINT GetNumIndices() const;

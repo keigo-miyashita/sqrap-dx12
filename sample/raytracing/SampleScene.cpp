@@ -58,13 +58,27 @@ void SampleScene::Render()
 		cameraBuffer_->Unmap();
 	}
 
-	command_->SetComputeResourceSet(sphere0ResourceSet_);
+	//command_->SetComputeResourceSet(sphere0ResourceSet_);
+	command_->SetComputeRootSig(*suzanneRootSignature_);
+	command_->SetDescriptorHeap(*suzanneDescManager_);
+	command_->SetComputeRootDescriptorTable(0, *suzanneDescManager_);
+	command_->SetComputeRoot32BitConstants(1, 4, &diffuseColor_);
 	command_->GetStableCommandList()->SetPipelineState1(raytracingStates_->GetStateObject().Get());
 	D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing_->GetDispatchRayDesc();
 	command_->GetStableCommandList()->DispatchRays(&dispatchRaysDesc);
 
 	command_->CopyBuffer(*outputTexture_, *(swapChain_->GetCurrentBackBuffer()));
-	auto outputTextureDesc = outputTexture_->GetResource()->GetDesc();
+
+	// GUI
+	{
+		GUI_->BeginCommand();
+		// Add GUI 
+		ImGui::Text("Color");
+		ImGui::SameLine();
+		ImGui::ColorEdit4("##SurfaceColor", (float*)&diffuseColor_);
+		GUI_->EndCommand();
+		command_->DrawGUI(*GUI_);
+	}
 
 	EndRender();
 
@@ -87,16 +101,17 @@ bool SampleScene::Init(const Application& app)
 		return false;
 	}
 
+	GUI_ = device_.CreateGUI(app.GetWindowHWND());
+
 	command_ = device_.CreateCommand();
 
 	SIZE size = { app.GetWindowWidth(), app.GetWindowHeight()};
 	swapChain_ = device_.CreateSwapChain(command_, app.GetWindowHWND(), size);
 
 	// ASMesh
-	string modelPath = string(MODEL_DIR) + "sphere.gltf";
-	sphereASMesh_ = device_.CreateASMesh(command_, modelPath);
-	modelPath = string(MODEL_DIR) + "Suzanne.gltf";
+	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";
 	suzanneASMesh_ = device_.CreateASMesh(command_, modelPath);
+	suzanneMesh_ = device_.CreateMesh(command_, modelPath);
 
 	// Scene Items
 	// Camera
@@ -105,7 +120,6 @@ bool SampleScene::Init(const Application& app)
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	sphereBLAS_ = device_.CreateBLAS(command_, *sphereASMesh_);
 	suzanneBLAS_ = device_.CreateBLAS(command_, *suzanneASMesh_);
 	sceneTLAS_ = device_.CreateTLAS(
 		command_,
@@ -148,30 +162,34 @@ bool SampleScene::Init(const Application& app)
 	miss_		= dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"miss");
 
 	// Descriptor Manager
-	sphere0DescManager_ = device_.CreateDescriptorManager(
+	suzanneDescManager_ = device_.CreateDescriptorManager(
 		HeapType::Resource, 
 		{
-			{ cameraBuffer_,				ViewType::CBV, 0},
-			{ light0Buffer_,				ViewType::CBV, 1},
-			{ sceneTLAS_->GetASBuffer(),	ViewType::SRV, 0},
+			{ cameraBuffer_,					ViewType::CBV, 0},
+			{ light0Buffer_,					ViewType::CBV, 1},
+			{ sceneTLAS_->GetASBuffer(),		ViewType::SRV, 0},
+			{ suzanneMesh_->GetVertexBuffer(),	ViewType::SRV, 1},
+			{ suzanneMesh_->GetIndexBuffer(),	ViewType::SRV, 2},
 			// NOTE : Need output UAV
-			{ outputTexture_,				ViewType::UAV, 0}
+			{ outputTexture_,					ViewType::UAV, 0}
 		}
 	);
 	// RootSignature
-	sphere0RootSignature_ = device_.CreateRootSignature(
+	suzanneRootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
+			{RootParamType::DescTable,	DescTableRootParamDesc{*suzanneDescManager_}},
+			{RootParamType::Constant,	DirectRootParamDesc{2, 4}}
 		}
 	);
 
-	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
-		sphere0RootSignature_,
+	suzanneResourceSet_ = std::make_shared<ResourceSet>(
+		suzanneRootSignature_,
 		// NOTE : Error occur when substitute BindResource
 		std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>>
 		{
-			std::shared_ptr<DescriptorManager>{ sphere0DescManager_ },
+			std::shared_ptr<DescriptorManager>{ suzanneDescManager_ },
+			Constants{static_cast<void*>(&diffuseColor_), 4, 0}
 		}
 	);
 
@@ -181,7 +199,7 @@ bool SampleScene::Init(const Application& app)
 			StateObjectType::Raytracing,
 			StateObjectDesc::RayTracingDesc
 			{
-				sphere0RootSignature_,
+				suzanneRootSignature_,
 				{
 					{rayGen_, ShaderStage::RayGen},
 				},
@@ -205,6 +223,8 @@ bool SampleScene::Init(const Application& app)
 		app.GetWindowHeight(),
 		1
 	);
+
+	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 
 	
 	return true;

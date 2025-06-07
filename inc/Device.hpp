@@ -29,6 +29,7 @@ using ComputePipelineHandle = std::shared_ptr<ComputePipeline>;
 using DescriptorManagerHandle = std::shared_ptr<DescriptorManager>;
 using FenceHandle = std::shared_ptr<Fence>;
 using GraphicsPipelineHandle = std::shared_ptr<GraphicsPipeline>;
+using GUIHandle = std::shared_ptr<GUI>;
 using IndirectHandle = std::shared_ptr<Indirect>;
 using MeshHandle = std::shared_ptr<Mesh>;
 using RayTracingHandle = std::shared_ptr<RayTracing>;

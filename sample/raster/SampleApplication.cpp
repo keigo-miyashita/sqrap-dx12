@@ -24,7 +24,7 @@ void SampleApplication::Run()
 
 	while (true) {
 
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -32,6 +32,8 @@ void SampleApplication::Run()
 		if (msg.message == WM_QUIT) {
 			break;
 		}
+
+		Input::Update();
 
 		sampleScene_.Render();
 	}

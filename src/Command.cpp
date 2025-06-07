@@ -230,6 +230,11 @@ void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsC
 	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
 }
 
+void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData)
+{
+	commandList_->SetComputeRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
+}
+
 void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 {
 	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
@@ -258,7 +263,12 @@ void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 		}
 		else if (std::holds_alternative<Constants>(resource)) {
 			Constants cs = std::get<Constants>(resource);
+			/*float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+			cs.constants = static_cast<void*>(color);*/
 			commandList_->SetComputeRoot32BitConstants(rootParamIndex, cs.numConstants, cs.constants, cs.numOffset);
+			float* constants = static_cast<float*>(cs.constants);
+			cout << "cs = " << constants[0] << " " << constants[1] << " " << constants[2] << " " << constants[3] << endl;
+			cout << "cs = " << cs.numConstants << " " << cs.numOffset << endl;
 			rootParamIndex++;
 		}
 	}

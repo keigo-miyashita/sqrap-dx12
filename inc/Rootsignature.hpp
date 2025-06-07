@@ -80,6 +80,6 @@ public:
 	~ResourceSet() = default;
 
 	std::shared_ptr<RootSignature> GetRootSignature() const;
-	const std::vector<BindResource> GetBindedResources() const;
-	const std::vector<std::shared_ptr<DescriptorManager>> GetDescManagers() const;
+	const std::vector<BindResource>& GetBindedResources() const;
+	const std::vector<std::shared_ptr<DescriptorManager>>& GetDescManagers() const;
 };

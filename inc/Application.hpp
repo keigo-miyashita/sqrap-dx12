@@ -11,6 +11,13 @@ struct MousePosition
 class Input
 {
 private:
+
+	struct InputLogicalState
+	{
+		bool isRawPushed = false;
+		bool isPushed = false;
+	};
+
 	static inline std::unordered_map<UINT, bool> isPushKey_ = {
 		{'A', false},
 		{'B', false},
@@ -41,6 +48,36 @@ private:
 		{VK_SPACE, false},
 		{VK_CONTROL, false},
 	};
+	static inline std::unordered_map<UINT, InputLogicalState> isLogicalPushKey_ = {
+		{'A', {false, false}},
+		{'B', {false, false}},
+		{'C', {false, false}},
+		{'D', {false, false}},
+		{'E', {false, false}},
+		{'F', {false, false}},
+		{'G', {false, false}},
+		{'H', {false, false}},
+		{'I', {false, false}},
+		{'J', {false, false}},
+		{'K', {false, false}},
+		{'L', {false, false}},
+		{'M', {false, false}},
+		{'N', {false, false}},
+		{'O', {false, false}},
+		{'P', {false, false}},
+		{'Q', {false, false}},
+		{'R', {false, false}},
+		{'S', {false, false}},
+		{'T', {false, false}},
+		{'U', {false, false}},
+		{'V', {false, false}},
+		{'W', {false, false}},
+		{'X', {false, false}},
+		{'Y', {false, false}},
+		{'Z', {false, false}},
+		{VK_SPACE, {false, false}},
+		{VK_CONTROL, {false, false}},
+	};
 	static inline int wheel_ = 0;
 	static inline bool isPushedLButton_ = false;
 	static inline bool isPushedRButton_ = false;
@@ -48,7 +85,8 @@ private:
 	static inline MousePosition currentMousePos_;
 
 public:
-	static void Update(UINT msg, WPARAM wparam, LPARAM lparam);
+	static void GetRawState(UINT msg, WPARAM wparam, LPARAM lparam);
+	static void Update();
 	static bool IsPushKey(UINT key);
 	static int GetWheel();
 	static MousePosition GetPushedPos();

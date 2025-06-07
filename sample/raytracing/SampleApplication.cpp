@@ -28,14 +28,18 @@ void SampleApplication::Run()
 
 	while (true) {
 
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+		// If you use If statements, system only can handle one input
+		// It leads delay for input
+		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+			if (msg.message == WM_QUIT) {
+				break;
+			}
+
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 
-		if (msg.message == WM_QUIT) {
-			break;
-		}
+		Input::Update();
 
 		sampleScene_.Render();
 	}

@@ -6,18 +6,32 @@ using namespace DirectX;
 
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND, UINT, WPARAM, LPARAM);
 
-void Input::Update(UINT msg, WPARAM wparam, LPARAM lparam)
+void Input::GetRawState(UINT msg, WPARAM wparam, LPARAM lparam)
 {
+	if (ImGui::GetCurrentContext() != nullptr) {
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantCaptureMouse) {
+			return;
+		}
+	}
+
 	UINT vkCode = (UINT)wparam;
 	int xPos = GET_X_LPARAM(lparam);
 	int yPos = GET_Y_LPARAM(lparam);
 	currentMousePos_ = {xPos, yPos};
+	/*for (auto& eachIsPushKey : isPushKey_) {
+		eachIsPushKey.second = false;
+	}*/
 	switch (msg) {
 	case WM_KEYDOWN:
-		isPushKey_[vkCode] = true;
+		//if ((lparam & (1 << 30)) == 0) {
+			isPushKey_[vkCode] = true;
+		//}
+		cout << "isPushKey" << endl;
 		break;
 	case WM_KEYUP:
 		isPushKey_[vkCode] = false;
+		cout << "isUnPushKey" << endl;
 		break;
 	case WM_LBUTTONDOWN:
 		isPushedLButton_ = true;
@@ -33,9 +47,26 @@ void Input::Update(UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 }
 
+void Input::Update()
+{
+	for (auto& [vk, rawState] : isPushKey_) {
+		bool prev = isLogicalPushKey_[vk].isRawPushed;
+		isLogicalPushKey_[vk].isRawPushed = rawState;
+
+		if (!prev && rawState) {
+			isLogicalPushKey_[vk].isPushed = true;
+		}
+		if (prev && !rawState) {
+			isLogicalPushKey_[vk].isPushed = false;
+		}
+		//isLogicalPushKey_[vk].isPushed = !prev && rawState;    // 前がfalse、今がtrue → 押された
+		//isLogicalPushKey_[vk].isReleased = prev && !rawState;   // 前がtrue、今がfalse → 離された
+	}
+}
+
 bool Input::IsPushKey(UINT key)
 {
-	return isPushKey_[key];
+	return isLogicalPushKey_[key].isPushed;
 }
 
 int Input::GetWheel()
@@ -139,7 +170,7 @@ Application::Application(std::string windowName, unsigned int window_width, unsi
 
 int Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
 {
-	Input::Update(msg, wparam, lparam);
+	Input::GetRawState(msg, wparam, lparam);
 
 	return 0;
 }

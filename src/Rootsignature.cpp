@@ -106,6 +106,9 @@ ResourceSet::ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::ini
 		}
 		else if (std::holds_alternative<Constants>(bindedResource)) {
 			Constants c = std::get<Constants>(bindedResource);
+			float* constants = static_cast<float*>(c.constants);
+			cout << "cs = " << (float)constants[0] << " " << (float)constants[1] << " " << (float)constants[2] << " " << (float)constants[3] << endl;
+			cout << "cs = " << c.numConstants << " " << c.numOffset << endl;
 			bindedResources_.push_back(c);
 		}
 	}
@@ -116,12 +119,12 @@ std::shared_ptr<RootSignature> ResourceSet::GetRootSignature() const
 	return pRootSignature_;
 }
 
-const std::vector<BindResource> ResourceSet::GetBindedResources() const
+const std::vector<BindResource>& ResourceSet::GetBindedResources() const
 {
 	return bindedResources_;
 }
 
-const std::vector<std::shared_ptr<DescriptorManager>> ResourceSet::GetDescManagers() const
+const std::vector<std::shared_ptr<DescriptorManager>>& ResourceSet::GetDescManagers() const
 {
 	return descriptorManagers_;
 }

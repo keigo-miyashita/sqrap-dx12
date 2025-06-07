@@ -62,6 +62,7 @@ public:
 	void SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager);
 	void SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
+	void SetComputeRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
 	void SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet);
 	void SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet);
 	bool WaitCommand();

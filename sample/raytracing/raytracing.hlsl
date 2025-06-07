@@ -1,3 +1,11 @@
+struct Vertex
+{
+    float4 position;
+    float4 normal;
+    float4 tangent;
+    float2 uv;
+};
+
 cbuffer Camera : register(b0)
 {
     float4x4 view;
@@ -13,6 +21,11 @@ cbuffer Light : register(b1)
     float4 lightColor;
 }
 
+cbuffer Color : register(b2)
+{
+    float4 diffuseColor;
+}
+
 // Payloadは自分で定義
 struct Payload {
     float3 color;
@@ -20,6 +33,8 @@ struct Payload {
 
 // Shader root signature
 RaytracingAccelerationStructure SceneBVH : register(t0);  // TLAS
+StructuredBuffer<Vertex> suzanneMeshVertex : register(t1); // TLAS
+StructuredBuffer<uint> suzanneMeshIndex : register(t2); // TLAS
 
 RWTexture2D<float4> Output : register(u0);  // 出力バッファ
 
@@ -72,11 +87,25 @@ void closestHit(inout Payload payload, in BuiltInTriangleIntersectionAttributes 
 {
     float3 beryCentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
 
-    float3 normal = float3(1.0f, 0.0f, 0.0f);
+    uint primitiveIndex = PrimitiveIndex();
+    uint3 indices = uint3(suzanneMeshIndex[primitiveIndex * 3 + 0], suzanneMeshIndex[primitiveIndex * 3 + 1], suzanneMeshIndex[primitiveIndex * 3 + 2]);
+    
+    Vertex v0 = suzanneMeshVertex[indices.x];
+    Vertex v1 = suzanneMeshVertex[indices.y];
+    Vertex v2 = suzanneMeshVertex[indices.z];
+    
+    float3 normal = normalize(beryCentrics.x * v0.normal.xyz + beryCentrics.y * v1.normal.xyz + beryCentrics.z * v2.normal.xyz);
+    //normal = normalize(v0.normal);
+    normal =  0.5f * normal + 0.5f;
+    //normal = float3(primitiveIndex / 2000, primitiveIndex / 2000, primitiveIndex / 2000);
+    float4 intersectPos = beryCentrics.x * v0.position + beryCentrics.y * v1.position + beryCentrics.z * v2.position;
+    float3 lightDir = normalize(lightPos.xyz - intersectPos.xyz);
+    
+    //float3 hitColor = abs(normal);
 
-    float3 hitColor = abs(normal);
-
-    payload.color = hitColor;
+    payload.color = normal;
+    float3 color = float3(1.0f, 0.0f, 0.0f);
+    payload.color = diffuseColor * lightColor.xyz * max(0.0f, dot(lightDir, normal));
     //payload.color = float3(1.0f, 1.0f, 1.0f);
 }
 

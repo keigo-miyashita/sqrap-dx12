@@ -38,17 +38,18 @@ private:
 	DXC dxc_;
 	CommandHandle command_;
 	SwapChainHandle swapChain_;
+	// GUI
+	GUIHandle GUI_;
 
 	// Mesh
-	ASMeshHandle sphereASMesh_;
 	ASMeshHandle suzanneASMesh_;
+	MeshHandle suzanneMesh_;
 
 	// Scene Items
 	Camera camera_;
 	Light light0_;
 
 	// AccelerationStructure
-	BLASHandle sphereBLAS_;
 	BLASHandle suzanneBLAS_;
 	TLASHandle sceneTLAS_;
 
@@ -63,19 +64,21 @@ private:
 	ShaderHandle miss_;
 
 	// Descriptor
-	DescriptorManagerHandle sphere0DescManager_;
+	DescriptorManagerHandle suzanneDescManager_;
 
 	// RootSignature
-	RootSignatureHandle sphere0RootSignature_;
+	RootSignatureHandle suzanneRootSignature_;
 
 	// Resource Set
-	std::shared_ptr<ResourceSet> sphere0ResourceSet_;
+	std::shared_ptr<ResourceSet> suzanneResourceSet_;
 
 	// Pipeline
 	StateObjectHandle raytracingStates_;
 
 	// RayTracing
 	RayTracingHandle rayTracing_;
+
+	Color diffuseColor_;
 
 	void BeginRender();
 	void EndRender();

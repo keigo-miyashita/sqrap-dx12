@@ -140,9 +140,9 @@ Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, const std::ve
 	CreateIndexBuffer();
 }
 
-const Buffer& Mesh::GetVertexBuffer() const
+std::shared_ptr<Buffer> Mesh::GetVertexBuffer() const
 {
-	return *vertexBuffer_;
+	return vertexBuffer_;
 }
 
 D3D12_VERTEX_BUFFER_VIEW Mesh::GetVBView() const
@@ -160,9 +160,9 @@ UINT Mesh::GetVertexCount() const
 	return vertices_.size();
 }
 
-const Buffer& Mesh::GetIndexBuffer() const
+std::shared_ptr<Buffer> Mesh::GetIndexBuffer() const
 {
-	return *indexBuffer_;
+	return indexBuffer_;
 }
 
 D3D12_INDEX_BUFFER_VIEW Mesh::GetIBView() const
@@ -285,9 +285,9 @@ ASMesh::ASMesh(const Device& device, std::shared_ptr<Command> command, const std
 	CreateIndexBuffer();
 }
 
-const Buffer& ASMesh::GetVertexBuffer() const
+std::shared_ptr<Buffer> ASMesh::GetVertexBuffer() const
 {
-	return *vertexBuffer_;
+	return vertexBuffer_;
 }
 
 D3D12_VERTEX_BUFFER_VIEW ASMesh::GetVBView() const
@@ -305,9 +305,9 @@ UINT ASMesh::GetVertexCount() const
 	return ASVertices_.size();
 }
 
-const Buffer& ASMesh::GetIndexBuffer() const
+std::shared_ptr<Buffer> ASMesh::GetIndexBuffer() const
 {
-	return *indexBuffer_;
+	return indexBuffer_;
 }
 
 D3D12_INDEX_BUFFER_VIEW ASMesh::GetIBView() const
