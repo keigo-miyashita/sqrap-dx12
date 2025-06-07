@@ -89,14 +89,14 @@ const std::vector<CD3DX12_ROOT_PARAMETER>& RootSignature::GetRootParameters() co
 	return rps_;
 }
 
-ResourceSet::ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>> bindedResources)
+ResourceSet::ResourceSet(RootSignatureHandle pRootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources)
 	: pRootSignature_(pRootSignature)
 {
 	cout << "Make ResourceSet" << endl;
 	// TODO : Integrate object and pointer
 	for (auto bindedResource : bindedResources) {
-		if (std::holds_alternative<std::shared_ptr<DescriptorManager>>(bindedResource)) {
-			std::shared_ptr<DescriptorManager> dm = std::get<std::shared_ptr<DescriptorManager>>(bindedResource);
+		if (std::holds_alternative<DescriptorManagerHandle>(bindedResource)) {
+			DescriptorManagerHandle dm = std::get<DescriptorManagerHandle>(bindedResource);
 			bindedResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			descriptorManagers_.push_back(dm);
 		}
@@ -114,7 +114,7 @@ ResourceSet::ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::ini
 	}
 }
 
-std::shared_ptr<RootSignature> ResourceSet::GetRootSignature() const
+RootSignatureHandle ResourceSet::GetRootSignature() const
 {
 	return pRootSignature_;
 }
@@ -124,7 +124,7 @@ const std::vector<BindResource>& ResourceSet::GetBindedResources() const
 	return bindedResources_;
 }
 
-const std::vector<std::shared_ptr<DescriptorManager>>& ResourceSet::GetDescManagers() const
+const std::vector<DescriptorManagerHandle>& ResourceSet::GetDescManagers() const
 {
 	return descriptorManagers_;
 }

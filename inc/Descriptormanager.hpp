@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Buffer;
 class Device;
 class Resource;
@@ -19,7 +21,7 @@ enum class ViewType
 
 struct DescriptorManagerDesc
 {
-	std::shared_ptr<Resource> resource;
+	ResourceHandle resource;
 	ViewType type;
 	UINT numReg;
 	bool isCounter = false;
@@ -49,10 +51,10 @@ private:
 	UINT baseRegSampler_ = 0;
 	UINT numSampler_ = 0;
 
-	void CreateCBV(std::shared_ptr<Resource> resource);
-	void CreateSRV(std::shared_ptr<Resource> resource);
-	void CreateUAV(std::shared_ptr<Resource> resource);
-	void CreateUAVCounter(std::shared_ptr<Resource> resource);
+	void CreateCBV(ResourceHandle resource);
+	void CreateSRV(ResourceHandle resource);
+	void CreateUAV(ResourceHandle resource);
+	void CreateUAVCounter(ResourceHandle resource);
 	void CreateSampler();
 
 public:

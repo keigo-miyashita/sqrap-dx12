@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Device;
 class ResourceSet;
 class RootSignature;
@@ -10,12 +12,12 @@ class Shader;
 struct GraphicsDesc
 {
 	std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts_;
-	std::shared_ptr<RootSignature> rootSignature_;
-	std::shared_ptr<Shader> VS_;
-	std::shared_ptr<Shader> PS_;
-	std::shared_ptr<Shader> DS_;
-	std::shared_ptr<Shader> HS_;
-	std::shared_ptr<Shader> GS_;
+	RootSignatureHandle rootSignature_;
+	ShaderHandle VS_;
+	ShaderHandle PS_;
+	ShaderHandle DS_;
+	ShaderHandle HS_;
+	ShaderHandle GS_;
 	D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	UINT sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
 	D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
@@ -50,8 +52,8 @@ public:
 
 struct ComputeDesc
 {
-	std::shared_ptr<RootSignature> rootSignature_;
-	std::shared_ptr<Shader> CS_;
+	RootSignatureHandle rootSignature_;
+	ShaderHandle CS_;
 	UINT nodeMask_ = 0;
 };
 
@@ -88,7 +90,7 @@ struct StateObjectDesc
 {
 	struct ShaderExportDesc
 	{
-		std::shared_ptr<Shader> shader;
+		ShaderHandle shader;
 		ShaderStage shaderStage;
 		std::shared_ptr<ResourceSet> localResourceSet;
 	};
@@ -97,7 +99,7 @@ struct StateObjectDesc
 	{
 		struct HitGroupShaderExportDesc
 		{
-			std::shared_ptr<Shader> shader;
+			ShaderHandle shader;
 			ShaderStage shaderStage;
 		};
 
@@ -117,7 +119,7 @@ struct StateObjectDesc
 
 	struct RayTracingDesc
 	{
-		std::shared_ptr<RootSignature> globalRootSig;
+		RootSignatureHandle globalRootSig;
 		// NOTE : HitGroupExportDescÇ™wstringÇä‹ÇÒÇ≈Ç¢ÇÈÇ©ÇÁÇ©initializer_listÇæÇ∆Ç§Ç‹Ç≠Ç¢Ç©Ç»Ç¢
 		std::vector<ShaderExportDesc> rayGens;
 		std::vector<ShaderExportDesc> misses;
@@ -128,12 +130,12 @@ struct StateObjectDesc
 	struct ProgramDesc
 	{
 		std::wstring programName;
-		std::initializer_list<std::shared_ptr<Shader>> shaders;
+		std::initializer_list<ShaderHandle> shaders;
 	};
 
 	struct WorkGraphDesc
 	{
-		std::shared_ptr<RootSignature> globalRootSig;
+		RootSignatureHandle globalRootSig;
 		std::initializer_list<ShaderExportDesc> exportDescs;
 		// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
 		// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË

@@ -238,7 +238,7 @@ void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, UINT num32bitsCo
 void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 {
 	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
-	const std::vector<std::shared_ptr<DescriptorManager>> descManagers = resourceSet->GetDescManagers();
+	const std::vector<DescriptorManagerHandle> descManagers = resourceSet->GetDescManagers();
 
 	commandList_->SetComputeRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
 
@@ -277,7 +277,7 @@ void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 void Command::SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet)
 {
 	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
-	const std::vector<std::shared_ptr<DescriptorManager>> descManagers = resourceSet->GetDescManagers();
+	const std::vector<DescriptorManagerHandle> descManagers = resourceSet->GetDescManagers();
 
 	commandList_->SetGraphicsRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
 

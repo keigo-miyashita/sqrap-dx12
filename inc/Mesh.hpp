@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Buffer;
 class Command;
 class Device;
@@ -26,12 +28,12 @@ protected:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	const Device* pDevice_ = nullptr;
-	std::shared_ptr<Command> command_;
+	CommandHandle command_;
 	std::vector<Vertex> vertices_;
-	std::shared_ptr<Buffer> vertexBuffer_;
+	BufferHandle vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vbView_;
 	std::vector<uint32_t> indices_;
-	std::shared_ptr<Buffer> indexBuffer_;
+	BufferHandle indexBuffer_;
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
 	static bool LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
@@ -39,14 +41,14 @@ protected:
 	HRESULT CreateIndexBuffer();
 
 public:
-	Mesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
-	Mesh(const Device& device, std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+	Mesh(const Device& device, CommandHandle command, std::string modelPath);
+	Mesh(const Device& device, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 	~Mesh() = default;
-	std::shared_ptr<Buffer> GetVertexBuffer() const;
+	BufferHandle GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
 	virtual UINT GetVertexCount() const;
-	std::shared_ptr<Buffer> GetIndexBuffer() const;
+	BufferHandle GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
 	UINT GetNumIndices() const;
@@ -59,12 +61,12 @@ protected:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	const Device* pDevice_ = nullptr;
-	std::shared_ptr<Command> command_;
+	CommandHandle command_;
 	std::vector<ASVertex> ASVertices_;
-	std::shared_ptr<Buffer> vertexBuffer_;
+	BufferHandle vertexBuffer_;
 	D3D12_VERTEX_BUFFER_VIEW vbView_;
 	std::vector<uint32_t> indices_;
-	std::shared_ptr<Buffer> indexBuffer_;
+	BufferHandle indexBuffer_;
 	D3D12_INDEX_BUFFER_VIEW ibView_;
 
 	static bool LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices);
@@ -72,14 +74,14 @@ protected:
 	HRESULT CreateIndexBuffer();
 
 public:
-	ASMesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath);
-	ASMesh(const Device& device, std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
+	ASMesh(const Device& device, CommandHandle command, std::string modelPath);
+	ASMesh(const Device& device, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
 	~ASMesh() = default;
-	std::shared_ptr<Buffer> GetVertexBuffer() const;
+	BufferHandle GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
 	virtual UINT GetVertexCount() const;
-	std::shared_ptr<Buffer> GetIndexBuffer() const;
+	BufferHandle GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
 	UINT GetNumIndices() const;

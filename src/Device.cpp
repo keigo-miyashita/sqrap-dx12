@@ -235,102 +235,102 @@ std::shared_ptr<AS> Device::CreateAS(UINT size, std::wstring name) const
 	return make_shared<AS>(*this, size, name);
 }
 
-std::shared_ptr<ASMesh> Device::CreateASMesh(std::shared_ptr<Command> command, std::string modelPath) const
+ASMeshHandle Device::CreateASMesh(CommandHandle command, std::string modelPath) const
 {
 	return make_shared<ASMesh>(*this, command, modelPath);
 }
 
-std::shared_ptr<ASMesh> Device::CreateASMesh(std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const
+ASMeshHandle Device::CreateASMesh(CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const
 {
 	return make_shared<ASMesh>(*this, command, ASVertices, indices);
 }
 
-std::shared_ptr<BLAS> Device::CreateBLAS(std::shared_ptr<Command> command, const ASMesh& mesh, std::wstring name) const
+BLASHandle Device::CreateBLAS(CommandHandle command, const ASMesh& mesh, std::wstring name) const
 {
 	return make_shared<BLAS>(*this, command, mesh, name);
 }
 
-std::shared_ptr<Buffer> Device::CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name) const
+BufferHandle Device::CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name) const
 {
 	return make_shared<Buffer>(*this, type, strideSize, numElement, name);
 }
 
-std::shared_ptr<Command> Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandType, std::wstring name) const
+CommandHandle Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandType, std::wstring name) const
 {
 	return make_shared<Command>(*this, commandType, name);
 }
 
-std::shared_ptr<ComputePipeline> Device::CreateComputePipeline(const ComputeDesc& desc, std::wstring name) const
+ComputePipelineHandle Device::CreateComputePipeline(const ComputeDesc& desc, std::wstring name) const
 {
 	return make_shared<ComputePipeline>(*this, desc, name);
 }
 
-std::shared_ptr<DescriptorManager> Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name) const
+DescriptorManagerHandle Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name) const
 {
 	return make_shared<DescriptorManager>(*this, heapType, descManagerDesc, name);
 }
 
-std::shared_ptr<Fence> Device::CreateFence(std::wstring name) const
+FenceHandle Device::CreateFence(std::wstring name) const
 {
 	return make_shared<Fence>(*this, name);
 }
 
-std::shared_ptr<GraphicsPipeline> Device::CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name) const
+GraphicsPipelineHandle Device::CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name) const
 {
 	return make_shared<GraphicsPipeline>(*this, desc, name);
 }
 
-std::shared_ptr<GUI> Device::CreateGUI(const HWND& hwnd) const
+GUIHandle Device::CreateGUI(const HWND& hwnd) const
 {
 	return make_shared<GUI>(*this, hwnd);
 }
 
-std::shared_ptr<Indirect> Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name) const
+IndirectHandle Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name) const
 {
 	return make_shared<Indirect>(*this, indirectDescs, rootSignature, byteStride, name);
 }
 
-std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, std::string modelPath) const
+MeshHandle Device::CreateMesh(CommandHandle command, std::string modelPath) const
 {
 	return make_shared<Mesh>(*this, command, modelPath);
 }
 
-std::shared_ptr<Mesh> Device::CreateMesh(std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
+MeshHandle Device::CreateMesh(CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
 {
 	return make_shared<Mesh>(*this, command, vertices, indices);
 }
 
-std::shared_ptr<RayTracing> Device::CreateRaytracing(const StateObject& stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
+RayTracingHandle Device::CreateRaytracing(const StateObject& stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
 {
 	return make_shared<RayTracing>(*this, stateObject, width, height, depth, name);
 }
 
-std::shared_ptr<RootSignature> Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const
+RootSignatureHandle Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const
 {
 	return make_shared<RootSignature>(*this, flag, rootParams, name);
 }
 
-std::shared_ptr<StateObject> Device::CreateStateObject(const StateObjectDesc soDesc, std::wstring name) const
+StateObjectHandle Device::CreateStateObject(const StateObjectDesc soDesc, std::wstring name) const
 {
 	return make_shared<StateObject>(*this, soDesc, name);
 }
 
-std::shared_ptr<SwapChain> Device::CreateSwapChain(std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
+SwapChainHandle Device::CreateSwapChain(CommandHandle& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
 }
 
-std::shared_ptr<Texture> Device::CreateTexture(TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+TextureHandle Device::CreateTexture(TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
 {
 	return make_shared<Texture>(*this, texDim, type, strideSize, format, width, height, depth, name);
 }
 
-std::shared_ptr<TLAS> Device::CreateTLAS(std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name) const
+TLASHandle Device::CreateTLAS(CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name) const
 {
 	return make_shared<TLAS>(*this, command, tlasDescs, name);
 }
 
-std::shared_ptr<WorkGraph> Device::CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name) const
+WorkGraphHandle Device::CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name) const
 {
 	return make_shared<WorkGraph>(*this, stateObject, maxInputRecords, maxNodeInputs, name);
 }

@@ -54,7 +54,7 @@ bool BLAS::CreateBLAS(const ASMesh& mesh)
 	return true;
 }
 
-BLAS::BLAS(const Device& device, std::shared_ptr<Command> command, const ASMesh& mesh, std::wstring name)
+BLAS::BLAS(const Device& device, CommandHandle command, const ASMesh& mesh, std::wstring name)
 	: pDevice_(&device), command_(command), name_(name)
 {
 	CreateBLAS(mesh);
@@ -128,7 +128,7 @@ bool TLAS::CreateTLAS()
 	return true;
 }
 
-TLAS::TLAS(const Device& device, std::shared_ptr<Command> command, const std::vector<TLASDesc>& tlasDescs, std::wstring name)
+TLAS::TLAS(const Device& device, CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name)
 	: pDevice_(&device), command_(command), tlasDescs_(tlasDescs), name_(name)
 {
 	CreateTLAS();

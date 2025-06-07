@@ -6,25 +6,25 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-void DescriptorManager::CreateCBV(std::shared_ptr<Resource> resource)
+void DescriptorManager::CreateCBV(ResourceHandle resource)
 {
 	resource->CreateCBV(*this, viewOffset_);
 	viewOffset_++;
 }
 
-void DescriptorManager::CreateSRV(std::shared_ptr<Resource> resource)
+void DescriptorManager::CreateSRV(ResourceHandle resource)
 {
 	resource->CreateSRV(*this, viewOffset_);
 	viewOffset_++;
 }
 
-void DescriptorManager::CreateUAV(std::shared_ptr<Resource> resource)
+void DescriptorManager::CreateUAV(ResourceHandle resource)
 {
 	resource->CreateUAV(*this, viewOffset_);
 	viewOffset_++;
 }
 
-void DescriptorManager::CreateUAVCounter(std::shared_ptr<Resource> resource)
+void DescriptorManager::CreateUAVCounter(ResourceHandle resource)
 {
 	resource->CreateUAVCounter(*this, viewOffset_);
 	viewOffset_++;

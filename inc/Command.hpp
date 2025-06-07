@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 #define StableCommandList ID3D12GraphicsCommandList9
 #define LatestCommandList ID3D12GraphicsCommandList10
 
@@ -35,7 +37,7 @@ private:
 	ComPtr<StableCommandList> stableCommandList_ = nullptr;
 	ComPtr<LatestCommandList> latestCommandList_ = nullptr;
 	ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
-	std::shared_ptr<Fence> fence_;
+	FenceHandle fence_;
 
 	bool CreateCommandList();
 	bool InitializeStableCommandList();

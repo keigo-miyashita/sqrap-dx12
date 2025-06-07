@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Command;
 class Device;
 class Resource;
@@ -14,10 +16,10 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	const Device* pDevice_ = nullptr;
-	std::shared_ptr<Command> pCommand_;
+	CommandHandle pCommand_;
 
 	ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
-	std::vector<std::shared_ptr<Texture>> backBuffers_;
+	std::vector<TextureHandle> backBuffers_;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap_ = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_;
 	ComPtr<ID3D12Resource> depthStencilBuffer_ = nullptr;
@@ -30,10 +32,10 @@ private:
 
 
 public:
-	SwapChain(const Device& device, std::shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
+	SwapChain(const Device& device, CommandHandle& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
 	~SwapChain() = default;
 	ComPtr<IDXGISwapChain4> GetSwapChain();
-	std::shared_ptr<Texture> GetCurrentBackBuffer();
+	TextureHandle GetCurrentBackBuffer();
 	ComPtr<ID3D12DescriptorHeap> GetRtvHeap();
 	D3D12_VIEWPORT GetViewPort();
 	D3D12_RECT GetRect();

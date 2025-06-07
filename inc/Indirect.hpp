@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Device;
 class RootSignature;
 
@@ -30,7 +32,7 @@ private:
 	D3D12_COMMAND_SIGNATURE_DESC cmdSigDesc_ = {};
 
 public:
-	Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name = L"");
+	Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name = L"");
 	~Indirect() = default;
 	ComPtr<ID3D12CommandSignature> GetCommandSignature() const;
 };

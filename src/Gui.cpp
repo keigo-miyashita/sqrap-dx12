@@ -55,22 +55,6 @@ GUI::~GUI()
 	ImGui::DestroyContext();
 }
 
-//bool GUI::Init(Device* pDevice, const HWND& hwnd)
-//{
-//	pDevice_ = pDevice;
-//	if (pDevice == nullptr) {
-//		cerr << "Class GUI does not have device" << endl;
-//		return false;
-//	}
-//
-//	if (!InitializeGUI(hwnd)) {
-//		cerr << "Failed to InitializeGUI" << endl;
-//		return false;
-//	}
-//
-//	return true;
-//}
-
 void GUI::BeginCommand()
 {
 	ImGui_ImplDX12_NewFrame();

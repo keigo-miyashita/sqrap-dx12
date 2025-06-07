@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Buffer;
 class Device;
 class Shader;
@@ -18,7 +20,7 @@ private:
 	const Device* pDevice_ = nullptr;
 	std::wstring name_;
 	ComPtr<ID3D12StateObjectProperties> soProp_ = nullptr;
-	std::shared_ptr<Buffer> sbtBuffer_;
+	BufferHandle sbtBuffer_;
 
 	D3D12_DISPATCH_RAYS_DESC raysDesc_ = {};
 

@@ -20,7 +20,6 @@ private:
 public:
 	GUI(const Device& device, const HWND& hwnd);
 	~GUI();
-	//bool Init(Device* pDevice, const HWND& hwnd);
 	void BeginCommand();
 	void EndCommand();
 	void Draw(Command& command);

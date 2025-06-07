@@ -4,6 +4,8 @@
 
 #include "Descriptormanager.hpp"
 
+#include "Alias.hpp"
+
 class DescriptorManager;
 class Device;
 
@@ -71,15 +73,15 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	const std::shared_ptr<RootSignature> pRootSignature_;
-	std::vector<std::shared_ptr<DescriptorManager>> descriptorManagers_;
+	const RootSignatureHandle pRootSignature_;
+	std::vector<DescriptorManagerHandle> descriptorManagers_;
 	std::vector<BindResource> bindedResources_;
 
 public:
-	ResourceSet(std::shared_ptr<RootSignature> pRootSignature, std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>> bindedResources);
+	ResourceSet(RootSignatureHandle pRootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources);
 	~ResourceSet() = default;
 
-	std::shared_ptr<RootSignature> GetRootSignature() const;
+	RootSignatureHandle GetRootSignature() const;
 	const std::vector<BindResource>& GetBindedResources() const;
-	const std::vector<std::shared_ptr<DescriptorManager>>& GetDescManagers() const;
+	const std::vector<DescriptorManagerHandle>& GetDescManagers() const;
 };

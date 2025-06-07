@@ -125,7 +125,7 @@ HRESULT Mesh::CreateIndexBuffer()
 	return S_OK;
 }
 
-Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath)
+Mesh::Mesh(const Device& device, CommandHandle command, std::string modelPath)
 	: pDevice_(&device), command_(command)
 {
 	LoadModel(modelPath, vertices_, indices_);
@@ -133,14 +133,14 @@ Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, std::string m
 	CreateIndexBuffer();
 }
 
-Mesh::Mesh(const Device& device, std::shared_ptr<Command> command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+Mesh::Mesh(const Device& device, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	: pDevice_(&device), command_(command), vertices_(vertices), indices_(indices)
 {
 	CreateVertexBuffer();
 	CreateIndexBuffer();
 }
 
-std::shared_ptr<Buffer> Mesh::GetVertexBuffer() const
+BufferHandle Mesh::GetVertexBuffer() const
 {
 	return vertexBuffer_;
 }
@@ -160,7 +160,7 @@ UINT Mesh::GetVertexCount() const
 	return vertices_.size();
 }
 
-std::shared_ptr<Buffer> Mesh::GetIndexBuffer() const
+BufferHandle Mesh::GetIndexBuffer() const
 {
 	return indexBuffer_;
 }
@@ -270,7 +270,7 @@ HRESULT ASMesh::CreateIndexBuffer()
 	return S_OK;
 }
 
-ASMesh::ASMesh(const Device& device, std::shared_ptr<Command> command, std::string modelPath)
+ASMesh::ASMesh(const Device& device, CommandHandle command, std::string modelPath)
 	: pDevice_(&device), command_(command)
 {
 	LoadModelForAS(modelPath, ASVertices_, indices_);
@@ -278,14 +278,14 @@ ASMesh::ASMesh(const Device& device, std::shared_ptr<Command> command, std::stri
 	CreateIndexBuffer();
 }
 
-ASMesh::ASMesh(const Device& device, std::shared_ptr<Command> command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices)
+ASMesh::ASMesh(const Device& device, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices)
 	: pDevice_(&device), command_(command), ASVertices_(ASVertices), indices_(indices)
 {
 	CreateVertexBuffer();
 	CreateIndexBuffer();
 }
 
-std::shared_ptr<Buffer> ASMesh::GetVertexBuffer() const
+BufferHandle ASMesh::GetVertexBuffer() const
 {
 	return vertexBuffer_;
 }
@@ -305,7 +305,7 @@ UINT ASMesh::GetVertexCount() const
 	return ASVertices_.size();
 }
 
-std::shared_ptr<Buffer> ASMesh::GetIndexBuffer() const
+BufferHandle ASMesh::GetIndexBuffer() const
 {
 	return indexBuffer_;
 }

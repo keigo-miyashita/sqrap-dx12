@@ -147,7 +147,7 @@ ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain()
 	return swapChain_;
 }
 
-std::shared_ptr<Texture> SwapChain::GetCurrentBackBuffer()
+TextureHandle SwapChain::GetCurrentBackBuffer()
 {
 	auto bbIndex = swapChain_->GetCurrentBackBufferIndex();
 	return backBuffers_[bbIndex];

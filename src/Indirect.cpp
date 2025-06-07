@@ -7,7 +7,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-Indirect::Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, std::shared_ptr<RootSignature> rootSignature, UINT byteStride, std::wstring name)
+Indirect::Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name)
 	: pDevice_(&device), name_(name)
 {
 	for (auto indirectDesc : indirectDescs) {
