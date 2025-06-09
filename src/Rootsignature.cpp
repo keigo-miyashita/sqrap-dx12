@@ -12,8 +12,8 @@ RootSignature::RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS fl
 	for (auto rootParam_ : rootParams) {
 		CD3DX12_ROOT_PARAMETER rp;
 		if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-			DescTableRootParamDesc descManagerRef = std::get<DescTableRootParamDesc>(rootParam_.rootParamDesc_);
-			rp.InitAsDescriptorTable(descManagerRef.descManager.GetNumDescRanges(), descManagerRef.descManager.GetPDescRanges(), rootParam_.shaderVisibility_);
+			DescTableRootParamDesc descManager = std::get<DescTableRootParamDesc>(rootParam_.rootParamDesc_);
+			rp.InitAsDescriptorTable(descManager.descManager->GetNumDescRanges(), descManager.descManager->GetPDescRanges(), rootParam_.shaderVisibility_);
 			rps_.push_back(rp);
 			size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 		}

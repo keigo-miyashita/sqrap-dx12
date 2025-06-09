@@ -16,7 +16,7 @@ enum class RootParamType
 
 struct DescTableRootParamDesc
 {
-	const DescriptorManager& descManager;
+	DescriptorManagerHandle descManager;
 };
 
 struct DirectRootParamDesc

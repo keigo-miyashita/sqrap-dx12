@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Alias.hpp"
+
 class Buffer;
 class Device;
 class StateObject;
@@ -28,7 +30,7 @@ private:
 	D3D12_SET_PROGRAM_DESC pgDesc_ = {};
 
 public:
-	WorkGraph(const Device& device, const StateObject& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"");
+	WorkGraph(const Device& device, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"");
 	~WorkGraph() = default;
 
 	D3D12_SET_PROGRAM_DESC GetProgramDesc() const;

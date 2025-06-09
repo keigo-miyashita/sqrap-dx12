@@ -57,7 +57,7 @@ void SampleScene::Render()
 
 	command_->GetCommandList()->SetPipelineState(lambert_->GetPipelineState().Get());
 	command_->SetGraphicsResourceSet(sphere0ResourceSet_);
-	command_->AddDrawIndexed(*sphere_, 1);
+	command_->AddDrawIndexed(sphere_, 1);
 
 	EndRender();
 
@@ -146,7 +146,7 @@ bool SampleScene::Init(const Application& app)
 	sphere0RootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	DescTableRootParamDesc{*sphere0DescManager_}},
+			{RootParamType::DescTable,	DescTableRootParamDesc{sphere0DescManager_}},
 			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
 		}
 		);

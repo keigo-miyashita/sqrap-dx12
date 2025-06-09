@@ -245,7 +245,7 @@ ASMeshHandle Device::CreateASMesh(CommandHandle command, const std::vector<ASVer
 	return make_shared<ASMesh>(*this, command, ASVertices, indices);
 }
 
-BLASHandle Device::CreateBLAS(CommandHandle command, const ASMesh& mesh, std::wstring name) const
+BLASHandle Device::CreateBLAS(CommandHandle command, ASMeshHandle mesh, std::wstring name) const
 {
 	return make_shared<BLAS>(*this, command, mesh, name);
 }
@@ -300,7 +300,7 @@ MeshHandle Device::CreateMesh(CommandHandle command, const std::vector<Vertex>& 
 	return make_shared<Mesh>(*this, command, vertices, indices);
 }
 
-RayTracingHandle Device::CreateRaytracing(const StateObject& stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
+RayTracingHandle Device::CreateRaytracing(StateObjectHandle stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
 {
 	return make_shared<RayTracing>(*this, stateObject, width, height, depth, name);
 }
@@ -315,7 +315,7 @@ StateObjectHandle Device::CreateStateObject(const StateObjectDesc soDesc, std::w
 	return make_shared<StateObject>(*this, soDesc, name);
 }
 
-SwapChainHandle Device::CreateSwapChain(CommandHandle& command, const HWND& hwnd, SIZE winSize, std::wstring name) const
+SwapChainHandle Device::CreateSwapChain(CommandHandle command, const HWND& hwnd, SIZE winSize, std::wstring name) const
 {
 	return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
 }
@@ -330,7 +330,7 @@ TLASHandle Device::CreateTLAS(CommandHandle command, const std::vector<TLASDesc>
 	return make_shared<TLAS>(*this, command, tlasDescs, name);
 }
 
-WorkGraphHandle Device::CreateWorkGraph(const StateObject& stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name) const
+WorkGraphHandle Device::CreateWorkGraph(StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name) const
 {
 	return make_shared<WorkGraph>(*this, stateObject, maxInputRecords, maxNodeInputs, name);
 }

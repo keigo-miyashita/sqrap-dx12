@@ -32,7 +32,7 @@ private:
 
 
 public:
-	SwapChain(const Device& device, CommandHandle& command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
+	SwapChain(const Device& device, CommandHandle command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
 	~SwapChain() = default;
 	ComPtr<IDXGISwapChain4> GetSwapChain();
 	TextureHandle GetCurrentBackBuffer();

@@ -87,20 +87,20 @@ Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstr
 	fence_ = pDevice_->CreateFence(name);
 }
 
-void Command::AddDrawIndexed(const Mesh& mesh, UINT numInstances)
+void Command::AddDrawIndexed(MeshHandle mesh, UINT numInstances)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList_->IASetVertexBuffers(0, 1, mesh.GetVBViewPtr());
-	commandList_->IASetIndexBuffer(mesh.GetIBViewPtr());
-	commandList_->DrawIndexedInstanced(mesh.GetNumIndices(), 1, 0, 0, 0);
+	commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
+	commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
+	commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), 1, 0, 0, 0);
 }
 
-void Command::AddDrawIndexedLine(const Mesh& mesh, UINT numInstances)
+void Command::AddDrawIndexedLine(MeshHandle mesh, UINT numInstances)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
-	commandList_->IASetVertexBuffers(0, 1, mesh.GetVBViewPtr());
-	commandList_->IASetIndexBuffer(mesh.GetIBViewPtr());
-	commandList_->DrawIndexedInstanced(mesh.GetNumIndices(), 1, 0, 0, 0);
+	commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
+	commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
+	commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), 1, 0, 0, 0);
 }
 
 void Command::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
@@ -108,30 +108,30 @@ void Command::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
 	commandList_->ResourceBarrier(numBarriers, pBarriers);
 }
 
-void Command::CopyBuffer(Resource& srcBuffer, Resource& destBuffer)
+void Command::CopyBuffer(ResourceHandle srcResource, ResourceHandle destResource)
 {
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
-	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), srcBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+	if (srcResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), srcResource->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
 		rscBarriers.push_back(srcBarrier);
 	}
-	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-		auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), destBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+	if (destResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
+		auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), destResource->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
 		rscBarriers.push_back(destBarrier);
 	}
 
 	if (rscBarriers.size() != 0) {
 		commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
 	}
-	commandList_->CopyResource(destBuffer.GetResource().Get(), srcBuffer.GetResource().Get());
+	commandList_->CopyResource(destResource->GetResource().Get(), srcResource->GetResource().Get());
 
 	rscBarriers.clear();
-	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-		auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcBuffer.GetResourceState());
+	if (srcResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+		auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcResource->GetResourceState());
 		rscBarriers.push_back(srcbarrier);
 	}
-	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-		auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer.GetResourceState());
+	if (destResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
+		auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destResource->GetResourceState());
 		rscBarriers.push_back(destbarrier);
 	}
 	if (rscBarriers.size() != 0) {
@@ -139,31 +139,31 @@ void Command::CopyBuffer(Resource& srcBuffer, Resource& destBuffer)
 	}
 }
 
-void Command::CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBuffer, UINT destOffset, UINT numBytes)
+void Command::CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHandle destBuffer, UINT destOffset, UINT numBytes)
 {
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
-	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), srcBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-		srcBuffer.SetResourceState(D3D12_RESOURCE_STATE_COPY_SOURCE);
+	if (srcBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), srcBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+		srcBuffer->SetResourceState(D3D12_RESOURCE_STATE_COPY_SOURCE);
 		rscBarriers.push_back(srcBarrier);
 	}
-	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-		auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), destBuffer.GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+	if (destBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
+		auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), destBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
 		rscBarriers.push_back(destBarrier);
 	}
 
 	if (rscBarriers.size() != 0) {
 		commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
 	}
-	commandList_->CopyBufferRegion(destBuffer.GetResource().Get(), destOffset, srcBuffer.GetResource().Get(), srcOffset, numBytes);
+	commandList_->CopyBufferRegion(destBuffer->GetResource().Get(), destOffset, srcBuffer->GetResource().Get(), srcOffset, numBytes);
 
 	rscBarriers.clear();
-	if (srcBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-		auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcBuffer.GetResourceState());
+	if (srcBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+		auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcBuffer->GetResourceState());
 		rscBarriers.push_back(srcbarrier);
 	}
-	if (destBuffer.GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-		auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer.GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer.GetResourceState());
+	if (destBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
+		auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer->GetResourceState());
 		rscBarriers.push_back(destbarrier);
 	}
 	if (rscBarriers.size() != 0) {
@@ -171,12 +171,12 @@ void Command::CopyBufferRegion(Buffer& srcBuffer, UINT srcOffset, Buffer& destBu
 	}
 }
 
-void Command::DrawIndirect(const Mesh& mesh, const Indirect& indirect, const Buffer& buffer, UINT maxCommandNum)
+void Command::DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList_->IASetVertexBuffers(0, 1, mesh.GetVBViewPtr());
-	commandList_->IASetIndexBuffer(mesh.GetIBViewPtr());
-	commandList_->ExecuteIndirect(indirect.GetCommandSignature().Get(), maxCommandNum, buffer.GetResource().Get(), 0, nullptr, 0);
+	commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
+	commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
+	commandList_->ExecuteIndirect(indirect->GetCommandSignature().Get(), maxCommandNum, buffer->GetResource().Get(), 0, nullptr, 0);
 }
 
 void Command::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
@@ -190,39 +190,39 @@ void Command::DrawGUI(GUI& GUI)
 	GUI.Draw(*this);
 }
 
-void Command::SetPipeline(const GraphicsPipeline& graphicsPipeline)
+void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)
 {
-	commandList_->SetPipelineState(graphicsPipeline.GetPipelineState().Get());
+	commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
 }
 
-void Command::SetPipeline(const ComputePipeline& computePipeline)
+void Command::SetPipeline(ComputePipelineHandle computePipeline)
 {
-	commandList_->SetPipelineState(computePipeline.GetPipelineState().Get());
+	commandList_->SetPipelineState(computePipeline->GetPipelineState().Get());
 }
 
-void Command::SetGraphicsRootSig(const RootSignature& graphicsRootSig)
+void Command::SetGraphicsRootSig(RootSignatureHandle graphicsRootSig)
 {
-	commandList_->SetGraphicsRootSignature(graphicsRootSig.GetRootSignature().Get());
+	commandList_->SetGraphicsRootSignature(graphicsRootSig->GetRootSignature().Get());
 }
 
-void Command::SetComputeRootSig(const RootSignature& computeRootSig)
+void Command::SetComputeRootSig(RootSignatureHandle computeRootSig)
 {
-	commandList_->SetComputeRootSignature(computeRootSig.GetRootSignature().Get());
+	commandList_->SetComputeRootSignature(computeRootSig->GetRootSignature().Get());
 }
 
-void Command::SetDescriptorHeap(const DescriptorManager& descManager)
+void Command::SetDescriptorHeap(DescriptorManagerHandle descManager)
 {
-	commandList_->SetDescriptorHeaps(1, descManager.GetDescriptorHeap().GetAddressOf());
+	commandList_->SetDescriptorHeaps(1, descManager->GetDescriptorHeap().GetAddressOf());
 }
 
-void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager)
+void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
 {
-	commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
-void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManager& descManager)
+void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
 {
-	commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData)

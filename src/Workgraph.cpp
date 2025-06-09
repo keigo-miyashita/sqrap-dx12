@@ -8,21 +8,21 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-WorkGraph::WorkGraph(const Device& device, const StateObject& stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name)
+WorkGraph::WorkGraph(const Device& device, StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name)
 	: pDevice_(&device), name_(name)
 {
 	ComPtr<ID3D12StateObjectProperties1> soProp = nullptr;
-	auto result = stateObject.GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp.ReleaseAndGetAddressOf()));
+	auto result = stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to QueryInterface for StateObjectProperties1 : " + to_string(result));
 	}
 	
-	workGraphProgramID_ = soProp->GetProgramIdentifier(stateObject.GetProgramName().c_str());
+	workGraphProgramID_ = soProp->GetProgramIdentifier(stateObject->GetProgramName().c_str());
 
-	stateObject.GetStateObject()->QueryInterface(IID_PPV_ARGS(workGraphProp_.ReleaseAndGetAddressOf()));
-	workGraphIndex_ = workGraphProp_->GetWorkGraphIndex(stateObject.GetProgramName().c_str());
+	stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(workGraphProp_.ReleaseAndGetAddressOf()));
+	workGraphIndex_ = workGraphProp_->GetWorkGraphIndex(stateObject->GetProgramName().c_str());
 
-	if (stateObject.GetStateObjectType() == StateObjectType::WorkGraphMesh) {
+	if (stateObject->GetStateObjectType() == StateObjectType::WorkGraphMesh) {
 		workGraphProp_->SetMaximumInputRecords(workGraphIndex_, maxInputRecords, maxNodeInputs);
 	}
 

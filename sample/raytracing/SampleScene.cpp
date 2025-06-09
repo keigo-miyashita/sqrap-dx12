@@ -59,15 +59,15 @@ void SampleScene::Render()
 	}
 
 	//command_->SetComputeResourceSet(sphere0ResourceSet_);
-	command_->SetComputeRootSig(*suzanneRootSignature_);
-	command_->SetDescriptorHeap(*suzanneDescManager_);
-	command_->SetComputeRootDescriptorTable(0, *suzanneDescManager_);
+	command_->SetComputeRootSig(suzanneRootSignature_);
+	command_->SetDescriptorHeap(suzanneDescManager_);
+	command_->SetComputeRootDescriptorTable(0, suzanneDescManager_);
 	command_->SetComputeRoot32BitConstants(1, 4, &diffuseColor_);
 	command_->GetStableCommandList()->SetPipelineState1(raytracingStates_->GetStateObject().Get());
 	D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing_->GetDispatchRayDesc();
 	command_->GetStableCommandList()->DispatchRays(&dispatchRaysDesc);
 
-	command_->CopyBuffer(*outputTexture_, *(swapChain_->GetCurrentBackBuffer()));
+	command_->CopyBuffer(outputTexture_, (swapChain_->GetCurrentBackBuffer()));
 
 	// GUI
 	{
@@ -120,7 +120,7 @@ bool SampleScene::Init(const Application& app)
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	suzanneBLAS_ = device_.CreateBLAS(command_, *suzanneASMesh_);
+	suzanneBLAS_ = device_.CreateBLAS(command_, suzanneASMesh_);
 	sceneTLAS_ = device_.CreateTLAS(
 		command_,
 		{
@@ -178,7 +178,7 @@ bool SampleScene::Init(const Application& app)
 	suzanneRootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	DescTableRootParamDesc{*suzanneDescManager_}},
+			{RootParamType::DescTable,	DescTableRootParamDesc{suzanneDescManager_}},
 			{RootParamType::Constant,	DirectRootParamDesc{2, 4}}
 		}
 	);
@@ -218,7 +218,7 @@ bool SampleScene::Init(const Application& app)
 	);
 
 	rayTracing_ = device_.CreateRaytracing(
-		*raytracingStates_,
+		raytracingStates_,
 		app.GetWindowWidth(),
 		app.GetWindowHeight(),
 		1

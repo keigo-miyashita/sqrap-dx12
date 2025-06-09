@@ -9,17 +9,17 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool BLAS::CreateBLAS(const ASMesh& mesh)
+bool BLAS::CreateBLAS(ASMeshHandle mesh)
 {
 	D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 	geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
 	geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
-	geomDesc.Triangles.VertexBuffer.StartAddress = mesh.GetVertexBuffer()->GetGPUAddress();
+	geomDesc.Triangles.VertexBuffer.StartAddress = mesh->GetVertexBuffer()->GetGPUAddress();
 	geomDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(ASVertex);
-	geomDesc.Triangles.VertexCount = mesh.GetVertexCount();
+	geomDesc.Triangles.VertexCount = mesh->GetVertexCount();
 	geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
-	geomDesc.Triangles.IndexBuffer = mesh.GetIndexBuffer()->GetGPUAddress();
-	geomDesc.Triangles.IndexCount = mesh.GetNumIndices();
+	geomDesc.Triangles.IndexBuffer = mesh->GetIndexBuffer()->GetGPUAddress();
+	geomDesc.Triangles.IndexCount = mesh->GetNumIndices();
 	geomDesc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = {};
@@ -54,7 +54,7 @@ bool BLAS::CreateBLAS(const ASMesh& mesh)
 	return true;
 }
 
-BLAS::BLAS(const Device& device, CommandHandle command, const ASMesh& mesh, std::wstring name)
+BLAS::BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name)
 	: pDevice_(&device), command_(command), name_(name)
 {
 	CreateBLAS(mesh);
@@ -95,7 +95,7 @@ bool TLAS::CreateTLAS()
 	cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
 	instanceDescBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 
-	command_->CopyBuffer(*uploadBuffer, *instanceDescBuffer_);
+	command_->CopyBuffer(uploadBuffer, instanceDescBuffer_);
 	command_->WaitCommand();
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = {};

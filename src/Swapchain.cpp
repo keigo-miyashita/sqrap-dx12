@@ -134,7 +134,7 @@ bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 	return true;
 }
 
-SwapChain::SwapChain(const Device& device, shared_ptr<Command>& command, const HWND& hwnd, SIZE winSize, std::wstring name) : pDevice_(&device), pCommand_(command), name_(name)
+SwapChain::SwapChain(const Device& device, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize, std::wstring name) : pDevice_(&device), pCommand_(command), name_(name)
 {
 	
 	CreateSwapChain(hwnd, winSize);

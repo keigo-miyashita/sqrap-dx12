@@ -24,11 +24,11 @@ private:
 	std::wstring name_;
 	ASHandle ASBuffer_;
 	BufferHandle scratchBuffer_;
-	bool CreateBLAS(const ASMesh& mesh);
+	bool CreateBLAS(ASMeshHandle mesh);
 
 public:
 
-	BLAS(const Device& device, CommandHandle command, const ASMesh& mesh, std::wstring name = L"");
+	BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name = L"");
 	~BLAS() = default;
 
 	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();

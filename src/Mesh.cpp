@@ -93,7 +93,7 @@ HRESULT Mesh::CreateVertexBuffer()
 	}
 
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(Vertex), vertices_.size());
-	command_->CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
+	command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
 	command_->WaitCommand();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
@@ -116,7 +116,7 @@ HRESULT Mesh::CreateIndexBuffer()
 	}
 
 	indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
-	command_->CopyBuffer(*indexUploadBuffer, *indexBuffer_);
+	command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
 	command_->WaitCommand();
 	ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 	ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
@@ -238,7 +238,7 @@ HRESULT ASMesh::CreateVertexBuffer()
 	}
 
 	vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
-	command_->CopyBuffer(*vertexUploadBuffer, *vertexBuffer_);
+	command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
 	command_->WaitCommand();
 	vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 	vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
@@ -261,7 +261,7 @@ HRESULT ASMesh::CreateIndexBuffer()
 	}
 
 	indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
-	command_->CopyBuffer(*indexUploadBuffer, *indexBuffer_);
+	command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
 	command_->WaitCommand();
 	ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 	ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);

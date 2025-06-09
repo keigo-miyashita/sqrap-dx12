@@ -37,17 +37,17 @@ UINT RayTracing::CopyMem(void* dest, const void* data, UINT size)
 	return size;
 }
 
-RayTracing::RayTracing(const Device& device, const StateObject& stateObject, UINT width, UINT height, UINT depth, std::wstring name)
+RayTracing::RayTracing(const Device& device, StateObjectHandle stateObject, UINT width, UINT height, UINT depth, std::wstring name)
 	: pDevice_(&device), name_(name)
 {
-	stateObject.GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp_.ReleaseAndGetAddressOf()));
+	stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp_.ReleaseAndGetAddressOf()));
 
 	vector<void*> rayGenIDs;
 	vector<void*> missIDs;
 	vector<void*> hitGroupIDs;
 
-	if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject.GetStateObjectDesc().typeDesc)) {
-		StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(stateObject.GetStateObjectDesc().typeDesc);
+	if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc)) {
+		StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc);
 
 		// Align size to max record size
 		// Allrecord aligned max record size
