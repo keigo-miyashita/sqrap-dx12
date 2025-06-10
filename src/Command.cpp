@@ -14,49 +14,42 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool Command::CreateCommandList()
+void Command::CreateCommandList()
 {
 	commandType_ = commandType_;
 	HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateCommandAllocator : " + to_string(result));
-		return false;
 	}
 	wstring cmdAllocName = L"CommandAllocator";
 	commandAllocator_->SetName((cmdAllocName + name_).c_str());
 	result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateCommandList : " + to_string(result));
-		return true;
 	}
 	wstring cmdListName = L"CommandList";
 	commandList_->SetName((cmdListName + name_).c_str());
-	return true;
 }
 
-bool Command::InitializeStableCommandList()
+void Command::InitializeStableCommandList()
 {
 	HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to QueryInterface for StableCommandList : " + to_string(result));
-		return false;
 	}
 	stableCommandList_->SetName((L"StableCommandList" + name_).c_str());
-	return true;
 }
 
-bool Command::InitializeLatestCommandList()
+void Command::InitializeLatestCommandList()
 {
 	HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to QueryInterface for LatestCommandList : " + to_string(result));
-		return false;
 	}
 	latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
-	return true;
 }
 
-bool Command::CreateCommandQueue()
+void Command::CreateCommandQueue()
 {
 	D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
 	cmdQueueDesc.Type = commandType_;
@@ -66,12 +59,9 @@ bool Command::CreateCommandQueue()
 	HRESULT result = pDevice_->GetDevice()->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(commandQueue_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateCommandQueue : " + to_string(result));
-		return false;
 	}
 	wstring cmdQueueName = L"CommandQueue";
 	commandQueue_->SetName((cmdQueueName	+ name_).c_str());
-
-	return true;
 }
 
 Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstring name) : pDevice_(&device), commandType_(commandType), name_(name)
@@ -184,10 +174,10 @@ void Command::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
 	commandList_->Dispatch(threadX, threadY, threadZ);
 }
 
-void Command::DrawGUI(GUI& GUI)
+void Command::DrawGUI(GUIHandle GUI)
 {
-	commandList_->SetDescriptorHeaps(1, GUI.GetImguiDescHeap().GetAddressOf());
-	GUI.Draw(*this);
+	commandList_->SetDescriptorHeaps(1, GUI->GetImguiDescHeap().GetAddressOf());
+	GUI->Draw(*this);
 }
 
 void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)

@@ -32,7 +32,6 @@ struct DirectRootParamDesc
 struct RootParameter
 {
 	RootParamType rootParamType_;
-	// Descriptor table‚ð“o˜^‚·‚é‚Æ‚«‰º‚Ì1‚Â
 	std::variant<DescTableRootParamDesc, DirectRootParamDesc> rootParamDesc_;
 	D3D12_SHADER_VISIBILITY shaderVisibility_ = D3D12_SHADER_VISIBILITY_ALL;
 };
@@ -73,12 +72,12 @@ private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	const RootSignatureHandle pRootSignature_;
+	const RootSignatureHandle rootSignature_;
 	std::vector<DescriptorManagerHandle> descriptorManagers_;
-	std::vector<BindResource> bindedResources_;
+	std::vector<BindResource> bindResources_;
 
 public:
-	ResourceSet(RootSignatureHandle pRootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources);
+	ResourceSet(RootSignatureHandle rootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources);
 	~ResourceSet() = default;
 
 	RootSignatureHandle GetRootSignature() const;

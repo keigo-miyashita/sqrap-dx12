@@ -21,14 +21,14 @@ private:
 	ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 	std::vector<TextureHandle> backBuffers_;
 	ComPtr<ID3D12DescriptorHeap> rtvHeap_ = nullptr;
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_;
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_ = {};
 	ComPtr<ID3D12Resource> depthStencilBuffer_ = nullptr;
 	ComPtr<ID3D12DescriptorHeap> dsvHeap_ = nullptr;
-	D3D12_VIEWPORT viewport_;
-	D3D12_RECT scissorsRect_;
+	D3D12_VIEWPORT viewport_ = {};
+	D3D12_RECT scissorsRect_ = {};
 	std::wstring name_;
-	bool CreateSwapChain(const HWND& hwnd, SIZE winSize);
-	bool CreateDepthStencilBuffer(SIZE winSize);
+	void CreateSwapChain(const HWND& hwnd, SIZE winSize);
+	void CreateDepthStencilBuffer(SIZE winSize);
 
 
 public:

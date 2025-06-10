@@ -13,7 +13,7 @@ GraphicsDesc::GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts) 
 
 }
 
-bool GraphicsPipeline::CreateGraphicsPipelineState()
+void GraphicsPipeline::CreateGraphicsPipelineState()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPSDesc = {};
 
@@ -51,11 +51,8 @@ bool GraphicsPipeline::CreateGraphicsPipelineState()
 	auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateGraphicsPipelineState : " + to_string(result));
-		return false;
 	}
 	pipeline_->SetName(name_.c_str());
-	
-	return true;
 }
 
 GraphicsPipeline::GraphicsPipeline(const Device& device, const GraphicsDesc& desc, std::wstring name)
@@ -69,7 +66,7 @@ ComPtr<ID3D12PipelineState> GraphicsPipeline::GetPipelineState() const
 	return pipeline_;
 }
 
-bool ComputePipeline::CreateComputePipelineState()
+void ComputePipeline::CreateComputePipelineState()
 {
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
 	computePSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
@@ -79,11 +76,8 @@ bool ComputePipeline::CreateComputePipelineState()
 	HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateComputePipelineState : " + to_string(result));
-		return false;
 	}
 	pipeline_->SetName(name_.c_str());
-
-	return true;
 }
 
 ComputePipeline::ComputePipeline(const Device& device, const ComputeDesc& desc, std::wstring name)
@@ -96,103 +90,6 @@ ComPtr<ID3D12PipelineState> ComputePipeline::GetPipelineState() const
 {
 	return pipeline_;
 }
-
-//void StateObjectDesc::AddGlobalRootSignature(const RootSignature& rootSignature)
-//{
-//	auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-//	pGlobalRootSig->SetRootSignature(rootSignature.GetRootSignature().Get());
-//}
-//
-//void StateObjectDesc::AddShader(const Shader& shader)
-//{
-//	auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-//	CD3DX12_SHADER_BYTECODE bcLib(shader.GetBlob()->GetBufferPointer(), shader.GetBlob()->GetBufferSize());
-//	pLib->SetDXILLibrary(&bcLib);
-//}
-//
-//void StateObjectDesc::AddWorkgraph(wstring programName)
-//{
-//	auto pWorkGraph = stateObjectDesc_.CreateSubobject<CD3DX12_WORK_GRAPH_SUBOBJECT>();
-//	pWorkGraph->IncludeAllAvailableNodes();
-//	pWorkGraph->SetProgramName(programName.c_str());
-//	programName_ = programName;
-//}
-//
-//void StateObjectDesc::AddGenericProgram(std::vector<std::wstring> entries)
-//{
-//	auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
-//	pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-//	auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
-//	pRTFormats->SetNumRenderTargets(1);
-//	pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
-//
-//	auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
-//	pGenericProgram->SetProgramName(L"program");
-//	for (int i = 0; i < entries.size(); i++) {
-//		pGenericProgram->AddExport(entries[i].c_str());
-//	}
-//	pGenericProgram->AddSubobject(*pPrimitiveTopology);
-//	pGenericProgram->AddSubobject(*pRTFormats);
-//}
-
-//StateObjectDesc::StateObjectDesc()
-//{
-//
-//
-//}
-
-//void StateObjectDesc::Init(StateObjectType::Type type)
-//{
-//	stateObjectType_ = type;
-//	if (stateObjectType_ == StateObjectType::Raytracing) {
-//		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
-//		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-//	}
-//	else if (stateObjectType_ == StateObjectType::WorkGraph) {
-//		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
-//		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-//		//// Graphics nodeを使うときは下のコメントアウトを外す.
-//		//pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
-//	}
-//	else if (stateObjectType_ == StateObjectType::WorkGraphMesh) {
-//		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
-//		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-//		// Graphics nodeを使うときは下のコメントアウトを外す.
-//		pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
-//	}
-//}
-
-//CD3DX12_STATE_OBJECT_DESC& StateObjectDesc::GetStateObjectDesc()
-//{
-//	return stateObjectDesc_;
-//}
-//
-//StateObjectType::Type StateObjectDesc::GetStateObjectType() const
-//{
-//	return stateObjectType_;
-//}
-//
-//std::wstring StateObjectDesc::GetProgramName() const
-//{
-//	return programName_;
-//}
-
-//bool StateObject::CreateStateObject(StateObjectDesc& soDesc, wstring name)
-//{
-//	cout << "StateObject::CreateStateObject" << endl;
-//	StateObjectType::Type test = soDesc.GetStateObjectType();
-//	stateObjectType_ = soDesc.GetStateObjectType();
-//	if (soDesc.GetStateObjectType() == StateObjectType::Raytracing) {
-//		cout << "StateObjectType::Raytracing" << endl;
-//	}
-//	else if (soDesc.GetStateObjectType() == StateObjectType::WorkGraph || soDesc.GetStateObjectType() == StateObjectType::WorkGraphMesh) {
-//		cout << "StateObjectType::WorkGraph" << endl;
-//		if (FAILED(pDevice_->GetLatestDevice()->CreateStateObject(soDesc.GetStateObjectDesc(), IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf())))) {
-//			return false;
-//		}
-//		return true;
-//	}
-//}
 
 StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std::wstring name)
 	: pDevice_(&device), soDesc_(soDesc), name_(name)

@@ -26,12 +26,15 @@ void SampleApplication::Run()
 	ShowWindow(hwnd_, SW_SHOW);
 	MSG msg = {};
 
-	while (true) {
+	bool isRunning = true;
+
+	while (isRunning) {
 
 		// If you use If statements, system only can handle one input
 		// It leads delay for input
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT) {
+				isRunning = false;
 				break;
 			}
 

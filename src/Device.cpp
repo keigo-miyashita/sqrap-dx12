@@ -33,24 +33,21 @@ namespace {
 	}
 }
 
-bool Device::EnableFeatures(vector<UUID>& features) const
+void Device::EnableFeatures(vector<UUID>& features) const
 {
 	auto result = D3D12EnableExperimentalFeatures(features.size(), features.data(), nullptr, nullptr);
 	if (FAILED(result)) {
-		cerr << "Failed to enable features\n";
-		return false;
+		throw std::runtime_error("Failed to D3D12EnableExperimentalFeatures" + to_string(result));
 	}
-	return true;
 }
 
-bool Device::CreateDXDevice(wstring gpuVendorName)
+void Device::CreateDXDevice(wstring gpuVendorName)
 {
 	UINT flagsDXGI = 0;
 	flagsDXGI |= DXGI_CREATE_FACTORY_DEBUG;
 	auto result = CreateDXGIFactory2(flagsDXGI, IID_PPV_ARGS(dxgiFactory_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
-		cerr << "Faild to create dxgi factory" << endl;
-		return false;
+		throw std::runtime_error("Failed to CreateDXGIFactory2" + to_string(result));
 	}
 	D3D_FEATURE_LEVEL levels[] = {
 		D3D_FEATURE_LEVEL_12_1,
@@ -84,39 +81,39 @@ bool Device::CreateDXDevice(wstring gpuVendorName)
 			break;
 		}
 	}
-	return isCreatedDevice;
-}
-
-bool Device::InitializeStableDevice()
-{
-	if (FAILED(device_->QueryInterface(IID_PPV_ARGS(stableDevice_.ReleaseAndGetAddressOf())))) {
-		cerr << "Failed to get stable device" << endl;
-		return false;
+	if (!isCreatedDevice) {
+		throw std::runtime_error("Failed to D3D12CreateDevice" + to_string(result));
 	}
-	
-	return true;
 }
 
-bool Device::InitializeLatestDevice()
+void Device::InitializeStableDevice()
+{
+	HRESULT result = device_->QueryInterface(IID_PPV_ARGS(stableDevice_.ReleaseAndGetAddressOf()));
+	if (FAILED(result)) {
+		throw std::runtime_error("Failed to QueryInterface for Stabledevice" + to_string(result));
+	}
+}
+
+void Device::InitializeLatestDevice()
 {
 	bool isInitializedLatestDevice = false;
 	if (CheckWorkGraphSupport()) {
-		if (FAILED(device_->QueryInterface(IID_PPV_ARGS(latestDevice_.ReleaseAndGetAddressOf())))) {
-			cerr << "Failed to get latest device" << endl;
-			return isInitializedLatestDevice;
+		HRESULT result = device_->QueryInterface(IID_PPV_ARGS(latestDevice_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw std::runtime_error("Failed to QueryInterface for LatestDevice" + to_string(result));
 		}
-		isInitializedLatestDevice = true;
 	}
-	return isInitializedLatestDevice;
 }
 
 bool Device::CheckWorkGraphSupport()
 {
 	bool hasSupportWorkGraph = false;
+	bool hasSupportMeshNode = false;
 	D3D12_FEATURE_DATA_D3D12_OPTIONS21 Options;
-	if (FAILED(device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &Options, sizeof(Options)))) {
-		cerr << "Failed to check feature support" << endl;
-		return false;
+	HRESULT result = device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &Options, sizeof(Options));
+	if (FAILED(result)) {
+		cerr << "Failed to check feature support" + to_string(result) << endl;
+		return hasSupportWorkGraph;
 	}
 	if (Options.WorkGraphsTier == D3D12_WORK_GRAPHS_TIER_NOT_SUPPORTED) {
 		cerr << "Device does not support for work graph" << endl;
@@ -125,20 +122,19 @@ bool Device::CheckWorkGraphSupport()
 	hasSupportWorkGraph = true;
 	if (Options.WorkGraphsTier < D3D12_WORK_GRAPHS_TIER_1_1) {
 		cerr << "Device does not support for mesh node of work graph" << endl;
+		return hasSupportMeshNode;
 	}
+	hasSupportMeshNode = true;
 	cout << "Device support for work graph" << endl;
 	return hasSupportWorkGraph;
 }
 
-bool Device::CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice)
+void Device::CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice)
 {
 	auto result = device_->QueryInterface(debugDevice.ReleaseAndGetAddressOf());
 	if (FAILED(result)) {
-		cerr << "Failed to CreateDebugDevice" << endl;
-		return false;
+		throw std::runtime_error("Failed to QueryInterface for DebugDevice" + to_string(result));
 	}
-	
-	return true;
 }
 
 Device::Device()
@@ -153,25 +149,13 @@ bool Device::Init(wstring gpuVenorName)
 #endif
 
 	vector<UUID> features = { D3D12ExperimentalShaderModels, D3D12StateObjectsExperiment };
-	if (!EnableFeatures(features)) {
-		cerr << "Failed to enable features" << endl;
-		return false;
-	}
+	EnableFeatures(features);
 
-	if (!CreateDXDevice(gpuVenorName)) {
-		cerr << "Failed to create dx device" << endl;
-		return false;
-	}
+	CreateDXDevice(gpuVenorName);
 
-	if (!InitializeStableDevice()) {
-		cerr << "Failed to get stable device" << endl;
-		return false;
-	}
+	InitializeStableDevice();
 
-	if (!InitializeLatestDevice()) {
-		cerr << "Failed to get latest device" << endl;
-		return false;
-	}
+	InitializeLatestDevice();
 
 	return true;
 }
@@ -183,29 +167,16 @@ bool Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
 #endif
 
 	vector<UUID> features = { D3D12ExperimentalShaderModels, D3D12StateObjectsExperiment };
-	if (!EnableFeatures(features)) {
-		cerr << "Failed to enable features" << endl;
-		return false;
-	}
+	EnableFeatures(features);
 
-	if (!CreateDXDevice(gpuVenorName)) {
-		cerr << "Failed to create dx device" << endl;
-		return false;
-	}
+	CreateDXDevice(gpuVenorName);
 
-	if (!InitializeLatestDevice()) {
-		cerr << "Failed to get latest device" << endl;
-		return false;
-	}
+	InitializeLatestDevice();
 
 #ifdef _DEBUG
 	cout << "Try to create DebugDevice" << endl;
-	if (!CreateDebugDevice(debugDevice)) {
-		cerr << "Failed to CreateDebugDevice" << endl;
-		return false;
-	}
-#endif // DEBUG
-
+	CreateDebugDevice(debugDevice);
+#endif // _DEBUG
 
 	return true;
 }

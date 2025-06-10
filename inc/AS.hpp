@@ -24,7 +24,7 @@ private:
 	std::wstring name_;
 	ASHandle ASBuffer_;
 	BufferHandle scratchBuffer_;
-	bool CreateBLAS(ASMeshHandle mesh);
+	void CreateBLAS(ASMeshHandle mesh);
 
 public:
 
@@ -55,7 +55,7 @@ private:
 	BufferHandle instanceDescBuffer_;
 	ASHandle ASBuffer_;
 	BufferHandle scratchBuffer_;
-	bool CreateTLAS();
+	void CreateTLAS();
 
 public:
 

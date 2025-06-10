@@ -42,7 +42,7 @@ private:
 	std::wstring name_;
 	ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
-	bool CreateGraphicsPipelineState();
+	void CreateGraphicsPipelineState();
 
 public:
 	GraphicsPipeline(const Device& device, const GraphicsDesc& desc, std::wstring name = L"");
@@ -68,7 +68,7 @@ private:
 	std::wstring name_;
 	ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
-	bool CreateComputePipelineState();
+	void CreateComputePipelineState();
 
 public:
 	ComputePipeline(const Device& device, const ComputeDesc& desc, std::wstring name = L"");
@@ -163,8 +163,6 @@ private:
 	std::vector<std::wstring> hitGroups;
 	std::wstring programName_;
 	StateObjectType stateObjectType_;
-
-	bool CreateStateObject();
 
 public:
 	StateObject(const Device& device, const StateObjectDesc soDesc, std::wstring name = L"");

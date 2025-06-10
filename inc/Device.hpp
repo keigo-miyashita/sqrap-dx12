@@ -14,8 +14,8 @@
 
 #include "Alias.hpp"
 
-#define StableDevice ID3D12Device13
-#define LatestDevice ID3D12Device14
+using StableDevice = ID3D12Device13;
+using LatestDevice = ID3D12Device14;
 
 class Command;
 class Fence;
@@ -38,12 +38,12 @@ private:
 	ComPtr<StableDevice> stableDevice_ = nullptr;
 	ComPtr<LatestDevice> latestDevice_ = nullptr;
 
-	bool EnableFeatures(std::vector<UUID>& features) const;
-	bool CreateDXDevice(std::wstring gpuVendorName);
-	bool InitializeStableDevice();
-	bool InitializeLatestDevice();
+	void EnableFeatures(std::vector<UUID>& features) const;
+	void CreateDXDevice(std::wstring gpuVendorName);
+	void InitializeStableDevice();
+	void InitializeLatestDevice();
 	bool CheckWorkGraphSupport();
-	bool CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice);
+	void CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice);
 
 public:
 	Device();
@@ -51,11 +51,11 @@ public:
 	bool Init(std::wstring gpuVenorName);
 	bool Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 	void ShowUsedVramSize();
-	ASHandle					CreateAS(UINT size, std::wstring name = L"") const;
+	ASHandle				CreateAS(UINT size, std::wstring name = L"") const;
 	ASMeshHandle			CreateASMesh(CommandHandle command, std::string modelPath) const;
-	ASMeshHandle				CreateASMesh(CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
+	ASMeshHandle			CreateASMesh(CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
 	BLASHandle				CreateBLAS(CommandHandle command, ASMeshHandle mesh, std::wstring name = L"") const;
-	BufferHandle				CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"") const;
+	BufferHandle			CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"") const;
 	CommandHandle			CreateCommand(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"") const;
 	ComputePipelineHandle	CreateComputePipeline(const ComputeDesc& desc, std::wstring name = L"") const;
 	DescriptorManagerHandle	CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"") const;

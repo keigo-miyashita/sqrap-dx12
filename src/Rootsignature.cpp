@@ -89,39 +89,39 @@ const std::vector<CD3DX12_ROOT_PARAMETER>& RootSignature::GetRootParameters() co
 	return rps_;
 }
 
-ResourceSet::ResourceSet(RootSignatureHandle pRootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources)
-	: pRootSignature_(pRootSignature)
+ResourceSet::ResourceSet(RootSignatureHandle rootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources)
+	: rootSignature_(rootSignature)
 {
 	cout << "Make ResourceSet" << endl;
 	// TODO : Integrate object and pointer
 	for (auto bindedResource : bindedResources) {
 		if (std::holds_alternative<DescriptorManagerHandle>(bindedResource)) {
 			DescriptorManagerHandle dm = std::get<DescriptorManagerHandle>(bindedResource);
-			bindedResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+			bindResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			descriptorManagers_.push_back(dm);
 		}
 		else if (std::holds_alternative<std::shared_ptr<Buffer>>(bindedResource)) {
 			std::shared_ptr<Buffer> b = std::get<std::shared_ptr<Buffer>>(bindedResource);
-			bindedResources_.push_back(b->GetGPUAddress());
+			bindResources_.push_back(b->GetGPUAddress());
 		}
 		else if (std::holds_alternative<Constants>(bindedResource)) {
 			Constants c = std::get<Constants>(bindedResource);
 			float* constants = static_cast<float*>(c.constants);
 			cout << "cs = " << (float)constants[0] << " " << (float)constants[1] << " " << (float)constants[2] << " " << (float)constants[3] << endl;
 			cout << "cs = " << c.numConstants << " " << c.numOffset << endl;
-			bindedResources_.push_back(c);
+			bindResources_.push_back(c);
 		}
 	}
 }
 
 RootSignatureHandle ResourceSet::GetRootSignature() const
 {
-	return pRootSignature_;
+	return rootSignature_;
 }
 
 const std::vector<BindResource>& ResourceSet::GetBindedResources() const
 {
-	return bindedResources_;
+	return bindResources_;
 }
 
 const std::vector<DescriptorManagerHandle>& ResourceSet::GetDescManagers() const

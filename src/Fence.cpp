@@ -30,6 +30,9 @@ bool Fence::WaitCommand(Command& command)
 
 	if (fence_->GetCompletedValue() < fenceVal_) {
 		auto event = CreateEvent(nullptr, false, false, nullptr);
+		if (event == nullptr) {
+			return false;
+		}
 		fence_->SetEventOnCompletion(fenceVal_, event);
 		WaitForSingleObject(event, INFINITE);
 		CloseHandle(event);
@@ -37,6 +40,8 @@ bool Fence::WaitCommand(Command& command)
 
 	command.GetCommandAllocator()->Reset();
 	command.GetCommandList()->Reset(command.GetCommandAllocator().Get(), nullptr);
+
+	return true;
 }
 
 ComPtr<ID3D12Fence> Fence::GetFence()

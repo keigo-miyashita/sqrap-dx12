@@ -47,7 +47,7 @@ public:
 	BufferHandle GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
-	virtual UINT GetVertexCount() const;
+	UINT GetVertexCount() const;
 	BufferHandle GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;
@@ -80,7 +80,7 @@ public:
 	BufferHandle GetVertexBuffer() const;
 	D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 	const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;
-	virtual UINT GetVertexCount() const;
+	UINT GetVertexCount() const;
 	BufferHandle GetIndexBuffer() const;
 	D3D12_INDEX_BUFFER_VIEW GetIBView() const;
 	const D3D12_INDEX_BUFFER_VIEW* GetIBViewPtr() const;

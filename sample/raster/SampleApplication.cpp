@@ -22,15 +22,18 @@ void SampleApplication::Run()
 	ShowWindow(hwnd_, SW_SHOW);
 	MSG msg = {};
 
-	while (true) {
+	bool isRunning = true;
+
+	while (isRunning) {
 
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+			if (msg.message == WM_QUIT) {
+				isRunning = false;
+				break;
+			}
+
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-		}
-
-		if (msg.message == WM_QUIT) {
-			break;
 		}
 
 		Input::Update();

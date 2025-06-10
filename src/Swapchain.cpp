@@ -8,7 +8,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
+void SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 {
 	RECT rc = {};
 	GetWindowRect(hwnd, &rc);
@@ -35,13 +35,11 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 		(IDXGISwapChain1**)swapChain_.ReleaseAndGetAddressOf());
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateSwapChainForHwnd : " + to_string(result));
-		return false;
 	}
 
 	result = swapChain_->GetDesc1(&swapChainDesc1);
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to get swapChainDesc1 : " + to_string(result));
-		return false;
 	}
 
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -52,16 +50,9 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 	result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain : " + to_string(result));
-		return false;
 	}
 	rtvHeap_->SetName(L"RenderTargetViewHeap");
-	
-	// DESC1‚¶‚á‚È‚­‚ÄDESC‚ðŽæ“¾‚µ‚Ä‚¢‚é‚ªDESC1‚Ì‚Ü‚Ü‚Å‚æ‚¢‚Ì‚Å‚ÍH
-	/*DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
-	if (FAILED(swapChain_->GetDesc(&swapChainDesc))) {
-		return false;
-	}
-	backBuffers_.resize(swapChainDesc.BufferCount);*/
+
 	backBuffers_.resize(swapChainDesc1.BufferCount);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
@@ -78,7 +69,6 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 		backBuffers_[i]->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to GetBuffer for SwapChain : " + to_string(result));
-			return false;
 		}
 		wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
 		backBuffers_[i]->SetName(nameBackBuffer.c_str());
@@ -89,11 +79,9 @@ bool SwapChain::CreateSwapChain(const HWND& hwnd, SIZE winSize)
 
 	viewport_ = CD3DX12_VIEWPORT(backBuffers_[0]->GetResource().Get());
 	scissorsRect_ = CD3DX12_RECT(0, 0, swapChainDesc1.Width, swapChainDesc1.Height);
-
-	return true;
 }
 
-bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
+void SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 {
 	auto depthResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
 		winSize.cx, winSize.cy, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
@@ -108,7 +96,6 @@ bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 		&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateCommittedResource for SwapChain's DepthStencilBuffer : " + to_string(result));
-		return false;
 	}
 	depthStencilBuffer_->SetName(L"DepthStencilBuffer");
 
@@ -120,7 +107,6 @@ bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 	result = pDevice_->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain's DepthStencilBuffer : " + to_string(result));
-		return false;
 	}
 	dsvHeap_->SetName(L"DepthStencilHeap");
 
@@ -130,8 +116,6 @@ bool SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
 	pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
-
-	return true;
 }
 
 SwapChain::SwapChain(const Device& device, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize, std::wstring name) : pDevice_(&device), pCommand_(command), name_(name)

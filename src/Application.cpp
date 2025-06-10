@@ -16,34 +16,36 @@ void Input::GetRawState(UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 
 	UINT vkCode = (UINT)wparam;
-	int xPos = GET_X_LPARAM(lparam);
-	int yPos = GET_Y_LPARAM(lparam);
-	currentMousePos_ = {xPos, yPos};
-	/*for (auto& eachIsPushKey : isPushKey_) {
-		eachIsPushKey.second = false;
-	}*/
 	switch (msg) {
 	case WM_KEYDOWN:
-		//if ((lparam & (1 << 30)) == 0) {
-			isPushKey_[vkCode] = true;
-		//}
-		cout << "isPushKey" << endl;
+		isPushKey_[vkCode] = true;
 		break;
 	case WM_KEYUP:
 		isPushKey_[vkCode] = false;
-		cout << "isUnPushKey" << endl;
 		break;
+	case WM_MOUSEMOVE:
 	case WM_LBUTTONDOWN:
-		isPushedLButton_ = true;
-		pushedMousePos_ = { xPos, yPos };
-		break;
 	case WM_LBUTTONUP:
-		isPushedLButton_ = false;
-		break;
 	case WM_MOUSEWHEEL:
-		short wheelDelta = GET_WHEEL_DELTA_WPARAM(wparam);
-		wheel_ = wheelDelta;
-		break;
+		{
+			int xPos = GET_X_LPARAM(lparam);
+			int yPos = GET_Y_LPARAM(lparam);
+			currentMousePos_ = { xPos, yPos };
+
+			if (msg == WM_LBUTTONDOWN) {
+				isPushedLButton_ = true;
+				cout << "pushing" << endl;
+				pushedMousePos_ = { xPos, yPos };
+			}
+			else if (msg == WM_LBUTTONUP) {
+				isPushedLButton_ = false;
+			}
+			else if (msg == WM_MOUSEWHEEL) {
+				short wheelDelta = GET_WHEEL_DELTA_WPARAM(wparam);
+				wheel_ = wheelDelta;
+			}
+			break;
+		}
 	}
 }
 
@@ -59,9 +61,12 @@ void Input::Update()
 		if (prev && !rawState) {
 			isLogicalPushKey_[vk].isPushed = false;
 		}
-		//isLogicalPushKey_[vk].isPushed = !prev && rawState;    // 前がfalse、今がtrue → 押された
-		//isLogicalPushKey_[vk].isReleased = prev && !rawState;   // 前がtrue、今がfalse → 離された
 	}
+
+	deltaMousePos_.x = currentMousePos_.x - prevMousePos_.x;
+	deltaMousePos_.y = currentMousePos_.y - prevMousePos_.y;
+
+	prevMousePos_ = currentMousePos_;
 }
 
 bool Input::IsPushKey(UINT key)
@@ -77,6 +82,16 @@ int Input::GetWheel()
 MousePosition Input::GetPushedPos()
 {
 	return pushedMousePos_;
+}
+
+MousePosition Input::GetPrevPos()
+{
+	return prevMousePos_;
+}
+
+MousePosition Input::GetDeltaPos()
+{
+	return deltaMousePos_;
 }
 
 MousePosition Input::GetPos()

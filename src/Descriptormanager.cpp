@@ -58,27 +58,39 @@ DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, st
 
 	ViewType currentType = ViewType::NONE;
 	for (auto desc : descManagerDesc) {
+		if (desc.type != currentType)
+		{
+			currentType = desc.type;
+			switch (currentType)
+			{
+			case ViewType::CBV:    baseRegCBV_ = desc.numReg; break;
+			case ViewType::SRV:    baseRegSRV_ = desc.numReg; break;
+			case ViewType::UAV:    baseRegUAV_ = desc.numReg; break;
+			case ViewType::SAMPLER: baseRegSampler_ = desc.numReg; break;
+			default: break;
+			}
+		}
 		if (desc.type == ViewType::CBV) {
-			if (desc.type != currentType) {
+			/*if (desc.type != currentType) {
 				currentType = ViewType::CBV;
 				baseRegCBV_ = desc.numReg;
-			}
+			}*/
 			numCBV_++;
 			CreateCBV(desc.resource);
 		}
 		else if (desc.type == ViewType::SRV) {
-			if (desc.type != currentType) {
+			/*if (desc.type != currentType) {
 				currentType = ViewType::SRV;
 				baseRegSRV_ = desc.numReg;
-			}
+			}*/
 			numSRV_++;
 			CreateSRV(desc.resource);
 		}
 		else if (desc.type == ViewType::UAV) {
-			if (desc.type != currentType) {
+			/*if (desc.type != currentType) {
 				currentType = ViewType::UAV;
 				baseRegUAV_ = desc.numReg;
-			}
+			}*/
 			numUAV_++;
 			if (!desc.isCounter) {
 				CreateUAV(desc.resource);
@@ -88,10 +100,10 @@ DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, st
 			}
 		}
 		else if (desc.type == ViewType::SAMPLER) {
-			if (desc.type != currentType) {
+			/*if (desc.type != currentType) {
 				currentType = ViewType::SAMPLER;
 				baseRegSampler_ = desc.numReg;
-			}
+			}*/
 			numSampler_++;
 			CreateSampler();
 		}

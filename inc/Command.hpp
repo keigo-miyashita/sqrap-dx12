@@ -39,10 +39,10 @@ private:
 	ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
 	FenceHandle fence_;
 
-	bool CreateCommandList();
-	bool InitializeStableCommandList();
-	bool InitializeLatestCommandList();
-	bool CreateCommandQueue();
+	void CreateCommandList();
+	void InitializeStableCommandList();
+	void InitializeLatestCommandList();
+	void CreateCommandQueue();
 
 
 public:
@@ -55,7 +55,7 @@ public:
 	void CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHandle destBuffer, UINT destOffset, UINT numBytes);
 	void DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum);
 	void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
-	void DrawGUI(GUI& GUI);
+	void DrawGUI(GUIHandle GUI);
 	void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
 	void SetPipeline(ComputePipelineHandle computePipeline);
 	void SetGraphicsRootSig(RootSignatureHandle graphicsRootSig);

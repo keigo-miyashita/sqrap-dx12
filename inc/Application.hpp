@@ -82,7 +82,9 @@ private:
 	static inline bool isPushedLButton_ = false;
 	static inline bool isPushedRButton_ = false;
 	static inline MousePosition pushedMousePos_;
+	static inline MousePosition prevMousePos_;
 	static inline MousePosition currentMousePos_;
+	static inline MousePosition deltaMousePos_;
 
 public:
 	static void GetRawState(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -90,6 +92,8 @@ public:
 	static bool IsPushKey(UINT key);
 	static int GetWheel();
 	static MousePosition GetPushedPos();
+	static MousePosition GetPrevPos();
+	static MousePosition GetDeltaPos();
 	static MousePosition GetPos();
 	static bool IsPushedLButton();
 	static bool IsPushedRButton();

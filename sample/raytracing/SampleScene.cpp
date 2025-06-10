@@ -77,7 +77,7 @@ void SampleScene::Render()
 		ImGui::SameLine();
 		ImGui::ColorEdit4("##SurfaceColor", (float*)&diffuseColor_);
 		GUI_->EndCommand();
-		command_->DrawGUI(*GUI_);
+		command_->DrawGUI(GUI_);
 	}
 
 	EndRender();

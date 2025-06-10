@@ -81,7 +81,6 @@ bool Buffer::CreateBuffer()
 	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to create buffer : " + to_string(result));
-		return false;
 	}
 	resource_->SetName(name_.c_str());
 	return true;
@@ -98,7 +97,6 @@ bool Buffer::CreateCounterBuffer()
 	HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, rscState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to create buffer : " + to_string(result));
-		return false;
 	}
 	resource_->SetName(name_.c_str());
 	return true;
@@ -349,7 +347,6 @@ void Texture::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
 void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 {
 	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-	/*viewDesc.Format = DXGI_FORMAT_UNKNOWN;*/
 	viewDesc.Format = format_;
 	if (texDim_ == TextureDim::Tex1D) {
 		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;

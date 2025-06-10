@@ -9,7 +9,7 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool BLAS::CreateBLAS(ASMeshHandle mesh)
+void BLAS::CreateBLAS(ASMeshHandle mesh)
 {
 	D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 	geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -50,8 +50,6 @@ bool BLAS::CreateBLAS(ASMeshHandle mesh)
 	auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_->GetResource().Get());
 	command_->GetStableCommandList()->ResourceBarrier(1, &barrier);
 	command_->WaitCommand();
-
-	return true;
 }
 
 BLAS::BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name)
@@ -65,7 +63,7 @@ D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASAddress()
 	return ASBuffer_->GetResource()->GetGPUVirtualAddress();
 }
 
-bool TLAS::CreateTLAS()
+void TLAS::CreateTLAS()
 {
 	vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDesc;
 	instanceDesc.resize(tlasDescs_.size());
@@ -124,8 +122,6 @@ bool TLAS::CreateTLAS()
 	auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_->GetResource().Get());
 	command_->GetStableCommandList()->ResourceBarrier(1, &barrier);
 	command_->WaitCommand();
-
-	return true;
 }
 
 TLAS::TLAS(const Device& device, CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name)
