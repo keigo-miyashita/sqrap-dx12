@@ -55,9 +55,23 @@ void SampleScene::Render()
 		cameraBuffer_->Unmap();
 	}
 
-	command_->GetCommandList()->SetPipelineState(lambert_->GetPipelineState().Get());
-	command_->SetGraphicsResourceSet(sphere0ResourceSet_);
+	command_->SetPipeline(lambert_);
+	command_->SetGraphicsRootSig(sphere0RootSignature_);
+	command_->SetDescriptorHeap(sphere0DescManager_);
+	command_->SetGraphicsRootDescriptorTable(0, sphere0DescManager_);
+	command_->SetGraphicsRoot32BitConstants(1, ColorConstants_);
 	command_->AddDrawIndexed(sphere_, 1);
+
+	// GUI
+	{
+		GUI_->BeginCommand();
+		// Add GUI 
+		ImGui::Text("Color");
+		ImGui::SameLine();
+		ImGui::ColorEdit4("##SurfaceColor", (float*)&diffuseColor_);
+		GUI_->EndCommand();
+		command_->DrawGUI(GUI_);
+	}
 
 	EndRender();
 
@@ -71,14 +85,11 @@ SampleScene::SampleScene()
 
 bool SampleScene::Init(const Application& app)
 {
-	if (!device_.Init(L"NVIDIA")) {
-		cerr << "Failed to init Device" << endl;
-		return false;
-	}
+	device_.Init(L"NVIDIA");
 
-	if (!dxc_.Init()) {
-		return false;
-	}
+	dxc_.Init();
+
+	GUI_ = device_.CreateGUI(app.GetWindowHWND());
 
 	command_ = device_.CreateCommand();
 
@@ -146,20 +157,13 @@ bool SampleScene::Init(const Application& app)
 	sphere0RootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	DescTableRootParamDesc{sphere0DescManager_}},
+			{RootParamType::DescTable,	sphere0DescManager_},
 			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
 		}
-		);
-
-	Color sphere0Color = { XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) };
-	sphere0ResourceSet_ = std::make_shared<ResourceSet>(
-			sphere0RootSignature_,
-			std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>>
-			{
-			std::shared_ptr<DescriptorManager>{sphere0DescManager_},
-				Constants{reinterpret_cast<void*>(&sphere0Color), 4}
-			}
 	);
+
+	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
+	ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
 
 	// Graphics pipeline
 	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =

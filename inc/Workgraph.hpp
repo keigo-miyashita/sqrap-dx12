@@ -22,6 +22,7 @@ private:
 	// D3D12_GPU_VIRTUAL_ADDRESSÇ∆sizeInBytesÇÇ‡Ç¬ç\ë¢ëÃ
 	D3D12_GPU_VIRTUAL_ADDRESS_RANGE backingMemoryAddressRange_ = {};
 	ComPtr<ID3D12Resource> backingMemory_ = nullptr;
+	BufferHandle localRootSigBuffer_;
 	UINT workGraphIndex_ = 0;
 	UINT numEntryPoints_ = 0;
 	UINT numNodes_ = 0;
@@ -30,6 +31,8 @@ private:
 	D3D12_SET_PROGRAM_DESC pgDesc_ = {};
 
 public:
+	static UINT AlignForLocalSigBuffer(UINT size);
+	static UINT CopyMem(void* dest, const void* data, UINT size);
 	WorkGraph(const Device& device, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"");
 	~WorkGraph() = default;
 

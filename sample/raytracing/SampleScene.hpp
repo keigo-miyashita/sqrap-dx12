@@ -70,14 +70,15 @@ private:
 	RootSignatureHandle suzanneRootSignature_;
 
 	// Resource Set
-	std::shared_ptr<ResourceSet> suzanneResourceSet_;
+	ResourceSetHandle suzanneResourceSet_;
 
 	// Pipeline
-	StateObjectHandle raytracingStates_;
+	StateObjectHandle rayTracingStates_;
 
 	// RayTracing
 	RayTracingHandle rayTracing_;
 
+	ConstantsHandle ColorConstants_;
 	Color diffuseColor_;
 
 	void BeginRender();

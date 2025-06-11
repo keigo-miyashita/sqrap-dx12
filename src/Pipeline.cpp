@@ -94,132 +94,132 @@ ComPtr<ID3D12PipelineState> ComputePipeline::GetPipelineState() const
 StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std::wstring name)
 	: pDevice_(&device), soDesc_(soDesc), name_(name)
 {
-	if (soDesc.stateObjectType == StateObjectType::Raytracing) {
+	if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-		if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc)) {
-			StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc);
+		if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_)) {
+			StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_);
 			
-			if (rtDesc.globalRootSig) {
+			if (rtDesc.globalRootSig_) {
 				auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pGlobalRootSig->SetRootSignature(rtDesc.globalRootSig->GetRootSignature().Get());
+				pGlobalRootSig->SetRootSignature(rtDesc.globalRootSig_->GetRootSignature().Get());
 			}
 
-			for (auto raygen : rtDesc.rayGens) {
+			for (auto raygen : rtDesc.rayGens_) {
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-				CD3DX12_SHADER_BYTECODE bcLib(raygen.shader->GetBlob()->GetBufferPointer(), raygen.shader->GetBlob()->GetBufferSize());
+				CD3DX12_SHADER_BYTECODE bcLib(raygen.shader_->GetBlob()->GetBufferPointer(), raygen.shader_->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
 				// NOTE : エントリ名を指定してコンパイルしているはずだがSetDXILLibraryだけだとファイル内のエクスポートが全部登録されてしまう
-				// 毎回明示しないと登録が重複しちゃった
-				pLib->DefineExport(raygen.shader->GetEntryName().c_str());
-				rayGens.push_back(raygen.shader->GetEntryName().c_str());
+				// 毎回明示しないと登録が重複してしまう
+				pLib->DefineExport(raygen.shader_->GetEntryName().c_str());
+				rayGens.push_back(raygen.shader_->GetEntryName().c_str());
 
-				if (raygen.localResourceSet) {
+				if (raygen.localResourceSet_) {
 					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-					pLocalRootSig->SetRootSignature(raygen.localResourceSet->GetRootSignature()->GetRootSignature().Get());
+					pLocalRootSig->SetRootSignature(raygen.localResourceSet_->GetRootSignature()->GetRootSignature().Get());
 
 					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
 					association->SetSubobjectToAssociate(*pLocalRootSig);
-					association->AddExport(raygen.shader->GetEntryName().c_str());
+					association->AddExport(raygen.shader_->GetEntryName().c_str());
 				}
 			}
 
-			for (auto miss : rtDesc.misses) {
+			for (auto miss : rtDesc.misses_) {
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-				CD3DX12_SHADER_BYTECODE bcLib(miss.shader->GetBlob()->GetBufferPointer(), miss.shader->GetBlob()->GetBufferSize());
+				CD3DX12_SHADER_BYTECODE bcLib(miss.shader_->GetBlob()->GetBufferPointer(), miss.shader_->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
-				pLib->DefineExport(miss.shader->GetEntryName().c_str());
-				rayGens.push_back(miss.shader->GetEntryName().c_str());
+				pLib->DefineExport(miss.shader_->GetEntryName().c_str());
+				rayGens.push_back(miss.shader_->GetEntryName().c_str());
 
-				if (miss.localResourceSet) {
+				if (miss.localResourceSet_) {
 					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-					pLocalRootSig->SetRootSignature(miss.localResourceSet->GetRootSignature()->GetRootSignature().Get());
+					pLocalRootSig->SetRootSignature(miss.localResourceSet_->GetRootSignature()->GetRootSignature().Get());
 
 					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
 					association->SetSubobjectToAssociate(*pLocalRootSig);
-					association->AddExport(miss.shader->GetEntryName().c_str());
+					association->AddExport(miss.shader_->GetEntryName().c_str());
 				}
 			}
 
-			for (auto hitGroup : rtDesc.hitGroups) {
+			for (auto hitGroup : rtDesc.hitGroups_) {
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-				CD3DX12_SHADER_BYTECODE closesthitBcLib(hitGroup.closesthit.shader->GetBlob()->GetBufferPointer(),		hitGroup.closesthit.shader->GetBlob()->GetBufferSize());
+				CD3DX12_SHADER_BYTECODE closesthitBcLib(hitGroup.closesthit_.shader_->GetBlob()->GetBufferPointer(), hitGroup.closesthit_.shader_->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&closesthitBcLib);
-				pLib->DefineExport(hitGroup.closesthit.shader->GetEntryName().c_str());
-				if (hitGroup.anyhit.shader) {
-					CD3DX12_SHADER_BYTECODE anyhitBcLib(hitGroup.anyhit.shader->GetBlob()->GetBufferPointer(), hitGroup.anyhit.shader->GetBlob()->GetBufferSize());
+				pLib->DefineExport(hitGroup.closesthit_.shader_->GetEntryName().c_str());
+				if (hitGroup.anyhit_.shader_) {
+					CD3DX12_SHADER_BYTECODE anyhitBcLib(hitGroup.anyhit_.shader_->GetBlob()->GetBufferPointer(), hitGroup.anyhit_.shader_->GetBlob()->GetBufferSize());
 					pLib->SetDXILLibrary(&anyhitBcLib);
-					pLib->DefineExport(hitGroup.anyhit.shader->GetEntryName().c_str());
+					pLib->DefineExport(hitGroup.anyhit_.shader_->GetEntryName().c_str());
 				}
-				if (hitGroup.intersection.shader) {
-					CD3DX12_SHADER_BYTECODE intersectionBcLib(hitGroup.intersection.shader->GetBlob()->GetBufferPointer(), hitGroup.intersection.shader->GetBlob()->GetBufferSize());
+				if (hitGroup.intersection_.shader_) {
+					CD3DX12_SHADER_BYTECODE intersectionBcLib(hitGroup.intersection_.shader_->GetBlob()->GetBufferPointer(), hitGroup.intersection_.shader_->GetBlob()->GetBufferSize());
 					pLib->SetDXILLibrary(&intersectionBcLib);
-					pLib->DefineExport(hitGroup.intersection.shader->GetEntryName().c_str());
+					pLib->DefineExport(hitGroup.intersection_.shader_->GetEntryName().c_str());
 				}
 
 				auto pHitGroup = stateObjectDesc_.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
-				pHitGroup->SetClosestHitShaderImport(hitGroup.closesthit.shader->GetEntryName().c_str());
-				if (hitGroup.anyhit.shader) {
-					pHitGroup->SetAnyHitShaderImport(hitGroup.anyhit.shader->GetEntryName().c_str());
+				pHitGroup->SetClosestHitShaderImport(hitGroup.closesthit_.shader_->GetEntryName().c_str());
+				if (hitGroup.anyhit_.shader_) {
+					pHitGroup->SetAnyHitShaderImport(hitGroup.anyhit_.shader_->GetEntryName().c_str());
 				}
-				if (hitGroup.intersection.shader) {
-					pHitGroup->SetIntersectionShaderImport(hitGroup.intersection.shader->GetEntryName().c_str());
+				if (hitGroup.intersection_.shader_) {
+					pHitGroup->SetIntersectionShaderImport(hitGroup.intersection_.shader_->GetEntryName().c_str());
 				}
-				pHitGroup->SetHitGroupExport(hitGroup.groupName.c_str());
+				pHitGroup->SetHitGroupExport(hitGroup.groupName_.c_str());
 
-				hitGroups.push_back(hitGroup.groupName.c_str());
+				hitGroups.push_back(hitGroup.groupName_.c_str());
 
-				if (hitGroup.localResourceSet) {
+				if (hitGroup.localResourceSet_) {
 					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-					pLocalRootSig->SetRootSignature(hitGroup.localResourceSet->GetRootSignature()->GetRootSignature().Get());
+					pLocalRootSig->SetRootSignature(hitGroup.localResourceSet_->GetRootSignature()->GetRootSignature().Get());
 
 					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
 					association->SetSubobjectToAssociate(*pLocalRootSig);
-					association->AddExport(hitGroup.groupName.c_str());
+					association->AddExport(hitGroup.groupName_.c_str());
 				}
 			}
 
 			auto pShaderConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_SHADER_CONFIG_SUBOBJECT>();
 			// payload size, setting for intersection
-			pShaderConfig->Config(rtDesc.rayConfigDesc.payloadSize, rtDesc.rayConfigDesc.attributeSize);
+			pShaderConfig->Config(rtDesc.rayConfigDesc_.payloadSize_, rtDesc.rayConfigDesc_.attributeSize_);
 
 			auto pPipelineConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
 			// ray depth
-			pPipelineConfig->Config(rtDesc.rayConfigDesc.rayDepth);
+			pPipelineConfig->Config(rtDesc.rayConfigDesc_.rayDepth_);
 		}
 	}
-	else if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+	else if (soDesc.stateObjectType_ == StateObjectType::WorkGraph || soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-		if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+		if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
 			// Graphics nodeを使うときは下のコメントアウトを外す.
 			pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
 		}
 
-		if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
-			StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
+		if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
+			StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
 
-			if (wgDesc.globalRootSig) {
+			if (wgDesc.globalRootSig_) {
 				auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
-				pGlobalRootSig->SetRootSignature(wgDesc.globalRootSig->GetRootSignature().Get());
+				pGlobalRootSig->SetRootSignature(wgDesc.globalRootSig_->GetRootSignature().Get());
 			}
 
-			for (auto exportDesc : wgDesc.exportDescs) {
+			for (auto exportDesc : wgDesc.exportDescs_) {
 				auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-				CD3DX12_SHADER_BYTECODE bcLib(exportDesc.shader->GetBlob()->GetBufferPointer(), exportDesc.shader->GetBlob()->GetBufferSize());
+				CD3DX12_SHADER_BYTECODE bcLib(exportDesc.shader_->GetBlob()->GetBufferPointer(), exportDesc.shader_->GetBlob()->GetBufferSize());
 				pLib->SetDXILLibrary(&bcLib);
 
-				if (exportDesc.localResourceSet) {
+				if (exportDesc.localResourceSet_) {
 					auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
-					pLocalRootSig->SetRootSignature(exportDesc.localResourceSet->GetRootSignature()->GetRootSignature().Get());
+					pLocalRootSig->SetRootSignature(exportDesc.localResourceSet_->GetRootSignature()->GetRootSignature().Get());
 
 					auto association = stateObjectDesc_.CreateSubobject<CD3DX12_SUBOBJECT_TO_EXPORTS_ASSOCIATION_SUBOBJECT>();
 					association->SetSubobjectToAssociate(*pLocalRootSig);
-					association->AddExport(exportDesc.shader->GetEntryName().c_str());
+					association->AddExport(exportDesc.shader_->GetEntryName().c_str());
 				}
 			}
 
-			if (soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+			if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
 				// NOTE : 
 				// This wrapper is designed under the assumption
 				// All program use the same topology and RTFormat
@@ -229,10 +229,10 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 				pRTFormats->SetNumRenderTargets(1);
 				pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
 
-				for (auto programDesc : wgDesc.programDescs) {
+				for (auto programDesc : wgDesc.programDescs_) {
 					auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
-					pGenericProgram->SetProgramName(programDesc.programName.c_str());
-					for (auto shader : programDesc.shaders) {
+					pGenericProgram->SetProgramName(programDesc.programName_.c_str());
+					for (auto shader : programDesc.shaders_) {
 						pGenericProgram->AddExport(shader->GetEntryName().c_str());
 					}
 					pGenericProgram->AddSubobject(*pPrimitiveTopology);
@@ -242,19 +242,29 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 
 			auto pWorkGraph = stateObjectDesc_.CreateSubobject<CD3DX12_WORK_GRAPH_SUBOBJECT>();
 			pWorkGraph->IncludeAllAvailableNodes();
-			pWorkGraph->SetProgramName(wgDesc.workGraphProgramName.c_str());
+			pWorkGraph->SetProgramName(wgDesc.workGraphProgramName_.c_str());
+
+			if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
+				for (auto programDesc : wgDesc.programDescs_) {
+					if (programDesc.nodeType_ == NodeType::Compute) {
+						auto pComputeNode = pWorkGraph->CreateShaderNode(programDesc.programName_.c_str());
+					}
+					else if (programDesc.nodeType_ == NodeType::Graphics) {
+						auto pGraphicsNode = pWorkGraph->CreateProgramNode(programDesc.programName_.c_str());
+					}
+				}
+			}
 		}
 	}
 
-	if (soDesc.stateObjectType == StateObjectType::Raytracing) {
-		// TODO : Handle raytracing pipeline
+	if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
 		cout << "StateObjectType::Raytracing" << endl;
 		HRESULT result = pDevice_->GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateStateObject : " + to_string(result));
 		}
 	}
-	else if (soDesc.stateObjectType == StateObjectType::WorkGraph || soDesc.stateObjectType == StateObjectType::WorkGraphMesh) {
+	else if (soDesc.stateObjectType_ == StateObjectType::WorkGraph || soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
 		cout << "StateObjectType::WorkGraph" << endl;
 		HRESULT result = pDevice_->GetLatestDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
@@ -270,16 +280,19 @@ ComPtr<ID3D12StateObject> StateObject::GetStateObject() const
 
 std::wstring StateObject::GetProgramName() const
 {
-	if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc)) {
-		StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc);
-		return wgDesc.workGraphProgramName;
+	if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
+		StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
+		return wgDesc.workGraphProgramName_;
+	}
+	else {
+		throw std::runtime_error("Cannot get program name for raytracing pipeline !");
 	}
 	// TODO : Throw exception
 }
 
 StateObjectType StateObject::GetStateObjectType() const
 {
-	return soDesc_.stateObjectType;
+	return soDesc_.stateObjectType_;
 }
 
 StateObjectDesc StateObject::GetStateObjectDesc() const

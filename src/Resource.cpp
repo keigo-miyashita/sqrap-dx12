@@ -410,3 +410,19 @@ void AS::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
 	heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
 	pDevice_->GetDevice()->CreateShaderResourceView(nullptr, &viewDesc, heapHandle);
 }
+
+Constants::Constants(void* constants, UINT numConstants)
+	: constants_(constants), numConstants_(numConstants)
+{
+
+}
+
+void* Constants::GetConstants()
+{
+	return constants_;
+}
+
+UINT Constants::GetNumConstants()
+{
+	return numConstants_;
+}

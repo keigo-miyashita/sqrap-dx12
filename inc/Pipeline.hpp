@@ -86,65 +86,75 @@ enum class ShaderStage
 	RayGen, ClosestHit, Anyhit, Intersection, Miss, Callable, Compute, Mesh, Pixel
 };
 
+enum class NodeType
+{
+	Compute, Graphics,
+};
+
 struct StateObjectDesc
 {
+	// Shader and binded resource for Ray tracing(Raygen, Miss, Callable), WorkGraph(Compute, Mesh, Pixel)
 	struct ShaderExportDesc
 	{
-		ShaderHandle shader;
-		ShaderStage shaderStage;
-		std::shared_ptr<ResourceSet> localResourceSet;
+		ShaderHandle shader_;
+		ShaderStage shaderStage_;
+		ResourceSetHandle localResourceSet_;
 	};
 
+	// Shader and binded resource for HitGroup(ClosestHit, Anyhit, Intersection)
 	struct HitGroupExportDesc
 	{
 		struct HitGroupShaderExportDesc
 		{
-			ShaderHandle shader;
-			ShaderStage shaderStage;
+			ShaderHandle shader_;
+			ShaderStage shaderStage_;
 		};
 
-		std::wstring groupName;
-		HitGroupShaderExportDesc closesthit;
-		HitGroupShaderExportDesc anyhit;
-		HitGroupShaderExportDesc intersection;
-		std::shared_ptr<ResourceSet> localResourceSet;
+		std::wstring groupName_;
+		HitGroupShaderExportDesc closesthit_;
+		HitGroupShaderExportDesc anyhit_;
+		HitGroupShaderExportDesc intersection_;
+		ResourceSetHandle localResourceSet_;
 	};
 
+	// Ray tracing config
 	struct RayConfigDesc
 	{
-		UINT payloadSize;
-		UINT attributeSize = 1;
-		UINT rayDepth = 1;
+		UINT payloadSize_;
+		UINT attributeSize_ = 1;
+		UINT rayDepth_ = 1;
 	};
 
+	// StateObject Setting for ray tracing
 	struct RayTracingDesc
 	{
-		RootSignatureHandle globalRootSig;
-		// NOTE : HitGroupExportDescÇ™wstringÇä‹ÇÒÇ≈Ç¢ÇÈÇ©ÇÁÇ©initializer_listÇæÇ∆Ç§Ç‹Ç≠Ç¢Ç©Ç»Ç¢
-		std::vector<ShaderExportDesc> rayGens;
-		std::vector<ShaderExportDesc> misses;
-		std::vector<HitGroupExportDesc> hitGroups;
-		RayConfigDesc rayConfigDesc;
+		RootSignatureHandle globalRootSig_;
+		std::vector<ShaderExportDesc> rayGens_;
+		std::vector<ShaderExportDesc> misses_;
+		std::vector<HitGroupExportDesc> hitGroups_;
+		RayConfigDesc rayConfigDesc_;
 	};
 
+	// Program setting for work graph
 	struct ProgramDesc
 	{
-		std::wstring programName;
-		std::initializer_list<ShaderHandle> shaders;
+		NodeType nodeType_;
+		std::wstring programName_;
+		std::vector<ShaderHandle> shaders_;
+		ResourceSetHandle resourceSet_;
 	};
 
+	// StateObject setting for work graph
 	struct WorkGraphDesc
 	{
-		RootSignatureHandle globalRootSig;
-		std::initializer_list<ShaderExportDesc> exportDescs;
-		// NOTE : initializer_listÇÇ¬Ç©Ç§Ç∆ProgramDesc.programNameÇ™ê≥ÇµÇ≠ë„ì¸Ç≥ÇÍÇ»Ç¢
-		// Ç®ÇªÇÁÇ≠éıñΩÇÃñ‚ëËÇ≈wstringÇ≈ÇÕÇ§Ç‹Ç≠Ç¢Ç©Ç»Ç¢â¬î\ê´Ç†ÇË
-		std::vector<ProgramDesc> programDescs;
-		std::wstring workGraphProgramName = L"Program";
+		RootSignatureHandle globalRootSig_;
+		std::vector<ShaderExportDesc> exportDescs_;
+		std::vector<ProgramDesc> programDescs_;
+		std::wstring workGraphProgramName_ = L"Program";
 	};
 
-	StateObjectType stateObjectType;
-	std::variant<RayTracingDesc, WorkGraphDesc> typeDesc;
+	StateObjectType stateObjectType_;
+	std::variant<RayTracingDesc, WorkGraphDesc> typeDesc_;
 };
 
 class StateObject

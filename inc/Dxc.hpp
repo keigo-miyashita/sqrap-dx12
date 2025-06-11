@@ -36,13 +36,13 @@ private:
 	ComPtr<IDxcLibrary> library_ = nullptr;
 	ComPtr<IDxcUtils> utils_ = nullptr;
 
-	bool InitializeDxc();
+	void InitializeDxc();
 
 public:
 	DXC();
 	~DXC() = default;
-	bool Init();
-	bool CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"") const;
+	void Init();
+	void CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"") const;
 	std::shared_ptr<Shader> CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"");
 	ComPtr<IDxcCompiler> GetCompiler();
 	ComPtr<IDxcLibrary> GetLibarary();

@@ -55,6 +55,6 @@ VStoPS VSmain(VSInput vsInput)
 float4 PSmain(VStoPS vsToPS) : SV_TARGET
 {
     float4 lightDir = normalize(lightPos - vsToPS.position);
-    return vsToPS.normal;
+    //return vsToPS.normal;
     return color * lightColor * max(0.0f, dot(lightDir, vsToPS.normal));
 }

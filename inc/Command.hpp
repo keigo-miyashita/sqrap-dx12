@@ -9,6 +9,7 @@
 
 class Buffer;
 class ComputePipeline;
+class Constants;
 class DescriptorHeap;
 class DescriptorManager;
 class Device;
@@ -20,8 +21,6 @@ class Mesh;
 class Resource;
 class ResourceSet;
 class RootSignature;
-
-struct Constants;
 
 class Command
 {
@@ -53,8 +52,9 @@ public:
 	void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
 	void CopyBuffer(ResourceHandle srcResource, ResourceHandle destResource);
 	void CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHandle destBuffer, UINT destOffset, UINT numBytes);
-	void DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum);
 	void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
+	void DispatchRays(RayTracingHandle rayTracing);
+	void DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum);
 	void DrawGUI(GUIHandle GUI);
 	void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
 	void SetPipeline(ComputePipelineHandle computePipeline);
@@ -63,10 +63,9 @@ public:
 	void SetDescriptorHeap(DescriptorManagerHandle descManager);
 	void SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
 	void SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
-	void SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
-	void SetComputeRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData);
-	void SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet);
-	void SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet);
+	void SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
+	void SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
+	void SetRayTracingState(StateObjectHandle stateObject);
 	bool WaitCommand();
 
 	D3D12_COMMAND_LIST_TYPE GetCommandType();

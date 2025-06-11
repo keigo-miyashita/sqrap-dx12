@@ -46,60 +46,52 @@ RayTracing::RayTracing(const Device& device, StateObjectHandle stateObject, UINT
 	vector<void*> missIDs;
 	vector<void*> hitGroupIDs;
 
-	if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc)) {
-		StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc);
+	if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_)) {
+		StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_);
 
-		// Align size to max record size
-		// Allrecord aligned max record size
+		// All record aligned max record size
 		UINT maxRayGenSize = 0;
-		for (auto rayGen : rtDesc.rayGens) {
-			void* id = soProp_->GetShaderIdentifier(rayGen.shader->GetEntryName().c_str());
+		for (auto rayGen : rtDesc.rayGens_) {
 			UINT shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 			UINT localRootSigSize = 0;
-			if (rayGen.localResourceSet) {
-				localRootSigSize = rayGen.localResourceSet->GetRootSignature()->GetSize();
+			if (rayGen.localResourceSet_) {
+				localRootSigSize = rayGen.localResourceSet_->GetRootSignature()->GetSize();
 			}
 			UINT rayGenSize = shaderSize + localRootSigSize;
 			maxRayGenSize = max(maxRayGenSize, rayGenSize);
 		}
 		UINT eachRayGenSize = AlignForSBTRecord(maxRayGenSize);
-		UINT sumRayGenRegionSize = AlignForSBT(eachRayGenSize * rtDesc.rayGens.size());
+		UINT sumRayGenRegionSize = AlignForSBT(eachRayGenSize * rtDesc.rayGens_.size());
 
 		UINT maxMissSize = 0;
-		for (auto miss : rtDesc.misses) {
-			void* id = soProp_->GetShaderIdentifier(miss.shader->GetEntryName().c_str());
+		for (auto miss : rtDesc.misses_) {
 			UINT shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 			UINT localRootSigSize = 0;
-			if (miss.localResourceSet) {
-				localRootSigSize = miss.localResourceSet->GetRootSignature()->GetSize();
+			if (miss.localResourceSet_) {
+				localRootSigSize = miss.localResourceSet_->GetRootSignature()->GetSize();
 			}
 			UINT missSize = shaderSize + localRootSigSize;
 			maxMissSize = max(maxMissSize, missSize);
 		}
 		UINT eachMissSize = AlignForSBTRecord(maxMissSize);
-		UINT sumMissRegionSize = AlignForSBT(eachMissSize * rtDesc.misses.size());
+		UINT sumMissRegionSize = AlignForSBT(eachMissSize * rtDesc.misses_.size());
 
 		UINT maxHitGroupSize = 0;
-		for (auto hitGroup : rtDesc.hitGroups) {
-			void* id = soProp_->GetShaderIdentifier(hitGroup.groupName.c_str());
+		for (auto hitGroup : rtDesc.hitGroups_) {
 			UINT shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 			UINT localRootSigSize = 0;
-			if (hitGroup.localResourceSet) {
-				localRootSigSize = hitGroup.localResourceSet->GetRootSignature()->GetSize();
+			if (hitGroup.localResourceSet_) {
+				localRootSigSize = hitGroup.localResourceSet_->GetRootSignature()->GetSize();
 			}
 			UINT hitGroupSize = shaderSize + localRootSigSize;
 			maxHitGroupSize = max(maxHitGroupSize, hitGroupSize);
 		}
 		UINT eachHitGroupSize = AlignForSBTRecord(maxHitGroupSize);
-		UINT sumHitGroupRegionSize = AlignForSBT(eachHitGroupSize * rtDesc.hitGroups.size());
+		UINT sumHitGroupRegionSize = AlignForSBT(eachHitGroupSize * rtDesc.hitGroups_.size());
 
 		UINT allRegionSize = sumRayGenRegionSize + sumMissRegionSize + sumHitGroupRegionSize;
 
-		sbtBuffer_ = pDevice_->CreateBuffer(
-			BufferType::Upload,
-			allRegionSize,
-			1
-		);
+		sbtBuffer_ = pDevice_->CreateBuffer(BufferType::Upload, allRegionSize, 1);
 
 		void* rawPtr = sbtBuffer_->Map();
 		// uint8_t is 8 bit = 1 byte data
@@ -109,93 +101,96 @@ RayTracing::RayTracing(const Device& device, StateObjectHandle stateObject, UINT
 
 			auto pRayGen = pSBT + 0;
 			int idRayGen = 0;
-			for (auto rayGen : rtDesc.rayGens) {
+			for (auto rayGen : rtDesc.rayGens_) {
 				auto pThisRayGen = pRayGen + idRayGen * eachRayGenSize;
-				// NOTE : If you use index, you may be ought to use vector not initializer ?
-				void* id = soProp_->GetShaderIdentifier(rayGen.shader->GetEntryName().c_str());
+				// NOTE : If you use index, you may be ought to use vector not initializer
+				void* id = soProp_->GetShaderIdentifier(rayGen.shader_->GetEntryName().c_str());
 				pThisRayGen += CopyMem(pThisRayGen, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
 				// local root descriptor pointer
-				if (!rayGen.localResourceSet)
+				if (!rayGen.localResourceSet_)
 					continue;
-				const auto bindedResources = rayGen.localResourceSet->GetBindedResources();
-				for (const auto& bindedResource : bindedResources) {
-					if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(bindedResource)) {
-						auto handle = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(bindedResource);
-						pThisRayGen += CopyMem(pThisRayGen, &handle, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+				const auto resourceSetDescs = rayGen.localResourceSet_->GetResourceSetDescs();
+				for (const auto& resourceSetDesc : resourceSetDescs) {
+					if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+						auto descriptorManagerHandle = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+						auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+						pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 					}
-					else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(bindedResource)) {
-						auto add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(bindedResource);
+					else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+						auto bufferHandle = std::get<BufferHandle>(resourceSetDesc.bindResource);
+						auto add = bufferHandle->GetGPUAddress();
 						pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
 					}
-					else if (std::holds_alternative<Constants>(bindedResource)) {
-						auto constants = std::get<Constants>(bindedResource);
+					else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+						auto constants = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
 						// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-						pThisRayGen += CopyMem(pThisRayGen, constants.constants, sizeof(float) * constants.numConstants);
+						pThisRayGen += CopyMem(pThisRayGen, constants.get(), sizeof(float) * constants->GetNumConstants());
 					}
 				}
-
 				idRayGen++;
 			}
 
 			auto pMiss = pSBT + sumRayGenRegionSize;
 			int idMiss = 0;
-			for (auto miss : rtDesc.misses) {
+			for (auto miss : rtDesc.misses_) {
 				auto pThisMiss = pMiss + idMiss * eachMissSize;
 
 				// NOTE : If you use index, you may be ought to use vector not initializer ?
-				void* id = soProp_->GetShaderIdentifier(miss.shader->GetEntryName().c_str());
+				void* id = soProp_->GetShaderIdentifier(miss.shader_->GetEntryName().c_str());
 				pThisMiss += CopyMem(pThisMiss, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
 				// local root descriptor pointer
-				if (!miss.localResourceSet)
+				if (!miss.localResourceSet_)
 					continue;
-				const auto bindedResources = miss.localResourceSet->GetBindedResources();
-				for (const auto& bindedResource : bindedResources) {
-					if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(bindedResource)) {
-						auto handle = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(bindedResource);
-						pThisMiss += CopyMem(pThisMiss, &handle, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+				const auto resourceSetDescs = miss.localResourceSet_->GetResourceSetDescs();
+				for (const auto& resourceSetDesc : resourceSetDescs) {
+					if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+						auto descriptorManagerHandle = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+						auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+						pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 					}
-					else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(bindedResource)) {
-						auto add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(bindedResource);
+					else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+						auto bufferHandle = std::get<BufferHandle>(resourceSetDesc.bindResource);
+						auto add = bufferHandle->GetGPUAddress();
 						pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
 					}
-					else if (std::holds_alternative<Constants>(bindedResource)) {
-						auto constants = std::get<Constants>(bindedResource);
+					else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+						auto constants = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
 						// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-						pThisMiss += CopyMem(pThisMiss, constants.constants, sizeof(float) * constants.numConstants);
+						pThisMiss += CopyMem(pThisMiss, constants.get(), sizeof(float) * constants->GetNumConstants());
 					}
 				}
-
 				idMiss++;
 			}
 
 			auto pHitGroup = pSBT + sumRayGenRegionSize + sumMissRegionSize;
 			int idHitGroup = 0;
-			for (auto hitGroup : rtDesc.hitGroups) {
+			for (auto hitGroup : rtDesc.hitGroups_) {
 				auto pThisHitGroup = pHitGroup + idHitGroup * eachHitGroupSize;
 
 				// NOTE : If you use index, you may be ought to use vector not initializer ?
-				void* id = soProp_->GetShaderIdentifier(hitGroup.groupName.c_str());
+				void* id = soProp_->GetShaderIdentifier(hitGroup.groupName_.c_str());
 				pThisHitGroup += CopyMem(pThisHitGroup, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
 				// local root descriptor pointer
-				if (!hitGroup.localResourceSet)
+				if (!hitGroup.localResourceSet_)
 					continue;
-				const auto bindedResources = hitGroup.localResourceSet->GetBindedResources();
-				for (const auto& bindedResource : bindedResources) {
-					if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(bindedResource)) {
-						auto handle = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(bindedResource);
-						pThisHitGroup += CopyMem(pThisHitGroup, &handle, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+				const auto resourceSetDescs = hitGroup.localResourceSet_->GetResourceSetDescs();
+				for (const auto& resourceSetDesc : resourceSetDescs) {
+					if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+						auto descriptorManagerHandle = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+						auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+						pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 					}
-					else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(bindedResource)) {
-						auto add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(bindedResource);
+					else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+						auto bufferHandle = std::get<BufferHandle>(resourceSetDesc.bindResource);
+						auto add = bufferHandle->GetGPUAddress();
 						pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
 					}
-					else if (std::holds_alternative<Constants>(bindedResource)) {
-						auto constants = std::get<Constants>(bindedResource);
+					else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+						auto constants = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
 						// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-						pThisHitGroup += CopyMem(pThisHitGroup, constants.constants, sizeof(float) * constants.numConstants);
+						pThisHitGroup += CopyMem(pThisHitGroup, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
 					}
 				}
-
 				idHitGroup++;
 			}
 
@@ -217,7 +212,6 @@ RayTracing::RayTracing(const Device& device, StateObjectHandle stateObject, UINT
 			raysDesc_.Height = height;
 			raysDesc_.Depth = depth;
 		}
-
 	}
 }
 

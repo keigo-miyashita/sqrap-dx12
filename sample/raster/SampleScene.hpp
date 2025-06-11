@@ -36,6 +36,8 @@ private:
 	CommandHandle command_;
 	SwapChainHandle swapChain_;
 	MeshHandle sphere_;
+	// GUI
+	GUIHandle GUI_;
 
 	// Scene Items
 	Camera camera_;
@@ -57,10 +59,11 @@ private:
 	// RootSignature
 	RootSignatureHandle sphere0RootSignature_;
 
-	std::shared_ptr<ResourceSet> sphere0ResourceSet_;
-
 	// Pipeline
 	GraphicsPipelineHandle lambert_;
+
+	ConstantsHandle ColorConstants_;
+	Color diffuseColor_;
 
 	void BeginRender();
 	void EndRender();

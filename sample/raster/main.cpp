@@ -12,11 +12,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #endif
 	auto app = SampleApplication("Rasterize Sample");
 
-	if (!app.Init()) {
+	try {
+		if (!app.Init()) {
+			return -1;
+		}
+		app.Run();
+		app.Terminate();
+	}
+	catch (const std::exception& e) {
+		std::cerr << "—áŠO‚ª”­¶‚µ‚Ü‚µ‚½: " << e.what() << std::endl;
+	}
+
+	/*if (!app.Init()) {
 		return -1;
 	}
 	app.Run();
-	app.Terminate();
+	app.Terminate();*/
 
 	return 0;
 }

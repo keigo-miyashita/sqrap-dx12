@@ -161,17 +161,23 @@ void Command::CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHan
 	}
 }
 
+void Command::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
+{
+	commandList_->Dispatch(threadX, threadY, threadZ);
+}
+
+void Command::DispatchRays(RayTracingHandle rayTracing)
+{
+	D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing->GetDispatchRayDesc();
+	stableCommandList_->DispatchRays(&dispatchRaysDesc);
+}
+
 void Command::DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum)
 {
 	commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
 	commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
 	commandList_->ExecuteIndirect(indirect->GetCommandSignature().Get(), maxCommandNum, buffer->GetResource().Get(), 0, nullptr, 0);
-}
-
-void Command::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
-{
-	commandList_->Dispatch(threadX, threadY, threadZ);
 }
 
 void Command::DrawGUI(GUIHandle GUI)
@@ -215,88 +221,19 @@ void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManag
 	commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
-void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData)
+void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
 {
-	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
+	commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 }
 
-void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, UINT num32bitsConstant, void* pData)
+void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
 {
-	commandList_->SetComputeRoot32BitConstants(rootParamIndex, num32bitsConstant, pData, 0);
+	commandList_->SetComputeRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 }
 
-void Command::SetComputeResourceSet(std::shared_ptr<ResourceSet> resourceSet)
+void Command::SetRayTracingState(StateObjectHandle stateObject)
 {
-	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
-	const std::vector<DescriptorManagerHandle> descManagers = resourceSet->GetDescManagers();
-
-	commandList_->SetComputeRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
-
-	std::vector<ID3D12DescriptorHeap*> rawHeaps;
-	for (auto& h : descManagers) {
-		rawHeaps.push_back(h->GetDescriptorHeap().Get());
-	}
-
-	commandList_->SetDescriptorHeaps(rawHeaps.size(), rawHeaps.data());;
-
-	UINT rootParamIndex = 0;
-	for (const BindResource& resource : resources) {
-		if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(resource)) {
-			D3D12_GPU_DESCRIPTOR_HANDLE dh = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(resource);
-			commandList_->SetComputeRootDescriptorTable(rootParamIndex, dh);
-			rootParamIndex++;
-		}
-		else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(resource)) {
-			D3D12_GPU_VIRTUAL_ADDRESS add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(resource);
-			// NOTE : Add bind descriptor
-			rootParamIndex++;
-		}
-		else if (std::holds_alternative<Constants>(resource)) {
-			Constants cs = std::get<Constants>(resource);
-			/*float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-			cs.constants = static_cast<void*>(color);*/
-			commandList_->SetComputeRoot32BitConstants(rootParamIndex, cs.numConstants, cs.constants, cs.numOffset);
-			float* constants = static_cast<float*>(cs.constants);
-			cout << "cs = " << constants[0] << " " << constants[1] << " " << constants[2] << " " << constants[3] << endl;
-			cout << "cs = " << cs.numConstants << " " << cs.numOffset << endl;
-			rootParamIndex++;
-		}
-	}
-}
-
-void Command::SetGraphicsResourceSet(std::shared_ptr<ResourceSet> resourceSet)
-{
-	const std::vector<BindResource> resources = resourceSet->GetBindedResources();
-	const std::vector<DescriptorManagerHandle> descManagers = resourceSet->GetDescManagers();
-
-	commandList_->SetGraphicsRootSignature(resourceSet->GetRootSignature()->GetRootSignature().Get());
-
-	// NOTE : Using raw ptr (memory leaks may occur)
-	std::vector<ID3D12DescriptorHeap*> rawHeaps;
-	for (auto& h : descManagers) {
-		rawHeaps.push_back(h->GetDescriptorHeap().Get());
-	}
-
-	commandList_->SetDescriptorHeaps(rawHeaps.size(), rawHeaps.data());;
-
-	UINT rootParamIndex = 0;
-	for (const BindResource& resource : resources) {
-		if (std::holds_alternative<D3D12_GPU_DESCRIPTOR_HANDLE>(resource)) {
-			D3D12_GPU_DESCRIPTOR_HANDLE dh = std::get<D3D12_GPU_DESCRIPTOR_HANDLE>(resource);
-			commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, dh);
-			rootParamIndex++;
-		}
-		else if (std::holds_alternative<D3D12_GPU_VIRTUAL_ADDRESS>(resource)) {
-			D3D12_GPU_VIRTUAL_ADDRESS add = std::get<D3D12_GPU_VIRTUAL_ADDRESS>(resource);
-			// NOTE : Add bind descriptor
-			rootParamIndex++;
-		}
-		else if (std::holds_alternative<Constants>(resource)) {
-			Constants cs = std::get<Constants>(resource);
-			commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, cs.numConstants, cs.constants, cs.numOffset);
-			rootParamIndex++;
-		}
-	}
+	stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
 }
 
 bool Command::WaitCommand()

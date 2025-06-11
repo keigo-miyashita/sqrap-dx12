@@ -48,8 +48,8 @@ private:
 public:
 	Device();
 	~Device() = default;
-	bool Init(std::wstring gpuVenorName);
-	bool Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
+	void Init(std::wstring gpuVenorName);
+	void Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 	void ShowUsedVramSize();
 	ASHandle				CreateAS(UINT size, std::wstring name = L"") const;
 	ASMeshHandle			CreateASMesh(CommandHandle command, std::string modelPath) const;

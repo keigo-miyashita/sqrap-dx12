@@ -7,25 +7,20 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-bool DXC::InitializeDxc()
+void DXC::InitializeDxc()
 {
 	auto result = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(compiler_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to DxcCreateInstance for compiler_ : " + to_string(result));
-		return false;
 	}
 	result = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(library_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to DxcCreateInstance for library_ : " + to_string(result));
-		return false;
 	}
 	result = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(utils_.ReleaseAndGetAddressOf()));
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to DxcCreateInstance for utils_ : " + to_string(result));
-		return false;
 	}
-
-	return true;
 }
 
 DXC::DXC()
@@ -33,16 +28,12 @@ DXC::DXC()
 
 }
 
-bool DXC::Init()
+void DXC::Init()
 {
-	if (!InitializeDxc()) {
-		return false;
-	}
-
-	return true;
+	InitializeDxc();
 }
 
-bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath) const
+void DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath) const
 {
 	ComPtr<IDxcIncludeHandler> incHandler_ = nullptr;
 	ComPtr<IDxcBlob> incBlob_ = nullptr;
@@ -50,20 +41,17 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, con
 	HRESULT result = utils_->CreateDefaultIncludeHandler(incHandler_.ReleaseAndGetAddressOf());
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateDefaultIncludeHandler : " + to_string(result));
-		return false;
 	}
 
 	if (!includePath.empty()) {
 		DWORD attrib = GetFileAttributesW(includePath.c_str());
 		if (attrib == INVALID_FILE_ATTRIBUTES) {
 			throw std::runtime_error("Failed to get include file : ");
-			return false;
 		}
 
 		result = incHandler_->LoadSource(includePath.c_str(), incBlob_.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to LoadSource : " + to_string(result));
-			return false;
 		}
 	}
 
@@ -86,7 +74,6 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, con
 	result = library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf());
 	if (FAILED(result)) {
 		throw std::runtime_error("Failed to CreateBlobFromFile : " + to_string(result));
-		return false;
 	}
 
 	ComPtr<IDxcOperationResult> dxcResult = nullptr;
@@ -103,22 +90,18 @@ bool DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, con
 			DebugOutputFormatString((char*)err->GetBufferPointer());
 		}
 		throw std::runtime_error("Failed to Compile : " + to_string(result));
-		return false;
 	}
 
 	HRESULT tmpResult;
 	dxcResult->GetStatus(&tmpResult);
-	if (SUCCEEDED(tmpResult)) {
-		dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
-		return true;
+	if (FAILED(tmpResult)) {
+		dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
+		if (err) {
+			DebugOutputFormatString((char*)err->GetBufferPointer());
+		}
+		throw std::runtime_error("Failed to GetResult : " + to_string(result));
 	}
-	dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
-	if (err) {
-		DebugOutputFormatString((char*)err->GetBufferPointer());
-	}
-	throw std::runtime_error("Failed to GetResult : " + to_string(result));
-	return false;
-
+	dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
 }
 
 std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)

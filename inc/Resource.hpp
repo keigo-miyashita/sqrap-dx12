@@ -142,3 +142,20 @@ public:
 
 	void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
 };
+
+class Constants
+{
+protected:
+	template<typename T>
+	using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+	void* constants_ = nullptr;
+	UINT numConstants_ = 0;
+
+public:
+	Constants(void* constants, UINT numConstants);
+	~Constants() = default;
+
+	void* GetConstants();
+	UINT GetNumConstants();
+};

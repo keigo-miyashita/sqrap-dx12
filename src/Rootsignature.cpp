@@ -12,32 +12,32 @@ RootSignature::RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS fl
 	for (auto rootParam_ : rootParams) {
 		CD3DX12_ROOT_PARAMETER rp;
 		if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-			DescTableRootParamDesc descManager = std::get<DescTableRootParamDesc>(rootParam_.rootParamDesc_);
-			rp.InitAsDescriptorTable(descManager.descManager->GetNumDescRanges(), descManager.descManager->GetPDescRanges(), rootParam_.shaderVisibility_);
+			DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+			rp.InitAsDescriptorTable(descManager->GetNumDescRanges(), descManager->GetPDescRanges(), rootParam_.shaderVisibility_);
 			rps_.push_back(rp);
 			size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 		}
 		else if (rootParam_.rootParamType_ == RootParamType::CBV) {
 			DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-			rp.InitAsConstantBufferView(directDesc.numReg, rootParam_.shaderVisibility_);
+			rp.InitAsConstantBufferView(directDesc.numReg_, rootParam_.shaderVisibility_);
 			rps_.push_back(rp);
 			size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 		}
 		else if (rootParam_.rootParamType_ == RootParamType::SRV) {
 			DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-			rp.InitAsShaderResourceView(directDesc.numReg, rootParam_.shaderVisibility_);
+			rp.InitAsShaderResourceView(directDesc.numReg_, rootParam_.shaderVisibility_);
 			rps_.push_back(rp);
 			size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 		}
 		else if (rootParam_.rootParamType_ == RootParamType::UAV) {
 			DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-			rp.InitAsUnorderedAccessView(directDesc.numReg, rootParam_.shaderVisibility_);
+			rp.InitAsUnorderedAccessView(directDesc.numReg_, rootParam_.shaderVisibility_);
 			rps_.push_back(rp);
 			size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 		}
 		else if (rootParam_.rootParamType_ == RootParamType::Constant) {
 			DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-			rp.InitAsConstants(directDesc.numConstant, directDesc.numReg, rootParam_.shaderVisibility_);
+			rp.InitAsConstants(directDesc.numConstant_, directDesc.numReg_, rootParam_.shaderVisibility_);
 			rps_.push_back(rp);
 			// For padding
 			// SBT needs 8 byte alignment for each parameter
@@ -89,29 +89,29 @@ const std::vector<CD3DX12_ROOT_PARAMETER>& RootSignature::GetRootParameters() co
 	return rps_;
 }
 
-ResourceSet::ResourceSet(RootSignatureHandle rootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources)
-	: rootSignature_(rootSignature)
+ResourceSet::ResourceSet(RootSignatureHandle rootSignature, std::vector<ResourceSetDesc> resourceSetDescs)
+	: rootSignature_(rootSignature), resourceSetDescs_(resourceSetDescs)
 {
 	cout << "Make ResourceSet" << endl;
-	// TODO : Integrate object and pointer
-	for (auto bindedResource : bindedResources) {
-		if (std::holds_alternative<DescriptorManagerHandle>(bindedResource)) {
-			DescriptorManagerHandle dm = std::get<DescriptorManagerHandle>(bindedResource);
-			bindResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-			descriptorManagers_.push_back(dm);
-		}
-		else if (std::holds_alternative<std::shared_ptr<Buffer>>(bindedResource)) {
-			std::shared_ptr<Buffer> b = std::get<std::shared_ptr<Buffer>>(bindedResource);
-			bindResources_.push_back(b->GetGPUAddress());
-		}
-		else if (std::holds_alternative<Constants>(bindedResource)) {
-			Constants c = std::get<Constants>(bindedResource);
-			float* constants = static_cast<float*>(c.constants);
-			cout << "cs = " << (float)constants[0] << " " << (float)constants[1] << " " << (float)constants[2] << " " << (float)constants[3] << endl;
-			cout << "cs = " << c.numConstants << " " << c.numOffset << endl;
-			bindResources_.push_back(c);
-		}
-	}
+	//resourceSetDescs_ = resourceSetDescs;
+	//for (auto resourceSetDesc : resourceSetDescs) {
+	//	if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+	//		DescriptorManagerHandle dm = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+	//		bindResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	//		//descriptorManagers_.push_back(dm);
+	//	}
+	//	else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+	//		BufferHandle b = std::get<BufferHandle>(resourceSetDesc.bindResource);
+	//		bindResources_.push_back(b->GetGPUAddress());
+	//	}
+	//	else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+	//		Constants c = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
+	//		float* constants = static_cast<float*>(c.constants_);
+	//		cout << "cs = " << (float)constants[0] << " " << (float)constants[1] << " " << (float)constants[2] << " " << (float)constants[3] << endl;
+	//		cout << "cs = " << c.numConstants_ << " " << c.numOffset_ << endl;
+	//		bindResources_.push_back(c);
+	//	}
+	//}
 }
 
 RootSignatureHandle ResourceSet::GetRootSignature() const
@@ -119,12 +119,12 @@ RootSignatureHandle ResourceSet::GetRootSignature() const
 	return rootSignature_;
 }
 
-const std::vector<BindResource>& ResourceSet::GetBindedResources() const
+const std::vector<ResourceSetDesc>& ResourceSet::GetResourceSetDescs() const
 {
-	return bindResources_;
+	return resourceSetDescs_;
 }
 
-const std::vector<DescriptorManagerHandle>& ResourceSet::GetDescManagers() const
-{
-	return descriptorManagers_;
-}
+//const std::vector<DescriptorManagerHandle>& ResourceSet::GetDescManagers() const
+//{
+//	return descriptorManagers_;
+//}

@@ -70,15 +70,15 @@ void TLAS::CreateTLAS()
 	for (int numDescs = 0; numDescs < tlasDescs_.size(); numDescs++) {
 		D3D12_RAYTRACING_INSTANCE_DESC desc = {};
 		XMFLOAT4X4 transform;
-		XMStoreFloat4x4(&transform, tlasDescs_[numDescs].transform);
+		XMStoreFloat4x4(&transform, tlasDescs_[numDescs].transform_);
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 4; j++) {
 				instanceDesc[numDescs].Transform[i][j] = transform.m[i][j];
 			}
 		}
 		instanceDesc[numDescs].InstanceMask = 0xFF;
-		instanceDesc[numDescs].AccelerationStructure = tlasDescs_[numDescs].blas->GetASAddress();
-		instanceDesc[numDescs].Flags = tlasDescs_[numDescs].flags;
+		instanceDesc[numDescs].AccelerationStructure = tlasDescs_[numDescs].blas_->GetASAddress();
+		instanceDesc[numDescs].Flags = tlasDescs_[numDescs].flags_;
 	}
 
 	shared_ptr<Buffer> uploadBuffer;

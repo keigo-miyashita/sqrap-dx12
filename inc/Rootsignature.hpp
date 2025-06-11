@@ -3,6 +3,7 @@
 #include "pch.hpp"
 
 #include "Descriptormanager.hpp"
+#include "Resource.hpp"
 
 #include "Alias.hpp"
 
@@ -14,25 +15,20 @@ enum class RootParamType
 	DescTable, CBV, SRV, UAV, Constant,
 };
 
-struct DescTableRootParamDesc
-{
-	DescriptorManagerHandle descManager;
-};
-
 struct DirectRootParamDesc
 {
 	// Constant‚âDescriptor‚ð’¼Ú“o˜^‚·‚é‚Æ‚«‰º‚Ì1‚Â
-	UINT numReg = 0;
+	UINT numReg_ = 0;
 	// 32BitsConstant—p
 	// 1‚Â32Bits = 4Bytes
 	// —ájfloat4 -> 16 Bytes -> numConstant_ = 4
-	UINT numConstant = 0;
+	UINT numConstant_ = 0;
 };
 
 struct RootParameter
 {
 	RootParamType rootParamType_;
-	std::variant<DescTableRootParamDesc, DirectRootParamDesc> rootParamDesc_;
+	std::variant<DescriptorManagerHandle, DirectRootParamDesc> rootParamDesc_;
 	D3D12_SHADER_VISIBILITY shaderVisibility_ = D3D12_SHADER_VISIBILITY_ALL;
 };
 
@@ -57,14 +53,19 @@ public:
 	const std::vector<CD3DX12_ROOT_PARAMETER>& GetRootParameters() const;
 };
 
-struct Constants
-{
-	void* constants;
-	UINT numConstants = 0;
-	UINT numOffset = 0;
-};
+//struct Constants
+//{
+//	void* constants_;
+//	UINT numConstants_ = 0;
+//	UINT numOffset_ = 0;
+//};
 
-using BindResource = std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, Constants>;
+//using BindResource = std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, ConstantsHandle>;
+
+struct ResourceSetDesc
+{
+	std::variant<DescriptorManagerHandle, BufferHandle, ConstantsHandle> bindResource;
+};
 
 class ResourceSet
 {
@@ -73,14 +74,12 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	const RootSignatureHandle rootSignature_;
-	std::vector<DescriptorManagerHandle> descriptorManagers_;
-	std::vector<BindResource> bindResources_;
+	std::vector<ResourceSetDesc> resourceSetDescs_;
 
 public:
-	ResourceSet(RootSignatureHandle rootSignature, std::initializer_list<std::variant<DescriptorManagerHandle, std::shared_ptr<Buffer>, Constants>> bindedResources);
+	ResourceSet(RootSignatureHandle rootSignature, std::vector<ResourceSetDesc> resourceSetDescs);
 	~ResourceSet() = default;
 
 	RootSignatureHandle GetRootSignature() const;
-	const std::vector<BindResource>& GetBindedResources() const;
-	const std::vector<DescriptorManagerHandle>& GetDescManagers() const;
+	const std::vector<ResourceSetDesc>& GetResourceSetDescs() const;
 };

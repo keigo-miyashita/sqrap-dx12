@@ -9,8 +9,6 @@ class Device;
 class Shader;
 class StateObject;
 
-struct Constants;
-
 class RayTracing
 {
 private:

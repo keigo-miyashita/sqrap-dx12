@@ -58,54 +58,43 @@ DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, st
 
 	ViewType currentType = ViewType::NONE;
 	for (auto desc : descManagerDesc) {
-		if (desc.type != currentType)
+		if (desc.type_ != currentType)
 		{
-			currentType = desc.type;
+			currentType = desc.type_;
 			switch (currentType)
 			{
-			case ViewType::CBV:    baseRegCBV_ = desc.numReg; break;
-			case ViewType::SRV:    baseRegSRV_ = desc.numReg; break;
-			case ViewType::UAV:    baseRegUAV_ = desc.numReg; break;
-			case ViewType::SAMPLER: baseRegSampler_ = desc.numReg; break;
-			default: break;
+				case ViewType::CBV:    baseRegCBV_ = desc.numReg_; break;
+				case ViewType::SRV:    baseRegSRV_ = desc.numReg_; break;
+				case ViewType::UAV:    baseRegUAV_ = desc.numReg_; break;
+				case ViewType::SAMPLER: baseRegSampler_ = desc.numReg_; break;
+				default: break;
 			}
 		}
-		if (desc.type == ViewType::CBV) {
-			/*if (desc.type != currentType) {
-				currentType = ViewType::CBV;
-				baseRegCBV_ = desc.numReg;
-			}*/
-			numCBV_++;
-			CreateCBV(desc.resource);
-		}
-		else if (desc.type == ViewType::SRV) {
-			/*if (desc.type != currentType) {
-				currentType = ViewType::SRV;
-				baseRegSRV_ = desc.numReg;
-			}*/
-			numSRV_++;
-			CreateSRV(desc.resource);
-		}
-		else if (desc.type == ViewType::UAV) {
-			/*if (desc.type != currentType) {
-				currentType = ViewType::UAV;
-				baseRegUAV_ = desc.numReg;
-			}*/
-			numUAV_++;
-			if (!desc.isCounter) {
-				CreateUAV(desc.resource);
-			}
-			else {
-				CreateUAVCounter(desc.resource);
-			}
-		}
-		else if (desc.type == ViewType::SAMPLER) {
-			/*if (desc.type != currentType) {
-				currentType = ViewType::SAMPLER;
-				baseRegSampler_ = desc.numReg;
-			}*/
-			numSampler_++;
-			CreateSampler();
+		switch (desc.type_)
+		{
+			case ViewType::CBV:
+				numCBV_++;
+				CreateCBV(desc.resource_);
+				break;
+			case ViewType::SRV:
+				numSRV_++;
+				CreateSRV(desc.resource_);
+				break;
+			case ViewType::UAV:
+				numUAV_++;
+				if (desc.isCounter_) {
+					CreateUAVCounter(desc.resource_);
+				}
+				else {
+					CreateUAV(desc.resource_);
+				}
+				break;
+			case ViewType::SAMPLER:
+				numSampler_++;
+				CreateSampler();
+				break;
+			default:
+				break;
 		}
 	}
 

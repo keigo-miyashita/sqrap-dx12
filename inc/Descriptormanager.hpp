@@ -21,10 +21,10 @@ enum class ViewType
 
 struct DescriptorManagerDesc
 {
-	ResourceHandle resource;
-	ViewType type;
-	UINT numReg;
-	bool isCounter = false;
+	ResourceHandle resource_;
+	ViewType type_;
+	UINT numReg_;
+	bool isCounter_ = false;
 };
 
 class DescriptorManager

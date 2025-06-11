@@ -142,7 +142,7 @@ Device::Device()
 
 }
 
-bool Device::Init(wstring gpuVenorName)
+void Device::Init(wstring gpuVenorName)
 {
 #ifdef _DEBUG
 	EnableDebugLayer();
@@ -156,11 +156,9 @@ bool Device::Init(wstring gpuVenorName)
 	InitializeStableDevice();
 
 	InitializeLatestDevice();
-
-	return true;
 }
 
-bool Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
+void Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
 {
 #ifdef _DEBUG
 	EnableDebugLayer();
@@ -177,8 +175,6 @@ bool Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
 	cout << "Try to create DebugDevice" << endl;
 	CreateDebugDevice(debugDevice);
 #endif // _DEBUG
-
-	return true;
 }
 
 void Device::ShowUsedVramSize()

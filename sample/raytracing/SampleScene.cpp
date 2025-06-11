@@ -58,14 +58,12 @@ void SampleScene::Render()
 		cameraBuffer_->Unmap();
 	}
 
-	//command_->SetComputeResourceSet(sphere0ResourceSet_);
 	command_->SetComputeRootSig(suzanneRootSignature_);
 	command_->SetDescriptorHeap(suzanneDescManager_);
 	command_->SetComputeRootDescriptorTable(0, suzanneDescManager_);
-	command_->SetComputeRoot32BitConstants(1, 4, &diffuseColor_);
-	command_->GetStableCommandList()->SetPipelineState1(raytracingStates_->GetStateObject().Get());
-	D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing_->GetDispatchRayDesc();
-	command_->GetStableCommandList()->DispatchRays(&dispatchRaysDesc);
+	command_->SetComputeRoot32BitConstants(1, ColorConstants_);
+	command_->SetRayTracingState(rayTracingStates_);
+	command_->DispatchRays(rayTracing_);
 
 	command_->CopyBuffer(outputTexture_, (swapChain_->GetCurrentBackBuffer()));
 
@@ -92,14 +90,9 @@ SampleScene::SampleScene()
 
 bool SampleScene::Init(const Application& app)
 {
-	if (!device_.Init(L"NVIDIA")) {
-		cerr << "Failed to init Device" << endl;
-		return false;
-	}
+	device_.Init(L"NVIDIA");
 
-	if (!dxc_.Init()) {
-		return false;
-	}
+	dxc_.Init();
 
 	GUI_ = device_.CreateGUI(app.GetWindowHWND());
 
@@ -178,23 +171,26 @@ bool SampleScene::Init(const Application& app)
 	suzanneRootSignature_ = device_.CreateRootSignature(
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	DescTableRootParamDesc{suzanneDescManager_}},
+			{RootParamType::DescTable,	suzanneDescManager_},
 			{RootParamType::Constant,	DirectRootParamDesc{2, 4}}
 		}
 	);
 
+	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
+	ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
+
+	// NOTE : ResourceSet create example
+	// This samples does not use local rootsignature, so it is not necessaliry
 	suzanneResourceSet_ = std::make_shared<ResourceSet>(
 		suzanneRootSignature_,
-		// NOTE : Error occur when substitute BindResource
-		std::initializer_list<std::variant<std::shared_ptr<DescriptorManager>, std::shared_ptr<Buffer>, Constants>>
-		{
-			std::shared_ptr<DescriptorManager>{ suzanneDescManager_ },
-			Constants{static_cast<void*>(&diffuseColor_), 4, 0}
+		std::vector<ResourceSetDesc>{
+			{suzanneDescManager_},
+			{ColorConstants_}
 		}
 	);
 
 	// StateObject
-	raytracingStates_ = device_.CreateStateObject(
+	rayTracingStates_ = device_.CreateStateObject(
 		{
 			StateObjectType::Raytracing,
 			StateObjectDesc::RayTracingDesc
@@ -218,13 +214,11 @@ bool SampleScene::Init(const Application& app)
 	);
 
 	rayTracing_ = device_.CreateRaytracing(
-		raytracingStates_,
+		rayTracingStates_,
 		app.GetWindowWidth(),
 		app.GetWindowHeight(),
 		1
 	);
-
-	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 
 	
 	return true;

@@ -36,10 +36,10 @@ public:
 
 struct TLASDesc
 {
-	DirectX::XMMATRIX transform;
-	UINT instanceMask = 0x0;
-	BLASHandle blas;
-	D3D12_RAYTRACING_INSTANCE_FLAGS flags;
+	DirectX::XMMATRIX transform_;
+	UINT instanceMask_ = 0x0;
+	BLASHandle blas_;
+	D3D12_RAYTRACING_INSTANCE_FLAGS flags_;
 };
 
 class TLAS
