@@ -70,7 +70,10 @@ WorkGraph::WorkGraph(const Device& device, StateObjectHandle stateObject, UINT m
 				}
 			}
 		}
-		localRootSigBuffer_ = pDevice_->CreateBuffer(BufferType::Upload, sizeof(maxLocalRootSigSize), numLocalRootSig);
+		if (maxLocalRootSigSize == 0) {
+			return;
+		}
+		localRootSigBuffer_ = pDevice_->CreateBuffer(BufferType::Upload, maxLocalRootSigSize, numLocalRootSig);
 		void* rawPtr = localRootSigBuffer_->Map();
 		for (auto& programDesc : workGraphDesc.programDescs_) {
 			if (programDesc.resourceSet_) {
@@ -101,6 +104,10 @@ WorkGraph::WorkGraph(const Device& device, StateObjectHandle stateObject, UINT m
 		}
 
 		localRootSigBuffer_->Unmap();
+
+		localRootArgumentsTableAddress_.SizeInBytes = maxLocalRootSigSize * numLocalRootSig;
+		localRootArgumentsTableAddress_.StartAddress = localRootSigBuffer_->GetGPUAddress();
+		localRootArgumentsTableAddress_.StrideInBytes = maxLocalRootSigSize;
 	}
 
 	pgDesc_.Type = D3D12_PROGRAM_TYPE_WORK_GRAPH;
@@ -110,6 +117,26 @@ WorkGraph::WorkGraph(const Device& device, StateObjectHandle stateObject, UINT m
 	// NOTE : 
 	// local root argumentÇégÇ§èÍçáÇ±Ç±Ç≈ìoò^
 	//pgDesc_.WorkGraph.NodeLocalRootArgumentsTable = 
+}
+
+D3D12_GPU_VIRTUAL_ADDRESS_RANGE WorkGraph::GetBackingMemoryAddressRange()
+{
+	return backingMemoryAddressRange_;
+}
+
+ComPtr<ID3D12Resource> WorkGraph::GetBackingMemory()
+{
+	return backingMemory_;
+}
+
+D3D12_PROGRAM_IDENTIFIER WorkGraph::GetProgramID()
+{
+	return workGraphProgramID_;
+}
+
+D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE WorkGraph::GetLocalSigSize()
+{
+	return localRootArgumentsTableAddress_;
 }
 
 D3D12_SET_PROGRAM_DESC WorkGraph::GetProgramDesc() const

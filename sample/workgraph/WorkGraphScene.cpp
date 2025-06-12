@@ -1,10 +1,10 @@
-#include "SampleScene.hpp"
+#include "WorkGraphScene.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-void SampleScene::BeginRender()
+void WorkGraphScene::BeginRender()
 {
 	auto bbIdx = swapChain_->GetSwapChain()->GetCurrentBackBufferIndex();
 
@@ -31,7 +31,7 @@ void SampleScene::BeginRender()
 	command_->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
-void SampleScene::EndRender()
+void WorkGraphScene::EndRender()
 {
 	auto bbIdx = swapChain_->GetSwapChain()->GetCurrentBackBufferIndex();
 
@@ -42,7 +42,7 @@ void SampleScene::EndRender()
 	command_->WaitCommand();
 }
 
-void SampleScene::Render()
+void WorkGraphScene::Render()
 {
 	BeginRender();
 
@@ -55,12 +55,43 @@ void SampleScene::Render()
 		cameraBuffer_->Unmap();
 	}
 
-	command_->SetPipeline(lambert_);
+	D3D12_SET_PROGRAM_DESC pgDesc;
+	pgDesc.Type = D3D12_PROGRAM_TYPE_WORK_GRAPH;
+	pgDesc.WorkGraph.BackingMemory = workGraph_->GetBackingMemoryAddressRange();
+	pgDesc.WorkGraph.Flags = D3D12_SET_WORK_GRAPH_FLAG_INITIALIZE;
+	pgDesc.WorkGraph.ProgramIdentifier = workGraph_->GetProgramID();
+	pgDesc.WorkGraph.NodeLocalRootArgumentsTable = workGraph_->GetLocalSigSize();
+	command_->GetLatestCommandList()->SetProgram(&pgDesc);
+
+	struct MeshRecord
+	{
+		uint32_t threadX_;
+		uint32_t threadY_;
+		uint32_t threadZ_;
+	};
+
+	vector<MeshRecord> meshRecord = { {sphere_->GetNumIndices() / 3 / 64 + 1, 1, 1} };
+
+	D3D12_DISPATCH_GRAPH_DESC graphDesc;
+	graphDesc.Mode = D3D12_DISPATCH_MODE_NODE_CPU_INPUT;
+	graphDesc.NodeCPUInput.EntrypointIndex = 0;
+	graphDesc.NodeCPUInput.NumRecords = meshRecord.size();
+	graphDesc.NodeCPUInput.pRecords = meshRecord.data();
+	graphDesc.NodeCPUInput.RecordStrideInBytes = sizeof(MeshRecord);
+
+	command_->GetLatestCommandList()->SetProgram(&pgDesc);
 	command_->SetGraphicsRootSig(sphere0RootSignature_);
 	command_->SetDescriptorHeap(sphere0DescManager_);
 	command_->SetGraphicsRootDescriptorTable(0, sphere0DescManager_);
 	command_->SetGraphicsRoot32BitConstants(1, ColorConstants_);
-	command_->AddDrawIndexed(sphere_, 1);
+	command_->GetLatestCommandList()->DispatchGraph(&graphDesc);
+
+	/*command_->SetPipeline(lambert_);
+	command_->SetGraphicsRootSig(sphere0RootSignature_);
+	command_->SetDescriptorHeap(sphere0DescManager_);
+	command_->SetGraphicsRootDescriptorTable(0, sphere0DescManager_);
+	command_->SetGraphicsRoot32BitConstants(1, ColorConstants_);
+	command_->AddDrawIndexed(sphere_, 1);*/
 
 	// GUI
 	{
@@ -78,12 +109,12 @@ void SampleScene::Render()
 	swapChain_->GetSwapChain()->Present(1, 0);
 }
 
-SampleScene::SampleScene()
+WorkGraphScene::WorkGraphScene()
 {
 	
 }
 
-bool SampleScene::Init(const Application& app)
+bool WorkGraphScene::Init(const Application& app)
 {
 	device_.Init(L"NVIDIA");
 
@@ -140,17 +171,19 @@ bool SampleScene::Init(const Application& app)
 	}
 
 	// Shaders
-	wstring shaderPath = wstring(SHADER_DIR) + L"lambert.hlsl";
-	simpleVS_ = dxc_.CreateShader(ShaderType::Vertex, shaderPath, L"VSmain");
+	wstring shaderPath = wstring(SHADER_DIR) + L"WorkGraph.hlsl";
+	meshNode_ = dxc_.CreateShader(ShaderType::WorkGraph, shaderPath, L"MeshNode");
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
 		HeapType::Resource, 
 		{
-			{ cameraBuffer_, ViewType::CBV, 0},
-			{ light0Buffer_, ViewType::CBV, 1},
-			{ sphere0Buffer_, ViewType::CBV, 2}
+			{ cameraBuffer_,				ViewType::CBV, 0},
+			{ light0Buffer_,				ViewType::CBV, 1},
+			{ sphere0Buffer_,				ViewType::CBV, 2},
+			{ sphere_->GetVertexBuffer(),	ViewType::SRV, 0 },
+			{ sphere_->GetIndexBuffer(),	ViewType::SRV, 1 }
 		}
 	);
 	// RootSignature
@@ -165,21 +198,24 @@ bool SampleScene::Init(const Application& app)
 	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 	ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
 
-	// Graphics pipeline
-	vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts =
-	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-	};
-	GraphicsDesc lambertDesc(inputLayouts);
-	lambertDesc.rootSignature_ = sphere0RootSignature_;
-	lambertDesc.VS_ = simpleVS_;
-	lambertDesc.PS_ = lambertPS_;
-	lambert_ = device_.CreateGraphicsPipeline(
-		lambertDesc
+	workGraphStateObject_ = device_.CreateStateObject(
+		{
+			StateObjectType::WorkGraphMesh,
+			StateObjectDesc::WorkGraphDesc
+			{
+				sphere0RootSignature_,
+				{
+					{meshNode_, ShaderStage::Mesh},
+					{lambertPS_, ShaderStage::Pixel},
+				},
+				{
+					{NodeType::Graphics, L"MeshProgram", {meshNode_, lambertPS_}}
+				}
+			}
+		}
 	);
+
+	workGraph_ = device_.CreateWorkGraph(workGraphStateObject_, 1, 1);
 
 	
 	return true;

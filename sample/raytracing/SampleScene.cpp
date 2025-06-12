@@ -114,10 +114,11 @@ bool SampleScene::Init(const Application& app)
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	suzanneBLAS_ = device_.CreateBLAS(command_, suzanneASMesh_);
+	XMMATRIX modelMat = XMMatrixMultiply(XMMatrixRotationY(XMConvertToRadians(180)), XMMatrixIdentity());
 	sceneTLAS_ = device_.CreateTLAS(
 		command_,
 		{
-			{XMMatrixIdentity(), 0, suzanneBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
+			{modelMat, 0, suzanneBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
 		}
 	);
 	

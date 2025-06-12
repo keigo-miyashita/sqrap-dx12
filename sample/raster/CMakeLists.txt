@@ -25,6 +25,13 @@ add_custom_command(TARGET ${PROJECT_NAME}-sample-raster POST_BUILD
   "${PROJECT_SOURCE_DIR}/external/dll/dxil.dll"
   "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-raster>")
 
+if(MSVC)
+    # リリースビルドの場合は WinMain を使う
+    set_target_properties(${PROJECT_NAME}-sample-raster PROPERTIES
+        LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS"
+    )
+endif()
+
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 add_compile_definitions(SHADER_DIR=L"${SHADER_DIR}")
 set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/model/")

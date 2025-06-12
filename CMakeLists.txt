@@ -64,3 +64,4 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 # これによって下の階層に正しい値をもった変数がコピーされる
 add_subdirectory(sample/raster)
 add_subdirectory(sample/raytracing)
+add_subdirectory(sample/workgraph)
