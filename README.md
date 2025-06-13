@@ -19,4 +19,4 @@ This wrapper support Work Graph, so you need:
 
 - **NVIDIA GPU Driver** version **566.36 or newer**
 - **Windows Developer Mode** turned **on**  
-  Go to: `Settings` → `Privacy & security` → `For developers` → Enable **Developer Mode**
+  Go to: `Settings` → `Systems` → `For developers` → Enable **Developer Mode**
