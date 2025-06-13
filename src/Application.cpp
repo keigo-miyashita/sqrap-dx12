@@ -34,7 +34,6 @@ void Input::GetRawState(UINT msg, WPARAM wparam, LPARAM lparam)
 
 			if (msg == WM_LBUTTONDOWN) {
 				isPushedLButton_ = true;
-				cout << "pushing" << endl;
 				pushedMousePos_ = { xPos, yPos };
 			}
 			else if (msg == WM_LBUTTONUP) {

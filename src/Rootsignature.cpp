@@ -50,7 +50,8 @@ RootSignature::RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS fl
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	// TODO : 
-	// 第3引数はSampler関係 Samplerリソースは別のメソッド定義が必要？
+	// Need another method for support sampler
+	// Third argument is for sampler
 	rootSignatureDesc.Init(rps_.size(), rps_.data(), 0, nullptr, flag_);
 
 	ComPtr<ID3DBlob> rootSigBlob = nullptr;
@@ -92,26 +93,6 @@ const std::vector<CD3DX12_ROOT_PARAMETER>& RootSignature::GetRootParameters() co
 ResourceSet::ResourceSet(RootSignatureHandle rootSignature, std::vector<ResourceSetDesc> resourceSetDescs)
 	: rootSignature_(rootSignature), resourceSetDescs_(resourceSetDescs)
 {
-	cout << "Make ResourceSet" << endl;
-	//resourceSetDescs_ = resourceSetDescs;
-	//for (auto resourceSetDesc : resourceSetDescs) {
-	//	if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-	//		DescriptorManagerHandle dm = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-	//		bindResources_.push_back(dm->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-	//		//descriptorManagers_.push_back(dm);
-	//	}
-	//	else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-	//		BufferHandle b = std::get<BufferHandle>(resourceSetDesc.bindResource);
-	//		bindResources_.push_back(b->GetGPUAddress());
-	//	}
-	//	else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-	//		Constants c = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
-	//		float* constants = static_cast<float*>(c.constants_);
-	//		cout << "cs = " << (float)constants[0] << " " << (float)constants[1] << " " << (float)constants[2] << " " << (float)constants[3] << endl;
-	//		cout << "cs = " << c.numConstants_ << " " << c.numOffset_ << endl;
-	//		bindResources_.push_back(c);
-	//	}
-	//}
 }
 
 RootSignatureHandle ResourceSet::GetRootSignature() const
@@ -123,8 +104,3 @@ const std::vector<ResourceSetDesc>& ResourceSet::GetResourceSetDescs() const
 {
 	return resourceSetDescs_;
 }
-
-//const std::vector<DescriptorManagerHandle>& ResourceSet::GetDescManagers() const
-//{
-//	return descriptorManagers_;
-//}

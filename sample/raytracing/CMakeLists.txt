@@ -34,5 +34,5 @@ endif()
 
 set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/")
 add_compile_definitions(SHADER_DIR=L"${SHADER_DIR}")
-set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/model/")
+set(MODEL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../model/")
 add_compile_definitions(MODEL_DIR="${MODEL_DIR}")

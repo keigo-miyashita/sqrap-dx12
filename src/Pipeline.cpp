@@ -258,14 +258,12 @@ StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std
 	}
 
 	if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
-		cout << "StateObjectType::Raytracing" << endl;
 		HRESULT result = pDevice_->GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateStateObject : " + to_string(result));
 		}
 	}
 	else if (soDesc.stateObjectType_ == StateObjectType::WorkGraph || soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
-		cout << "StateObjectType::WorkGraph" << endl;
 		HRESULT result = pDevice_->GetLatestDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateStateObject : " + to_string(result));
@@ -287,7 +285,6 @@ std::wstring StateObject::GetProgramName() const
 	else {
 		throw std::runtime_error("Cannot get program name for raytracing pipeline !");
 	}
-	// TODO : Throw exception
 }
 
 StateObjectType StateObject::GetStateObjectType() const

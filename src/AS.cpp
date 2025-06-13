@@ -89,7 +89,6 @@ void TLAS::CreateTLAS()
 		memcpy(pDesc, instanceDesc.data(), sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size());
 		uploadBuffer->Unmap();
 	}
-	cout << "uploadBuffer result : stride = " << uploadBuffer->GetResource()->GetDesc().Width << " num = " << uploadBuffer->GetResource()->GetDesc().Height << endl;
 	cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
 	instanceDescBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 
