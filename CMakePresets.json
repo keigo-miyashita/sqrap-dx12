@@ -18,7 +18,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/x64-Debug",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/x64-Debug"
       },
@@ -37,7 +37,7 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/x64-Release",
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/x64-Release"
       },
