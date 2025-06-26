@@ -39,3 +39,4 @@ PROJECT_DIR/
 ├── vcpkg-configuration.json
 ├── vcpkg.json
 ```
+3. Build and run with Visual Studio
