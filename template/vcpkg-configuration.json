@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg-configuration.schema.json",
+  "overlay-ports": [
+    "./sqrap-dx12/ports/directx-dxc",
+    "./sqrap-dx12/ports/directx-headers",
+    "./sqrap-dx12/ports/directx12-agility"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "version-string": "0.1.0",
+  "dependencies": [
+    "directx-dxc",
+    "directx-headers",
+    "directx12-agility",
+    "directxtex",
+    {
+      "name": "imgui",
+      "features": [
+        "win32-binding",
+        "dx12-binding"
+      ]
+    },
+    "tinygltf"
+  ]
+}
