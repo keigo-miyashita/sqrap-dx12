@@ -29,6 +29,7 @@ git init
 git submodule add https://github.com/keigo-miyashita/sqrap-dx12.git
 ```
 2. Add main.cpp and copy the required file from template directory
+```
 PROJECT_DIR/
 ├── src/
 │ ├── main.cpp
@@ -37,3 +38,4 @@ PROJECT_DIR/
 ├── CMakePresets.json
 ├── vcpkg-configuration.json
 ├── vcpkg.json
+```
