@@ -19,3 +19,21 @@ This wrapper support Work Graph, so you need:
 - **NVIDIA GPU Driver** version **566.36 or later**
 - **Windows Developer Mode** turned **enabled**  
   Go to: `Settings` → `Systems` → `For developers` → Enable **Developer Mode**
+
+## Usage
+
+1. Make directory and add sqrap as submodule
+```powershell
+mkdir PROJECT_DIR
+git init
+git submodule add https://github.com/keigo-miyashita/sqrap-dx12.git
+```
+2. Add main.cpp and copy the required file from template directory
+PROJECT_DIR/
+├── src/
+│ ├── main.cpp
+├── .gitignore
+├── CMakeLists.txt
+├── CMakePresets.json
+├── vcpkg-configuration.json
+├── vcpkg.json
