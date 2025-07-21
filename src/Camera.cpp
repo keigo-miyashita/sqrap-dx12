@@ -36,36 +36,35 @@ void Camera::Update()
 	XMFLOAT3 front = GetFront();
 	XMFLOAT3 right = GetRight();
 	XMFLOAT3 up = GetUp();
-	float moveScale = 0.05f;
 	if (Input::IsPushKey('W')) {
-		position_.x += front.x * moveScale;
-		position_.y += front.y * moveScale;
-		position_.z += front.z * moveScale;
+		position_.x += front.x * moveScale_;
+		position_.y += front.y * moveScale_;
+		position_.z += front.z * moveScale_;
 	}
 	if (Input::IsPushKey('S')) {
-		position_.x -= front.x * moveScale;
-		position_.y -= front.y * moveScale;
-		position_.z -= front.z * moveScale;
+		position_.x -= front.x * moveScale_;
+		position_.y -= front.y * moveScale_;
+		position_.z -= front.z * moveScale_;
 	}
 	if (Input::IsPushKey('D')) {
-		position_.x += right.x * moveScale;
-		position_.y += right.y * moveScale;
-		position_.z += right.z * moveScale;
+		position_.x += right.x * moveScale_;
+		position_.y += right.y * moveScale_;
+		position_.z += right.z * moveScale_;
 	}
 	if (Input::IsPushKey('A')) {
-		position_.x -= right.x * moveScale;
-		position_.y -= right.y * moveScale;
-		position_.z -= right.z * moveScale;
+		position_.x -= right.x * moveScale_;
+		position_.y -= right.y * moveScale_;
+		position_.z -= right.z * moveScale_;
 	}
 	if (Input::IsPushKey(VK_SPACE)) {
-		position_.x += up.x * moveScale;
-		position_.y += up.y * moveScale;
-		position_.z += up.z * moveScale;
+		position_.x += up.x * moveScale_;
+		position_.y += up.y * moveScale_;
+		position_.z += up.z * moveScale_;
 	}
 	if (Input::IsPushKey(VK_CONTROL)) {
-		position_.x -= up.x * moveScale;
-		position_.y -= up.y * moveScale;
-		position_.z -= up.z * moveScale;
+		position_.x -= up.x * moveScale_;
+		position_.y -= up.y * moveScale_;
+		position_.z -= up.z * moveScale_;
 	}
 
 	if (Input::IsPushedLButton()) {
@@ -75,8 +74,8 @@ void Camera::Update()
 
 		/*rotation_.x += (currentMousePos.y - prevMousePos.y) * moveScale;
 		rotation_.y += (currentMousePos.x - prevMousePos.x) * moveScale;*/
-		rotation_.x += Input::GetDeltaPos().y * moveScale;
-		rotation_.y += Input::GetDeltaPos().x * moveScale;
+		rotation_.x += Input::GetDeltaPos().y * rotateScale_;
+		rotation_.y += Input::GetDeltaPos().x * rotateScale_;
 	}
 }
 
@@ -140,4 +139,34 @@ DirectX::XMMATRIX Camera::GetInvViewProj()
 DirectX::XMMATRIX Camera::GetInvView()
 {
 	return XMMatrixInverse(nullptr, GetView());
+}
+
+float Camera::GetMoveScale()
+{
+	return moveScale_;
+}
+
+float Camera::GetRotateScale()
+{
+	return rotateScale_;
+}
+
+float* Camera::GetMoveScalePtr()
+{
+	return &moveScale_;
+}
+
+float* Camera::GetRotateScalePtr()
+{
+	return &rotateScale_;
+}
+
+void Camera::SetMoveScale(float scale)
+{
+	moveScale_ = scale;
+}
+
+void Camera::GetRotateScale(float scale)
+{
+	rotateScale_ = scale;
 }

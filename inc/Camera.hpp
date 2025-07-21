@@ -11,6 +11,8 @@ private:
 	float fovYAngle_ = 60.0f;
 	float nearZ_ = 0.1f;
 	float farZ_ = 100.0f;
+	float moveScale_ = 0.05f;
+	float rotateScale_ = 0.05f;
 
 public:
 	Camera();
@@ -34,5 +36,11 @@ public:
 	DirectX::XMMATRIX GetProj();
 	DirectX::XMMATRIX GetInvViewProj();
 	DirectX::XMMATRIX GetInvView();
-	
+	float GetMoveScale();
+	float GetRotateScale();
+	float* GetMoveScalePtr();
+	float* GetRotateScalePtr();
+
+	void SetMoveScale(float scale);
+	void GetRotateScale(float scale);
 };

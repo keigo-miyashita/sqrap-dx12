@@ -7,3 +7,6 @@
 - decriptormanagerのサンプラーへの対応
 - 32bitsconstantの保持の仕方
 - Resourcesetの初期化
+- PipelineDescの見直し
+	- 一度定義したものを引数にとって中身をコピーする設計はどうか
+	- トポロジー設定を簡単にしたい
