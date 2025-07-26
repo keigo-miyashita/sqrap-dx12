@@ -11,12 +11,25 @@ void Input::GetRawState(UINT msg, WPARAM wparam, LPARAM lparam)
 	if (ImGui::GetCurrentContext() != nullptr) {
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.WantCaptureMouse) {
+			isPushedLButton_ = false;
+			isPushedRButton_ = false;
+			for (auto& [vk, rawState] : isPushKey_) {
+				rawState = false;
+			}
 			return;
 		}
 	}
 
 	UINT vkCode = (UINT)wparam;
 	switch (msg) {
+	case WM_KILLFOCUS:
+		isPushedLButton_ = false;
+		isPushedRButton_ = false;
+		for (auto& [vk, rawState] : isPushKey_) {
+			rawState = false;
+		}
+		//isPushKey_[vkCode] = false;
+		break;
 	case WM_KEYDOWN:
 		isPushKey_[vkCode] = true;
 		break;
