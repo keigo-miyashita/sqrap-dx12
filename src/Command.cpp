@@ -134,7 +134,6 @@ void Command::CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHan
 	vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 	if (srcBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
 		auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), srcBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-		srcBuffer->SetResourceState(D3D12_RESOURCE_STATE_COPY_SOURCE);
 		rscBarriers.push_back(srcBarrier);
 	}
 	if (destBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {

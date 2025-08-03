@@ -58,7 +58,7 @@ public:
 	BufferHandle			CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"") const;
 	CommandHandle			CreateCommand(D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"") const;
 	ComputePipelineHandle	CreateComputePipeline(const ComputeDesc& desc, std::wstring name = L"") const;
-	DescriptorManagerHandle	CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"") const;
+	DescriptorManagerHandle	CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE, std::wstring name = L"") const;
 	FenceHandle				CreateFence(std::wstring name = L"") const;
 	GraphicsPipelineHandle	CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name = L"") const;
 	GUIHandle				CreateGUI(const HWND& hwnd) const;

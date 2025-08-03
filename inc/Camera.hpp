@@ -19,7 +19,7 @@ public:
 	~Camera() = default;
 	bool Init(
 		float aspectRatio,
-		DirectX::XMFLOAT3 position = {0.0f, 0.0f, 0.0f},
+		float* position,
 		float rotateX = 0.0f,
 		float rotateY = 0.0f,
 		float fovYAngle = 60.0f,

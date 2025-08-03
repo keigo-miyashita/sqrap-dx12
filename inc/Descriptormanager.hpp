@@ -41,7 +41,7 @@ private:
 	UINT viewOffset_ = 0;
 	UINT numDescriptor_ = 0;
 	// Descriptor Table
-	std::vector<CD3DX12_DESCRIPTOR_RANGE> descRanges_;
+	std::vector<CD3DX12_DESCRIPTOR_RANGE1> descRanges_;
 	UINT baseRegCBV_ = 0;
 	UINT numCBV_ = 0;
 	UINT baseRegSRV_ = 0;
@@ -58,10 +58,10 @@ private:
 	void CreateSampler();
 
 public:
-	DescriptorManager(const Device& pDevice, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name = L"");
+	DescriptorManager(const Device& pDevice, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE, std::wstring name = L"");
 	~DescriptorManager() = default;
 	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() const;
 	HeapType GetHeapType() const;
 	UINT GetNumDescRanges() const;
-	const CD3DX12_DESCRIPTOR_RANGE* GetPDescRanges() const;
+	const CD3DX12_DESCRIPTOR_RANGE1* GetPDescRanges() const;
 };

@@ -10,7 +10,7 @@ RootSignature::RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS fl
 	: pDevice_(&device), flag_(flag), name_(name)
 {
 	for (auto rootParam_ : rootParams) {
-		CD3DX12_ROOT_PARAMETER rp;
+		CD3DX12_ROOT_PARAMETER1 rp;
 		if (rootParam_.rootParamType_ == RootParamType::DescTable) {
 			DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
 			rp.InitAsDescriptorTable(descManager->GetNumDescRanges(), descManager->GetPDescRanges(), rootParam_.shaderVisibility_);
@@ -48,16 +48,15 @@ RootSignature::RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS fl
 		}
 	}
 
-	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
 	// TODO : 
 	// Need another method for support sampler
 	// Third argument is for sampler
-	rootSignatureDesc.Init(rps_.size(), rps_.data(), 0, nullptr, flag_);
+	rootSignatureDesc.Init_1_1(rps_.size(), rps_.data(), 0, nullptr, flag_);
 
 	ComPtr<ID3DBlob> rootSigBlob = nullptr;
 	ComPtr<ID3DBlob> errBlob = nullptr;
-	HRESULT result = D3D12SerializeRootSignature(&rootSignatureDesc,
-		D3D_ROOT_SIGNATURE_VERSION_1_0,
+	HRESULT result = D3D12SerializeVersionedRootSignature(&rootSignatureDesc,
 		rootSigBlob.ReleaseAndGetAddressOf(),
 		errBlob.ReleaseAndGetAddressOf());
 	if (FAILED(result)) {
@@ -85,7 +84,7 @@ UINT RootSignature::GetSize() const
 	return size_;
 }
 
-const std::vector<CD3DX12_ROOT_PARAMETER>& RootSignature::GetRootParameters() const
+const std::vector<CD3DX12_ROOT_PARAMETER1>& RootSignature::GetRootParameters() const
 {
 	return rps_;
 }

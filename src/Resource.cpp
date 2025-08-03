@@ -152,10 +152,10 @@ Buffer::Buffer(const Device& device, BufferType type, UINT strideSize, UINT numE
 	}
 }
 
-void* Buffer::Map()
+void* Buffer::Map(UINT subresource, D3D12_RANGE* range)
 {
 	void* pData = nullptr;
-	HRESULT result = resource_->Map(0, nullptr, &pData);
+	HRESULT result = resource_->Map(subresource, range, &pData);
 	if (FAILED(result)) {
 		cerr << "Failed to map buffer" << endl;;
 		return nullptr;

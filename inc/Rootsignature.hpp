@@ -41,7 +41,7 @@ private:
 	const Device* pDevice_ = nullptr;
 	ComPtr<ID3D12RootSignature> rootSig_ = nullptr;
 	D3D12_ROOT_SIGNATURE_FLAGS flag_ = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	std::vector<CD3DX12_ROOT_PARAMETER> rps_;
+	std::vector<CD3DX12_ROOT_PARAMETER1> rps_;
 	std::wstring name_;
 	UINT size_ = 0;
 
@@ -50,7 +50,7 @@ public:
 	~RootSignature() = default;
 	ComPtr<ID3D12RootSignature> GetRootSignature() const;
 	UINT GetSize() const;
-	const std::vector<CD3DX12_ROOT_PARAMETER>& GetRootParameters() const;
+	const std::vector<CD3DX12_ROOT_PARAMETER1>& GetRootParameters() const;
 };
 
 //struct Constants

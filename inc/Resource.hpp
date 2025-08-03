@@ -70,7 +70,7 @@ public:
 	Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"");
 	~Buffer() = default;
 
-	void* Map();
+	void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
 	void Unmap();
 	void Reset();
 

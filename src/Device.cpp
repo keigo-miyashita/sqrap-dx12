@@ -232,9 +232,9 @@ ComputePipelineHandle Device::CreateComputePipeline(const ComputeDesc& desc, std
 	return make_shared<ComputePipeline>(*this, desc, name);
 }
 
-DescriptorManagerHandle Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name) const
+DescriptorManagerHandle Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags, std::wstring name) const
 {
-	return make_shared<DescriptorManager>(*this, heapType, descManagerDesc, name);
+	return make_shared<DescriptorManager>(*this, heapType, descManagerDesc, flags, name);
 }
 
 FenceHandle Device::CreateFence(std::wstring name) const

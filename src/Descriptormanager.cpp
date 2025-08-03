@@ -35,7 +35,7 @@ void DescriptorManager::CreateSampler()
 	viewOffset_++;
 }
 
-DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, std::wstring name)
+DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags, std::wstring name)
 	: pDevice_(&device), heapType_(heapType), name_(name)
 {
 	numDescriptor_ = descManagerDesc.size();
@@ -100,25 +100,25 @@ DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, st
 
 	if (heapType_ == HeapType::Resource) {
 		if (numCBV_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numCBV_, baseRegCBV_, 0, 0);
+			CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numCBV_, baseRegCBV_, 0, flags, 0);
 			descRanges_.push_back(descRange);
 		}
 		if (numSRV_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV_, baseRegSRV_, 0, numCBV_);
+			CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV_, baseRegSRV_, 0, flags, numCBV_);
 			descRanges_.push_back(descRange);
 		}
 		if (numUAV_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, numUAV_, baseRegUAV_, 0, numCBV_ + numSRV_);
+			CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, numUAV_, baseRegUAV_, 0, flags, numCBV_ + numSRV_);
 			descRanges_.push_back(descRange);
 		}
 	}
 	else if (heapType_ == HeapType::Sampler) {
 		if (numSampler_ != 0) {
-			CD3DX12_DESCRIPTOR_RANGE descRange = {};
-			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, numSampler_, baseRegSampler_, 0, 0);
+			CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
+			descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, numSampler_, baseRegSampler_, 0, flags, 0);
 			descRanges_.push_back(descRange);
 		}
 	}
@@ -139,7 +139,7 @@ UINT DescriptorManager::GetNumDescRanges() const
 	return descRanges_.size();
 }
 
-const CD3DX12_DESCRIPTOR_RANGE* DescriptorManager::GetPDescRanges() const
+const CD3DX12_DESCRIPTOR_RANGE1* DescriptorManager::GetPDescRanges() const
 {
 	return descRanges_.data();
 }
