@@ -4,63 +4,66 @@
 
 #include "Alias.hpp"
 
-class AS;
-class ASMesh;
-class Buffer;
-class Command;
-class Device;
-class Fence;
-class Mesh;
-class Resouce;
-
-class BLAS
+namespace sqrp
 {
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+	class AS;
+	class ASMesh;
+	class Buffer;
+	class Command;
+	class Device;
+	class Fence;
+	class Mesh;
+	class Resouce;
 
-	const Device* pDevice_ = nullptr;
-	CommandHandle command_;
-	std::wstring name_;
-	ASHandle ASBuffer_;
-	BufferHandle scratchBuffer_;
-	void CreateBLAS(ASMeshHandle mesh);
+	class BLAS
+	{
+	private:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-public:
+		const Device* pDevice_ = nullptr;
+		CommandHandle command_;
+		std::wstring name_;
+		ASHandle ASBuffer_;
+		BufferHandle scratchBuffer_;
+		void CreateBLAS(ASMeshHandle mesh);
 
-	BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name = L"");
-	~BLAS() = default;
+	public:
 
-	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
-};
+		BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name = L"");
+		~BLAS() = default;
 
-struct TLASDesc
-{
-	DirectX::XMMATRIX transform_;
-	UINT instanceMask_ = 0x0;
-	BLASHandle blas_;
-	D3D12_RAYTRACING_INSTANCE_FLAGS flags_;
-};
+		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
+	};
 
-class TLAS
-{
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+	struct TLASDesc
+	{
+		DirectX::XMMATRIX transform_;
+		UINT instanceMask_ = 0x0;
+		BLASHandle blas_;
+		D3D12_RAYTRACING_INSTANCE_FLAGS flags_;
+	};
 
-	const Device* pDevice_ = nullptr;
-	CommandHandle command_;
-	std::wstring name_;
-	std::vector<TLASDesc> tlasDescs_;
-	BufferHandle instanceDescBuffer_;
-	ASHandle ASBuffer_;
-	BufferHandle scratchBuffer_;
-	void CreateTLAS();
+	class TLAS
+	{
+	private:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-public:
+		const Device* pDevice_ = nullptr;
+		CommandHandle command_;
+		std::wstring name_;
+		std::vector<TLASDesc> tlasDescs_;
+		BufferHandle instanceDescBuffer_;
+		ASHandle ASBuffer_;
+		BufferHandle scratchBuffer_;
+		void CreateTLAS();
 
-	TLAS(const Device& device, CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"");
-	~TLAS() = default;
-	ASHandle GetASBuffer() const;
-	D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
-};
+	public:
+
+		TLAS(const Device& device, CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"");
+		~TLAS() = default;
+		ASHandle GetASBuffer() const;
+		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
+	};
+}

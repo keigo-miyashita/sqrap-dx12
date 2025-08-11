@@ -87,6 +87,6 @@ private:
 public:
 	SampleScene();
 	~SampleScene() = default;
-	bool Init(const Application& app);
+	bool Init(const sqrp::Application& app);
 	void Render();
 };

@@ -11,6 +11,7 @@
 #include <Gui.hpp>
 #include <Indirect.hpp>
 #include <Mesh.hpp>
+#include <Object.hpp>
 #include <Pipeline.hpp>
 #include <Raytracing.hpp>
 #include <Resource.hpp>

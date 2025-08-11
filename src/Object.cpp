@@ -6,33 +6,36 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Object::Object(MeshHandle mesh, DirectX::XMFLOAT4 position, DirectX::XMFLOAT3 rotation, float scale)
-		: mesh_(mesh), position_(position), rotation_(rotation), scale(scale)
+	Object::Object(MeshHandle mesh,
+		DirectX::XMFLOAT4 position,
+		DirectX::XMFLOAT4 quotRotation,
+		float scale)
+		: mesh_(mesh), position_(position), quotRotation_(quotRotation), scale_(scale)
 	{
 
 	}
 
-	DirectX::XMMATRIX GetModelMat()
+	DirectX::XMMATRIX Object::GetModelMat()
 	{
-		return XMMatrixTranslation(position_.x, position_.y, position_.z) * XMMatrixRotationQuaternion(XMLoadFloat4(&quotRotation_)) * XMMatrixScaling(scale_);
+		return XMMatrixTranslation(position_.x, position_.y, position_.z) * XMMatrixRotationQuaternion(XMLoadFloat4(&quotRotation_)) * XMMatrixScaling(scale_, scale_, scale_);
 	}
 
-	DirectX::XMMATRIX GetInvTransMat()
+	DirectX::XMMATRIX Object::GetInvTransMat()
 	{
 		return XMMatrixTranspose(XMMatrixInverse(nullptr, GetModelMat()));
 	}
 
-	void SetPosition(DirectX::XMFLOAT4 position)
+	void Object::SetPosition(DirectX::XMFLOAT4 position)
 	{
 		position_ = position;
 	}
 
-	void SetRotation(DirectX::XMFLOAT3 rotation)
+	void Object::SetRotation(DirectX::XMFLOAT4 quotRotation)
 	{
-		rotation_ = rotation;
+		quotRotation_ = quotRotation;
 	}
 
-	void SetScale(float scale)
+	void Object::SetScale(float scale)
 	{
 		scale_ = scale;
 	}

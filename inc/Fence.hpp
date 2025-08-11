@@ -2,25 +2,28 @@
 
 #include "pch.hpp"
 
-class Command;
-class Device;
-
-class Fence
+namespace sqrp
 {
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+	class Command;
+	class Device;
 
-	const Device* pDevice_ = nullptr;
-	std::wstring name_;
-	ComPtr<ID3D12Fence> fence_ = nullptr;
-	UINT64 fenceVal_ = 0;
+	class Fence
+	{
+	private:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-public:
-	Fence(const Device& device, std::wstring name = L"");
-	~Fence() = default;
-	bool WaitCommand(Command& command);
+		const Device* pDevice_ = nullptr;
+		std::wstring name_;
+		ComPtr<ID3D12Fence> fence_ = nullptr;
+		UINT64 fenceVal_ = 0;
 
-	ComPtr<ID3D12Fence> GetFence();
-	UINT64 GetFenceVal();
-};
+	public:
+		Fence(const Device& device, std::wstring name = L"");
+		~Fence() = default;
+		bool WaitCommand(Command& command);
+
+		ComPtr<ID3D12Fence> GetFence();
+		UINT64 GetFenceVal();
+	};
+}

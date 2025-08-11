@@ -4,18 +4,21 @@ using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
-Shader::Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)
-	: pDxc_(&dxc), shaderType_(shaderType), entryName_(entry)
+namespace sqrp
 {
-	pDxc_->CompileShader(blob_, shaderType_, fileName, entry, includePath);
-}
+	Shader::Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)
+		: pDxc_(&dxc), shaderType_(shaderType), entryName_(entry)
+	{
+		pDxc_->CompileShader(blob_, shaderType_, fileName, entry, includePath);
+	}
 
-ComPtr<IDxcBlob> Shader::GetBlob() const
-{
-	return blob_;
-}
+	ComPtr<IDxcBlob> Shader::GetBlob() const
+	{
+		return blob_;
+	}
 
-std::wstring Shader::GetEntryName() const
-{
-	return entryName_;
+	std::wstring Shader::GetEntryName() const
+	{
+		return entryName_;
+	}
 }

@@ -2,160 +2,163 @@
 
 #include "pch.hpp"
 
-class DescriptorManager;
-class Device;
-
-enum class ResourceType
+namespace sqrp
 {
-	Buffer, Texture, AS
-};
+	class DescriptorManager;
+	class Device;
 
-class Resource
-{
-protected:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+	enum class ResourceType
+	{
+		Buffer, Texture, AS
+	};
 
-	const Device* pDevice_ = nullptr;
-	ComPtr<ID3D12Resource> resource_ = nullptr;
-	std::wstring name_;
-	ResourceType rscType_;
-	D3D12_HEAP_TYPE heapType_ = D3D12_HEAP_TYPE_DEFAULT;
-	D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
-	D3D12_RESOURCE_STATES rscState_ = D3D12_RESOURCE_STATE_COMMON;
+	class Resource
+	{
+	protected:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-public:
-	Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
-	Resource();
-	~Resource() = default;
-	
-	virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
-	virtual void CreateSRV(DescriptorManager& descManager, UINT viewOffset) = 0;
-	virtual void CreateUAV(DescriptorManager& descManager, UINT viewOffset);
-	virtual void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset);
+		const Device* pDevice_ = nullptr;
+		ComPtr<ID3D12Resource> resource_ = nullptr;
+		std::wstring name_;
+		ResourceType rscType_;
+		D3D12_HEAP_TYPE heapType_ = D3D12_HEAP_TYPE_DEFAULT;
+		D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+		D3D12_RESOURCE_STATES rscState_ = D3D12_RESOURCE_STATE_COMMON;
 
-	ComPtr<ID3D12Resource> GetResource() const;
-	D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
-	ResourceType GetResourceType() const;
-	D3D12_HEAP_TYPE GetHeapType() const;
-	D3D12_RESOURCE_FLAGS GetResourceFlag() const;
-	D3D12_RESOURCE_STATES GetResourceState() const;
+	public:
+		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
+		Resource();
+		~Resource() = default;
 
-	void SetResourceState(D3D12_RESOURCE_STATES rscState);
-};
+		virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
+		virtual void CreateSRV(DescriptorManager& descManager, UINT viewOffset) = 0;
+		virtual void CreateUAV(DescriptorManager& descManager, UINT viewOffset);
+		virtual void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset);
 
-enum class BufferType
-{
-	Default, Upload, Read, Unordered, AS, Counter
-};
+		ComPtr<ID3D12Resource> GetResource() const;
+		D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
+		ResourceType GetResourceType() const;
+		D3D12_HEAP_TYPE GetHeapType() const;
+		D3D12_RESOURCE_FLAGS GetResourceFlag() const;
+		D3D12_RESOURCE_STATES GetResourceState() const;
 
-class Buffer : public Resource
-{
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+		void SetResourceState(D3D12_RESOURCE_STATES rscState);
+	};
 
-	BufferType type_;
-	UINT strideSize_ = 0;
-	UINT numElement_ = 0;
-	UINT offsetCounter_ = 0;
+	enum class BufferType
+	{
+		Default, Upload, Read, Unordered, AS, Counter
+	};
 
-	bool CreateBuffer();
-	bool CreateCounterBuffer();
+	class Buffer : public Resource
+	{
+	private:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-public:
-	static UINT AlignForUAVCounter(UINT size);
-	static UINT AlignForConstantBuffer(UINT size);
+		BufferType type_;
+		UINT strideSize_ = 0;
+		UINT numElement_ = 0;
+		UINT offsetCounter_ = 0;
 
-	Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"");
-	~Buffer() = default;
+		bool CreateBuffer();
+		bool CreateCounterBuffer();
 
-	void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
-	void Unmap();
-	void Reset();
+	public:
+		static UINT AlignForUAVCounter(UINT size);
+		static UINT AlignForConstantBuffer(UINT size);
 
-	void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
-	void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-	void CreateUAV(DescriptorManager& descManager, UINT viewOffset) override;
-	void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset) override;
+		Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"");
+		~Buffer() = default;
 
-	UINT GetStrideSize() const;
-	UINT GetNumElement() const;
-	UINT GetOffsetCounter() const;;
-};
+		void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
+		void Unmap();
+		void Reset();
 
-enum class TextureType
-{
-	Default, Upload, Read, Unordered
-};
+		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
+		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
+		void CreateUAV(DescriptorManager& descManager, UINT viewOffset) override;
+		void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset) override;
 
-enum class TextureDim
-{
-	Tex1D, Tex2D, Tex3D,
-};
+		UINT GetStrideSize() const;
+		UINT GetNumElement() const;
+		UINT GetOffsetCounter() const;;
+	};
 
-class Texture : public Resource
-{
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+	enum class TextureType
+	{
+		Default, Upload, Read, Unordered
+	};
 
-	TextureType type_;
-	TextureDim texDim_;
-	UINT strideSize_ = 0;
-	UINT width_ = 1;
-	UINT height_ = 1;
-	UINT depth_ = 1;
-	DXGI_FORMAT format_;
+	enum class TextureDim
+	{
+		Tex1D, Tex2D, Tex3D,
+	};
 
-public:
-	Texture(const Device& device, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
-	Texture();
-	~Texture() = default;
-	void* Map();
-	void Unmap();
-	void Reset();
+	class Texture : public Resource
+	{
+	private:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-	void CreateUAV(DescriptorManager& descManager, UINT viewOffset) override;
+		TextureType type_;
+		TextureDim texDim_;
+		UINT strideSize_ = 0;
+		UINT width_ = 1;
+		UINT height_ = 1;
+		UINT depth_ = 1;
+		DXGI_FORMAT format_;
 
-	UINT GetStrideSize() const;
-	UINT GetWidth() const;
-	UINT GetHeight() const;
-	UINT GetDepth() const;
+	public:
+		Texture(const Device& device, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
+		Texture();
+		~Texture() = default;
+		void* Map();
+		void Unmap();
+		void Reset();
 
-	void SetName(std::wstring name);
-	void SetResource(ComPtr<ID3D12Resource> resource);
-};
+		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
+		void CreateUAV(DescriptorManager& descManager, UINT viewOffset) override;
 
-class AS : public Resource
-{
-private:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+		UINT GetStrideSize() const;
+		UINT GetWidth() const;
+		UINT GetHeight() const;
+		UINT GetDepth() const;
 
-	UINT size_;
+		void SetName(std::wstring name);
+		void SetResource(ComPtr<ID3D12Resource> resource);
+	};
 
-public:
-	AS(const Device& device, UINT size, std::wstring name = L"");
-	~AS() = default;
+	class AS : public Resource
+	{
+	private:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-};
+		UINT size_;
 
-class Constants
-{
-protected:
-	template<typename T>
-	using ComPtr = Microsoft::WRL::ComPtr<T>;
+	public:
+		AS(const Device& device, UINT size, std::wstring name = L"");
+		~AS() = default;
 
-	void* constants_ = nullptr;
-	UINT numConstants_ = 0;
+		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
+	};
 
-public:
-	Constants(void* constants, UINT numConstants);
-	~Constants() = default;
+	class Constants
+	{
+	protected:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-	void* GetConstants();
-	UINT GetNumConstants();
-};
+		void* constants_ = nullptr;
+		UINT numConstants_ = 0;
+
+	public:
+		Constants(void* constants, UINT numConstants);
+		~Constants() = default;
+
+		void* GetConstants();
+		UINT GetNumConstants();
+	};
+}
