@@ -17,9 +17,6 @@ namespace sqrp
 	struct IndirectDesc
 	{
 		IndirectType type_;
-		UINT maxCommandCount_ = 0;
-		BufferHandle argumentBuffer_ = nullptr;
-		BufferHandle counterBuffer_ = nullptr;
 		UINT rootParameterIndex_ = 0;
 		UINT numConstant_ = 0;
 	};
@@ -35,10 +32,26 @@ namespace sqrp
 		ComPtr<ID3D12CommandSignature> cmdSig_ = nullptr;
 		std::vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgDesc_;
 		D3D12_COMMAND_SIGNATURE_DESC cmdSigDesc_ = {};
+		UINT maxCommandCount_ = 0;
+		BufferHandle argumentBuffer_ = nullptr;
+		BufferHandle counterBuffer_ = nullptr;
 
 	public:
-		Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name = L"");
+		Indirect(
+			const Device& device,
+			std::initializer_list<IndirectDesc> indirectDescs,
+			RootSignatureHandle rootSignature,
+			UINT byteStride,
+			UINT maxCommandCount = 0,
+			BufferHandle argumentBuffer = nullptr,
+			BufferHandle counterBuffer = nullptr,
+			std::wstring name = L""
+		);
 		~Indirect() = default;
 		ComPtr<ID3D12CommandSignature> GetCommandSignature() const;
+		UINT GetMaxCommandCount() const;
+		BufferHandle GetArgumentBuffer() const;
+		BufferHandle GetCounterBuffer() const;
+		UINT GetCounterBufferOffset() const;
 	};
 }

@@ -64,7 +64,7 @@ namespace sqrp
 		FenceHandle				CreateFence(std::wstring name = L"") const;
 		GraphicsPipelineHandle	CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name = L"") const;
 		GUIHandle				CreateGUI(const HWND& hwnd) const;
-		IndirectHandle			CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name = L"") const;
+		IndirectHandle			CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount = 0, BufferHandle argumentBuffer = nullptr, BufferHandle counterBuffer = nullptr, std::wstring name = L"") const;
 		MeshHandle				CreateMesh(CommandHandle command, std::string modelPath) const;
 		MeshHandle				CreateMesh(CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 		RayTracingHandle		CreateRaytracing(StateObjectHandle stateObject, UINT width, UINT height, UINT depth, std::wstring name = L"") const;

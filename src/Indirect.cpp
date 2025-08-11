@@ -9,8 +9,15 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Indirect::Indirect(const Device& device, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name)
-		: pDevice_(&device), name_(name)
+	Indirect::Indirect(const Device& device,
+		std::initializer_list<IndirectDesc> indirectDescs,
+		RootSignatureHandle rootSignature,
+		UINT byteStride,
+		UINT maxCommandCount,
+		BufferHandle argumentBuffer,
+		BufferHandle counterBuffer,
+		std::wstring name
+	) : pDevice_(&device), maxCommandCount_(maxCommandCount), argumentBuffer_(argumentBuffer), counterBuffer_(counterBuffer), name_(name)
 	{
 		for (auto indirectDesc : indirectDescs) {
 			D3D12_INDIRECT_ARGUMENT_DESC desc = {};
@@ -87,5 +94,24 @@ namespace sqrp
 	ComPtr<ID3D12CommandSignature> Indirect::GetCommandSignature() const
 	{
 		return cmdSig_;
+	}
+
+	UINT Indirect::GetMaxCommandCount() const
+	{
+		return maxCommandCount_;
+	}
+
+	BufferHandle Indirect::GetArgumentBuffer() const
+	{
+		return argumentBuffer_;
+	}
+	BufferHandle Indirect::GetCounterBuffer() const
+	{
+		return counterBuffer_;
+	}
+
+	UINT Indirect::GetCounterBufferOffset() const
+	{
+		return counterBuffer_->GetOffsetCounter();
 	}
 }

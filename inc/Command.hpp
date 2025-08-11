@@ -58,6 +58,7 @@ namespace sqrp
 		void DispatchRays(RayTracingHandle rayTracing);
 		void DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum);
 		void DrawGUI(GUIHandle GUI);
+		void ExecuteIndirect(IndirectHandle indirect);
 		void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
 		void SetPipeline(ComputePipelineHandle computePipeline);
 		void SetGraphicsRootSig(RootSignatureHandle graphicsRootSig);

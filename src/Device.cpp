@@ -254,9 +254,9 @@ namespace sqrp
 		return make_shared<GUI>(*this, hwnd);
 	}
 
-	IndirectHandle Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, std::wstring name) const
+	IndirectHandle Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount, BufferHandle argumentBuffer, BufferHandle counterBuffer, std::wstring name) const
 	{
-		return make_shared<Indirect>(*this, indirectDescs, rootSignature, byteStride, name);
+		return make_shared<Indirect>(*this, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer, name);
 	}
 
 	MeshHandle Device::CreateMesh(CommandHandle command, std::string modelPath) const

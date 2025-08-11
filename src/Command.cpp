@@ -187,6 +187,30 @@ namespace sqrp
 		GUI->Draw(*this);
 	}
 
+	void Command::ExecuteIndirect(IndirectHandle indirect)
+	{
+		if (indirect->GetCounterBuffer() != nullptr) {
+			commandList_->ExecuteIndirect(
+				indirect->GetCommandSignature().Get(),
+				indirect->GetMaxCommandCount(),
+				indirect->GetArgumentBuffer()->GetResource().Get(),
+				0,
+				indirect->GetCounterBuffer()->GetResource().Get(),
+				indirect->GetCounterBufferOffset()
+			);
+		}
+		else {
+			commandList_->ExecuteIndirect(
+				indirect->GetCommandSignature().Get(),
+				indirect->GetMaxCommandCount(),
+				indirect->GetArgumentBuffer()->GetResource().Get(),
+				0,
+				nullptr,
+				0
+			);
+		}
+	}
+
 	void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)
 	{
 		commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
