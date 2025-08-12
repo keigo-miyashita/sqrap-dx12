@@ -5,7 +5,7 @@
 
 #include "SampleScene.hpp"
 
-class SampleApplication : Application
+class SampleApplication : sqrp::Application
 {
 private:
 	template<typename T>

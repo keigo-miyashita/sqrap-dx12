@@ -1,11 +1,11 @@
-#include "WorkGraphScene.hpp"
+#include "MeshShaderScene.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 using namespace sqrp;
 
-void WorkGraphScene::BeginRender()
+void MeshShaderScene::BeginRender()
 {
 	auto bbIdx = swapChain_->GetSwapChain()->GetCurrentBackBufferIndex();
 
@@ -32,7 +32,7 @@ void WorkGraphScene::BeginRender()
 	command_->GetCommandList()->RSSetScissorRects(1, &scissorRect);
 }
 
-void WorkGraphScene::EndRender()
+void MeshShaderScene::EndRender()
 {
 	auto bbIdx = swapChain_->GetSwapChain()->GetCurrentBackBufferIndex();
 
@@ -43,7 +43,7 @@ void WorkGraphScene::EndRender()
 	command_->WaitCommand();
 }
 
-void WorkGraphScene::Render()
+void MeshShaderScene::Render()
 {
 	BeginRender();
 
@@ -56,36 +56,14 @@ void WorkGraphScene::Render()
 		cameraBuffer_->Unmap();
 	}
 
-	D3D12_SET_PROGRAM_DESC pgDesc;
-	pgDesc.Type = D3D12_PROGRAM_TYPE_WORK_GRAPH;
-	pgDesc.WorkGraph.BackingMemory = workGraph_->GetBackingMemoryAddressRange();
-	pgDesc.WorkGraph.Flags = D3D12_SET_WORK_GRAPH_FLAG_INITIALIZE;
-	pgDesc.WorkGraph.ProgramIdentifier = workGraph_->GetProgramID();
-	pgDesc.WorkGraph.NodeLocalRootArgumentsTable = workGraph_->GetLocalSigSize();
-	command_->GetLatestCommandList()->SetProgram(&pgDesc);
+	UINT num_dispatch_thread = sphere_->GetNumIndices() / 3 / 64 + 1;
 
-	struct MeshRecord
-	{
-		uint32_t threadX_;
-		uint32_t threadY_;
-		uint32_t threadZ_;
-	};
-
-	vector<MeshRecord> meshRecord = { {sphere_->GetNumIndices() / 3 / 64 + 1, 1, 1} };
-
-	D3D12_DISPATCH_GRAPH_DESC graphDesc;
-	graphDesc.Mode = D3D12_DISPATCH_MODE_NODE_CPU_INPUT;
-	graphDesc.NodeCPUInput.EntrypointIndex = 0;
-	graphDesc.NodeCPUInput.NumRecords = meshRecord.size();
-	graphDesc.NodeCPUInput.pRecords = meshRecord.data();
-	graphDesc.NodeCPUInput.RecordStrideInBytes = sizeof(MeshRecord);
-
-	command_->GetLatestCommandList()->SetProgram(&pgDesc);
+	command_->GetStableCommandList()->SetPipelineState(lambert_->GetPipelineState().Get());
 	command_->SetGraphicsRootSig(sphere0RootSignature_);
 	command_->SetDescriptorHeap(sphere0DescManager_);
 	command_->SetGraphicsRootDescriptorTable(0, sphere0DescManager_);
 	command_->SetGraphicsRoot32BitConstants(1, ColorConstants_);
-	command_->GetLatestCommandList()->DispatchGraph(&graphDesc);
+	command_->GetStableCommandList()->DispatchMesh(num_dispatch_thread, 1, 1);
 
 	/*command_->SetPipeline(lambert_);
 	command_->SetGraphicsRootSig(sphere0RootSignature_);
@@ -110,12 +88,12 @@ void WorkGraphScene::Render()
 	swapChain_->GetSwapChain()->Present(1, 0);
 }
 
-WorkGraphScene::WorkGraphScene()
+MeshShaderScene::MeshShaderScene()
 {
 	
 }
 
-bool WorkGraphScene::Init(const Application& app)
+bool MeshShaderScene::Init(const Application& app)
 {
 	device_.Init(L"NVIDIA");
 
@@ -172,8 +150,8 @@ bool WorkGraphScene::Init(const Application& app)
 	}
 
 	// Shaders
-	wstring shaderPath = wstring(SHADER_DIR) + L"WorkGraph.hlsl";
-	meshNode_ = dxc_.CreateShader(ShaderType::WorkGraph, shaderPath, L"MeshNode");
+	wstring shaderPath = wstring(SHADER_DIR) + L"MeshShader.hlsl";
+	simpleMS_ = dxc_.CreateShader(ShaderType::Mesh, shaderPath, L"MSmain");
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
 
 	// Descriptor Manager
@@ -199,24 +177,11 @@ bool WorkGraphScene::Init(const Application& app)
 	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 	ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
 
-	workGraphStateObject_ = device_.CreateStateObject(
-		{
-			StateObjectType::WorkGraphMesh,
-			StateObjectDesc::WorkGraphDesc
-			{
-				sphere0RootSignature_,
-				{
-					{meshNode_, ShaderStage::Mesh},
-					{lambertPS_, ShaderStage::Pixel},
-				},
-				{
-					{NodeType::Graphics, L"MeshProgram", {meshNode_, lambertPS_}}
-				}
-			}
-		}
-	);
-
-	workGraph_ = device_.CreateWorkGraph(workGraphStateObject_, 1, 1);
+	MeshDesc meshDesc = {};
+	meshDesc.rootSignature_ = sphere0RootSignature_;
+	meshDesc.MS_ = simpleMS_;
+	meshDesc.PS_ = lambertPS_;
+	lambert_ = device_.CreateMeshPipeline(meshDesc);
 
 	
 	return true;

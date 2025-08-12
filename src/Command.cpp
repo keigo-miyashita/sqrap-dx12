@@ -275,7 +275,7 @@ namespace sqrp
 
 		uploadBuffer_->Upload(pData, strideSize, numElement);
 
-		this->CopyBuffer(uploadBuffer_, buffer);
+		this->CopyBufferRegion(uploadBuffer_, 0, buffer, 0, strideSize * numElement);
 
 		this->WaitCommand();
 	}

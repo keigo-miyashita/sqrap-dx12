@@ -13,6 +13,7 @@ namespace sqrp
 	class GUI;
 	class Indirect;
 	class Mesh;
+	class MeshPipeline;
 	class RayTracing;
 	class Resource;
 	class ResourceSet;
@@ -37,6 +38,7 @@ namespace sqrp
 	using GUIHandle = std::shared_ptr<GUI>;
 	using IndirectHandle = std::shared_ptr<Indirect>;
 	using MeshHandle = std::shared_ptr<Mesh>;
+	using MeshPipelineHandle = std::shared_ptr<MeshPipeline>;
 	using RayTracingHandle = std::shared_ptr<RayTracing>;
 	using ResourceHandle = std::shared_ptr<Resource>;
 	using ResourceSetHandle = std::shared_ptr<ResourceSet>;

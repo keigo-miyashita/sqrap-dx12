@@ -21,7 +21,7 @@ namespace sqrp
 		~Camera() = default;
 		bool Init(
 			float aspectRatio,
-			float* position,
+			DirectX::XMFLOAT3 position,
 			float rotateX = 0.0f,
 			float rotateY = 0.0f,
 			float fovYAngle = 60.0f,

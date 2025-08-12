@@ -269,6 +269,11 @@ namespace sqrp
 		return make_shared<Mesh>(*this, command, vertices, indices);
 	}
 
+	MeshPipelineHandle Device::CreateMeshPipeline(const MeshDesc& desc, std::wstring name) const
+	{
+		return make_shared<MeshPipeline>(*this, desc, name);
+	}
+
 	RayTracingHandle Device::CreateRaytracing(StateObjectHandle stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
 	{
 		return make_shared<RayTracing>(*this, stateObject, width, height, depth, name);

@@ -20,7 +20,7 @@ struct Color
 	DirectX::XMFLOAT4 color;
 };
 
-class SampleScene
+class MeshShaderScene
 {
 private:
 	template<typename T>
@@ -42,9 +42,11 @@ private:
 	sqrp::BufferHandle cameraBuffer_;
 	sqrp::BufferHandle light0Buffer_;
 	sqrp::BufferHandle sphere0Buffer_;
+	sqrp::ConstantsHandle ColorConstants_;
+	Color diffuseColor_;
 
 	// Shaders
-	sqrp::ShaderHandle simpleVS_;
+	sqrp::ShaderHandle simpleMS_;
 	sqrp::ShaderHandle lambertPS_;
 
 	// Descriptor
@@ -54,17 +56,14 @@ private:
 	sqrp::RootSignatureHandle sphere0RootSignature_;
 
 	// Pipeline
-	sqrp::GraphicsPipelineHandle lambert_;
-
-	sqrp::ConstantsHandle ColorConstants_;
-	Color diffuseColor_;
+	sqrp::MeshPipelineHandle lambert_;
 
 	void BeginRender();
 	void EndRender();
 
 public:
-	SampleScene();
-	~SampleScene() = default;
+	MeshShaderScene();
+	~MeshShaderScene() = default;
 	bool Init(const sqrp::Application& app);
 	void Render();
 };

@@ -18,12 +18,6 @@ struct Light
 	DirectX::XMFLOAT4 color;
 };
 
-struct Object
-{
-	DirectX::XMMATRIX model;
-	DirectX::XMMATRIX invTransModel;
-};
-
 struct Color
 {
 	DirectX::XMFLOAT4 color;
@@ -34,51 +28,51 @@ class SampleScene
 private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
-	Device device_;
-	DXC dxc_;
-	CommandHandle command_;
-	SwapChainHandle swapChain_;
+	sqrp::Device device_;
+	sqrp::DXC dxc_;
+	sqrp::CommandHandle command_;
+	sqrp::SwapChainHandle swapChain_;
 	// GUI
-	GUIHandle GUI_;
+	sqrp::GUIHandle GUI_;
 
 	// Mesh
-	ASMeshHandle suzanneASMesh_;
-	MeshHandle suzanneMesh_;
+	sqrp::ASMeshHandle suzanneASMesh_;
+	sqrp::MeshHandle suzanneMesh_;
 
 	// Scene Items
-	Camera camera_;
+	sqrp::Camera camera_;
 	Light light0_;
 
 	// AccelerationStructure
-	BLASHandle suzanneBLAS_;
-	TLASHandle sceneTLAS_;
+	sqrp::BLASHandle suzanneBLAS_;
+	sqrp::TLASHandle sceneTLAS_;
 
 	// Resources
-	BufferHandle cameraBuffer_;
-	BufferHandle light0Buffer_;
-	TextureHandle outputTexture_;
+	sqrp::BufferHandle cameraBuffer_;
+	sqrp::BufferHandle light0Buffer_;
+	sqrp::TextureHandle outputTexture_;
 
 	// Shaders
-	ShaderHandle rayGen_;
-	ShaderHandle closestHit_;
-	ShaderHandle miss_;
+	sqrp::ShaderHandle rayGen_;
+	sqrp::ShaderHandle closestHit_;
+	sqrp::ShaderHandle miss_;
 
 	// Descriptor
-	DescriptorManagerHandle suzanneDescManager_;
+	sqrp::DescriptorManagerHandle suzanneDescManager_;
 
 	// RootSignature
-	RootSignatureHandle suzanneRootSignature_;
+	sqrp::RootSignatureHandle suzanneRootSignature_;
 
 	// Resource Set
-	ResourceSetHandle suzanneResourceSet_;
+	sqrp::ResourceSetHandle suzanneResourceSet_;
 
 	// Pipeline
-	StateObjectHandle rayTracingStates_;
+	sqrp::StateObjectHandle rayTracingStates_;
 
 	// RayTracing
-	RayTracingHandle rayTracing_;
+	sqrp::RayTracingHandle rayTracing_;
 
-	ConstantsHandle ColorConstants_;
+	sqrp::ConstantsHandle ColorConstants_;
 	Color diffuseColor_;
 
 	void BeginRender();

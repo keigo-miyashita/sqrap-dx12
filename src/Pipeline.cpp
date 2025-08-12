@@ -68,6 +68,56 @@ namespace sqrp
 		return pipeline_;
 	}
 
+	MeshDesc::MeshDesc()
+	{
+
+	}
+
+	MeshPipeline::MeshPipeline(const Device& device, const MeshDesc& desc, std::wstring name)
+		: pDevice_(&device), desc_(desc), name_(name)
+	{
+		D3DX12_MESH_SHADER_PIPELINE_STATE_DESC meshPSDesc = {};
+
+		meshPSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
+		if (desc_.AS_) {
+			meshPSDesc.AS = CD3DX12_SHADER_BYTECODE(desc_.AS_->GetBlob()->GetBufferPointer(), desc_.AS_->GetBlob()->GetBufferSize());
+		}
+		if (desc_.MS_) {
+			meshPSDesc.MS = CD3DX12_SHADER_BYTECODE(desc_.MS_->GetBlob()->GetBufferPointer(), desc_.MS_->GetBlob()->GetBufferSize());
+		}
+		if (desc_.PS_) {
+			meshPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc_.PS_->GetBlob()->GetBufferPointer(), desc_.PS_->GetBlob()->GetBufferSize());
+		}
+		meshPSDesc.BlendState = desc_.blendState_;
+		meshPSDesc.SampleMask = desc_.sampleMask_;
+		meshPSDesc.RasterizerState = desc_.rasterizerDesc_;
+		meshPSDesc.DepthStencilState = desc_.depthStencilDesc_;
+		meshPSDesc.DSVFormat = desc_.dsvFormat_;
+		meshPSDesc.PrimitiveTopologyType = desc_.primitiveType_;
+		meshPSDesc.NumRenderTargets = desc_.RTVFormats_.size();
+		for (int i = 0; i < desc_.RTVFormats_.size(); i++) {
+			meshPSDesc.RTVFormats[i] = desc_.RTVFormats_[i];
+		}
+		meshPSDesc.SampleDesc = desc_.sampleDesc_;
+
+		CD3DX12_PIPELINE_MESH_STATE_STREAM meshStateStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(meshPSDesc);
+
+		D3D12_PIPELINE_STATE_STREAM_DESC streamDesc = {};
+		streamDesc.pPipelineStateSubobjectStream = &meshStateStream;
+		streamDesc.SizeInBytes = sizeof(meshStateStream);
+
+		auto result = pDevice_->GetStableDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw std::runtime_error("Failed to CreateMeshPipelineState : " + to_string(result));
+		}
+		pipeline_->SetName(name_.c_str());
+	}
+
+	ComPtr<ID3D12PipelineState> MeshPipeline::GetPipelineState() const
+	{
+		return pipeline_;
+	}
+
 	void ComputePipeline::CreateComputePipelineState()
 	{
 		D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};

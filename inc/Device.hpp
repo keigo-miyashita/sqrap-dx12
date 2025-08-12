@@ -67,6 +67,7 @@ namespace sqrp
 		IndirectHandle			CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount = 0, BufferHandle argumentBuffer = nullptr, BufferHandle counterBuffer = nullptr, std::wstring name = L"") const;
 		MeshHandle				CreateMesh(CommandHandle command, std::string modelPath) const;
 		MeshHandle				CreateMesh(CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
+		MeshPipelineHandle		CreateMeshPipeline(const MeshDesc& desc, std::wstring name = L"") const;
 		RayTracingHandle		CreateRaytracing(StateObjectHandle stateObject, UINT width, UINT height, UINT depth, std::wstring name = L"") const;
 		RootSignatureHandle		CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"") const;
 		StateObjectHandle		CreateStateObject(const StateObjectDesc soDesc, std::wstring name = L"") const;

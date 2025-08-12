@@ -1,13 +1,13 @@
-#include "SampleApplication.hpp"
+#include "MeshShaderApp.hpp"
 
 using namespace sqrp;
 
-SampleApplication::SampleApplication(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
+MeshShaderApp::MeshShaderApp(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
 {
 
 }
 
-bool SampleApplication::Init()
+bool MeshShaderApp::Init()
 {
 	// Comポインタを使う準備
 	// 第二引数はマルチスレッドへの対応
@@ -16,14 +16,10 @@ bool SampleApplication::Init()
 	}
 	CreateGameWindow(windowName_);
 
-	if (!sampleScene_.Init(*this)) {
-		return false;
-	}
-
-	return true;
+	sampleScene_.Init(*this);
 };
 
-void SampleApplication::Run()
+void MeshShaderApp::Run()
 {
 	ShowWindow(hwnd_, SW_SHOW);
 	MSG msg = {};
@@ -32,8 +28,6 @@ void SampleApplication::Run()
 
 	while (isRunning) {
 
-		// If you use If statements, system only can handle one input
-		// It leads delay for input
 		while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT) {
 				isRunning = false;
@@ -50,7 +44,7 @@ void SampleApplication::Run()
 	}
 };
 
-void SampleApplication::Terminate()
+void MeshShaderApp::Terminate()
 {
 	UnregisterClass(windowClass_.lpszClassName, windowClass_.hInstance);
 };

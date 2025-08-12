@@ -15,7 +15,7 @@ namespace sqrp
 
 	bool Camera::Init(
 		float aspectRatio,
-		float* position,
+		DirectX::XMFLOAT3 position,
 		float rotateX,
 		float rotateY,
 		float fovYAngle,
@@ -24,7 +24,7 @@ namespace sqrp
 	)
 	{
 		aspectRatio_ = aspectRatio;
-		position_ = { position[0], position[1], position[2], 1.0f };
+		position_ = { position.x, position.y, position.z, 1.0f };
 		rotation_ = XMFLOAT3(rotateX, rotateY, 0.0f);
 		fovYAngle_ = fovYAngle;
 		nearZ_ = nearZ;

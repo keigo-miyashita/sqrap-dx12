@@ -3,6 +3,7 @@
 using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
+using namespace sqrp;
 
 void SampleScene::BeginRender()
 {
@@ -131,11 +132,11 @@ bool SampleScene::Init(const Application& app)
 		light0Buffer_->Unmap();
 	}
 
-	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Object)), 1);
+	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(TransformMatrix)), 1);
 	rawPtr = sphere0Buffer_->Map();
 	if (rawPtr) {
-		Object* pObject = static_cast<Object*>(rawPtr);
-		*pObject = sphere0_;
+		TransformMatrix* pTransformMatrix = static_cast<TransformMatrix*>(rawPtr);
+		*pTransformMatrix = sphere0_;
 		sphere0Buffer_->Unmap();
 	}
 

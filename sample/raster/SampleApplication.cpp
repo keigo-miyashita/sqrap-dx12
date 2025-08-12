@@ -1,5 +1,7 @@
 #include "SampleApplication.hpp"
 
+using namespace sqrp;
+
 SampleApplication::SampleApplication(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
 {
 

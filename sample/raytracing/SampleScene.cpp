@@ -3,6 +3,7 @@
 using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
+using namespace sqrp;
 
 void SampleScene::BeginRender()
 {

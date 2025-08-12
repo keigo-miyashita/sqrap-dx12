@@ -15,12 +15,6 @@ struct Light
 	DirectX::XMFLOAT4 color;
 };
 
-struct Object
-{
-	DirectX::XMMATRIX model;
-	DirectX::XMMATRIX invTransModel;
-};
-
 struct Color
 {
 	DirectX::XMFLOAT4 color;
@@ -31,41 +25,41 @@ class WorkGraphScene
 private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
-	Device device_;
-	DXC dxc_;
-	CommandHandle command_;
-	SwapChainHandle swapChain_;
-	MeshHandle sphere_;
+	sqrp::Device device_;
+	sqrp::DXC dxc_;
+	sqrp::CommandHandle command_;
+	sqrp::SwapChainHandle swapChain_;
+	sqrp::MeshHandle sphere_;
 	// GUI
-	GUIHandle GUI_;
+	sqrp::GUIHandle GUI_;
 
 	// Scene Items
-	Camera camera_;
+	sqrp::Camera camera_;
 	Light light0_;
-	Object sphere0_;
+	sqrp::TransformMatrix sphere0_;
 
 	// Resources
-	BufferHandle cameraBuffer_;
-	BufferHandle light0Buffer_;
-	BufferHandle sphere0Buffer_;
-	ConstantsHandle ColorConstants_;
+	sqrp::BufferHandle cameraBuffer_;
+	sqrp::BufferHandle light0Buffer_;
+	sqrp::BufferHandle sphere0Buffer_;
+	sqrp::ConstantsHandle ColorConstants_;
 	Color diffuseColor_;
 
 	// Shaders
-	ShaderHandle meshNode_;
-	ShaderHandle lambertPS_;
+	sqrp::ShaderHandle meshNode_;
+	sqrp::ShaderHandle lambertPS_;
 
 	// Descriptor
-	DescriptorManagerHandle sphere0DescManager_;
+	sqrp::DescriptorManagerHandle sphere0DescManager_;
 
 	// RootSignature
-	RootSignatureHandle sphere0RootSignature_;
+	sqrp::RootSignatureHandle sphere0RootSignature_;
 
 	// StateObject
-	StateObjectHandle workGraphStateObject_;
+	sqrp::StateObjectHandle workGraphStateObject_;
 
 	// Workgraph
-	WorkGraphHandle workGraph_;
+	sqrp::WorkGraphHandle workGraph_;
 
 	void BeginRender();
 	void EndRender();
@@ -73,6 +67,6 @@ private:
 public:
 	WorkGraphScene();
 	~WorkGraphScene() = default;
-	bool Init(const Application& app);
+	bool Init(const sqrp::Application& app);
 	void Render();
 };
