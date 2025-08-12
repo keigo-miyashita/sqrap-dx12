@@ -159,7 +159,7 @@ namespace sqrp
 		void* pData = nullptr;
 		HRESULT result = resource_->Map(subresource, range, &pData);
 		if (FAILED(result)) {
-			cerr << "Failed to map buffer" << endl;;
+			cerr << "Failed to map buffer" << endl;
 			return nullptr;
 		}
 		return pData;
@@ -173,6 +173,18 @@ namespace sqrp
 	void Buffer::Reset()
 	{
 		resource_.Reset();
+	}
+
+	void Buffer::Upload(void* pData, UINT strideSize, UINT numElement)
+	{
+		void* rawPtr = this->Map();
+		if (rawPtr) {
+			memcpy(rawPtr, pData, strideSize * numElement);
+			this->Unmap();
+		}
+		else {
+			cerr << "Failed to upload buffer" << endl;
+		}
 	}
 
 	void Buffer::CreateCBV(DescriptorManager& descManager, UINT viewOffset)

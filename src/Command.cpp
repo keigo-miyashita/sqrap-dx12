@@ -269,6 +269,17 @@ namespace sqrp
 		return true;
 	}
 
+	void Command::InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement)
+	{
+		BufferHandle uploadBuffer_ = pDevice_->CreateBuffer(BufferType::Upload, strideSize, numElement);
+
+		uploadBuffer_->Upload(pData, strideSize, numElement);
+
+		this->CopyBuffer(uploadBuffer_, buffer);
+
+		this->WaitCommand();
+	}
+
 	D3D12_COMMAND_LIST_TYPE Command::GetCommandType()
 	{
 		return commandType_;

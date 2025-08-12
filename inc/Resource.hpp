@@ -75,6 +75,7 @@ namespace sqrp
 		void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
 		void Unmap();
 		void Reset();
+		void Upload(void* pData, UINT strideSize, UINT numElement);
 
 		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
