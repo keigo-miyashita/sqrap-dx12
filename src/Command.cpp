@@ -211,6 +211,12 @@ namespace sqrp
 		}
 	}
 
+	void Command::SetMesh(MeshHandle mesh)
+	{
+		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
+		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
+	}
+
 	void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)
 	{
 		commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
