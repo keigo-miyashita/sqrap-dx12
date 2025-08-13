@@ -256,6 +256,68 @@ namespace sqrp
 		commandList_->SetComputeRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 	}
 
+	void Command::SetGraphicsResource(RootSignatureHandle graphicsRootSig)
+	{
+		SetGraphicsRootSig(graphicsRootSig);
+		int rootParamIndex = 0;
+		for (const auto& rootParam_ : graphicsRootSig->GetRootParametersVec()) {
+			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
+				DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				SetDescriptorHeap(descManager);
+				SetGraphicsRootDescriptorTable(rootParamIndex, descManager);
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle CBV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle SRV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle UAV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				//SetGraphicsRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
+				commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
+			}
+			rootParamIndex++;
+		}
+	}
+
+	void Command::SetComputeResource(RootSignatureHandle computeRootSig)
+	{
+		SetComputeRootSig(computeRootSig);
+		int rootParamIndex = 0;
+		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
+			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
+				DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				SetDescriptorHeap(descManager);
+				SetComputeRootDescriptorTable(rootParamIndex, descManager);
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle CBV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle SRV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle UAV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				//SetComputeRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
+				commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
+			}
+			rootParamIndex++;
+		}
+	}
+
 	void Command::SetRayTracingState(StateObjectHandle stateObject)
 	{
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());

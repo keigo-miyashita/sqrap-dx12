@@ -68,6 +68,8 @@ namespace sqrp
 		void SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
 		void SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
 		void SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
+		void SetGraphicsResource(RootSignatureHandle graphicsRootSig);
+		void SetComputeResource(RootSignatureHandle computeRootSig);
 		void SetRayTracingState(StateObjectHandle stateObject);
 		bool WaitCommand();
 

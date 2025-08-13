@@ -25,6 +25,7 @@ namespace sqrp
 		// 1‚Â32Bits = 4Bytes
 		// —ájfloat4 -> 16 Bytes -> numConstant_ = 4
 		UINT numConstant_ = 0;
+		void* constantPtr_ = nullptr;
 	};
 
 	struct RootParameter
@@ -44,6 +45,7 @@ namespace sqrp
 		ComPtr<ID3D12RootSignature> rootSig_ = nullptr;
 		D3D12_ROOT_SIGNATURE_FLAGS flag_ = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 		std::vector<CD3DX12_ROOT_PARAMETER1> rps_;
+		std::vector<RootParameter> rootParams_;
 		std::wstring name_;
 		UINT size_ = 0;
 
@@ -53,6 +55,7 @@ namespace sqrp
 		ComPtr<ID3D12RootSignature> GetRootSignature() const;
 		UINT GetSize() const;
 		const std::vector<CD3DX12_ROOT_PARAMETER1>& GetRootParameters() const;
+		const std::vector<RootParameter>& GetRootParametersVec() const;
 	};
 
 	//struct Constants
