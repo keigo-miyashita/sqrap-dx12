@@ -161,7 +161,7 @@ namespace sqrp
 		}
 
 		// Window size
-		RECT wrc = { 0, 0, window_width_, window_height_ };
+		RECT wrc = { 0, 0, windowWidth_, windowHeight_ };
 		AdjustWindowRect(&wrc, WS_OVERLAPPEDWINDOW, false);
 		// Create window object
 		hwnd_ = CreateWindow(
@@ -189,12 +189,12 @@ namespace sqrp
 		appPtr = this;
 	}
 
-	Application::Application(std::string windowName, unsigned int window_width, unsigned int window_height)
+	Application::Application(std::string windowName, unsigned int windowWidth, unsigned int windowHeight)
 	{
 		appPtr = this;
 		windowName_ = windowName;
-		window_width_ = window_width;
-		window_height_ = window_height;
+		windowWidth_ = windowWidth;
+		windowHeight_ = windowHeight;
 	}
 
 	int Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
@@ -206,12 +206,51 @@ namespace sqrp
 
 	bool Application::Init()
 	{
-		return 0;
+		// Comポインタを使う準備
+		// 第二引数はマルチスレッドへの対応
+		if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
+			return false;
+		}
+		CreateGameWindow(windowName_);
+
+		OnStart();
+
+		return true;
+	}
+
+	bool Application::OnStart()
+	{
+		return false;
+	}
+
+	void Application::OnRender()
+	{
+
 	}
 
 	void Application::Run()
 	{
+		ShowWindow(hwnd_, SW_SHOW);
+		MSG msg = {};
 
+		bool isRunning = true;
+
+		while (isRunning) {
+
+			while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+				if (msg.message == WM_QUIT) {
+					isRunning = false;
+					break;
+				}
+
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+
+			Input::Update();
+
+			OnRender();
+		}
 	}
 
 	void Application::Terminate()
@@ -226,11 +265,11 @@ namespace sqrp
 
 	UINT Application::GetWindowWidth() const
 	{
-		return window_width_;
+		return windowWidth_;
 	}
 
 	UINT Application::GetWindowHeight() const
 	{
-		return window_height_;
+		return windowHeight_;
 	}
 }

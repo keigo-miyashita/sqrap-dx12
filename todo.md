@@ -5,10 +5,10 @@
 	- FlagでAS用も保持するか決めてクラスをまとめる?
 - 定義した構造体の命名の見直し
 - decriptormanagerのサンプラーへの対応
-- 32bitsconstantの保持の仕方
 - Resourcesetの初期化
 - PipelineDescの見直し
 	- 一度定義したものを引数にとって中身をコピーする設計はどうか
 	- トポロジー設定を簡単にしたい
 - Buffer->Map(-, &range)で範囲をコピーする処理を簡単にしたい
 - CommandListに複数スレッドでコマンドをつめるようにする
+- MVP行列構造体をレイトレに対応

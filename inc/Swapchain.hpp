@@ -36,6 +36,9 @@ namespace sqrp
 	public:
 		SwapChain(const Device& device, CommandHandle command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
 		~SwapChain() = default;
+
+		void BeginRender();
+		void EndRender();
 		ComPtr<IDXGISwapChain4> GetSwapChain();
 		TextureHandle GetCurrentBackBuffer();
 		ComPtr<ID3D12DescriptorHeap> GetRtvHeap();

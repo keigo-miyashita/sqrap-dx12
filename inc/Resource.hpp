@@ -76,6 +76,14 @@ namespace sqrp
 		void Unmap();
 		void Reset();
 		void Upload(void* pData, UINT strideSize, UINT numElement);
+		template<typename T>
+		void Write(const T& data)
+		{
+			void* rawPtr = Map();
+			*static_cast<T*>(rawPtr) = data;
+
+			Unmap();
+		}
 
 		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;

@@ -139,6 +139,31 @@ namespace sqrp
 		}
 	}
 
+	void Device::CreateCommandQueue()
+	{
+		D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
+		cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+		cmdQueueDesc.NodeMask = 0;
+		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+		cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		HRESULT result;
+		result = device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(graphicsCommandQueue_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw std::runtime_error("Failed to CreateCommandQueue : " + to_string(result));
+		}
+		graphicsCommandQueue_->SetName(L"GraphicsCommandQueue");
+
+		cmdQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
+		cmdQueueDesc.NodeMask = 0;
+		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
+		cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		result = device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(computeCommandQueue_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw std::runtime_error("Failed to CreateCommandQueue : " + to_string(result));
+		}
+		computeCommandQueue_->SetName(L"ComputeCommandQueue");
+	}
+
 	Device::Device()
 	{
 
@@ -158,6 +183,8 @@ namespace sqrp
 		InitializeStableDevice();
 
 		InitializeLatestDevice();
+
+		CreateCommandQueue();
 	}
 
 	void Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
@@ -327,5 +354,15 @@ namespace sqrp
 	ComPtr<LatestDevice> Device::GetLatestDevice() const
 	{
 		return latestDevice_;
+	}
+
+	ComPtr<ID3D12CommandQueue> Device::GetGraphicsCommandQueue() const
+	{
+		return graphicsCommandQueue_;
+	}
+
+	ComPtr<ID3D12CommandQueue> Device::GetComputeCommandQueue() const
+	{
+		return computeCommandQueue_;
 	}
 }

@@ -51,7 +51,7 @@ namespace sqrp
 		latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
 	}
 
-	void Command::CreateCommandQueue()
+	/*void Command::CreateCommandQueue()
 	{
 		D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
 		cmdQueueDesc.Type = commandType_;
@@ -64,7 +64,7 @@ namespace sqrp
 		}
 		wstring cmdQueueName = L"CommandQueue";
 		commandQueue_->SetName((cmdQueueName + name_).c_str());
-	}
+	}*/
 
 	Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstring name) : pDevice_(&device), commandType_(commandType), name_(name)
 	{
@@ -74,7 +74,7 @@ namespace sqrp
 
 		InitializeLatestCommandList();
 
-		CreateCommandQueue();
+		//CreateCommandQueue();
 
 		fence_ = pDevice_->CreateFence(name);
 	}
@@ -217,19 +217,45 @@ namespace sqrp
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
 	}
 
-	void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)
+	void Command::SetComputeResource(RootSignatureHandle computeRootSig)
 	{
-		commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
+		SetComputeRootSig(computeRootSig);
+		int rootParamIndex = 0;
+		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
+			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
+				DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				SetDescriptorHeap(descManager);
+				SetComputeRootDescriptorTable(rootParamIndex, descManager);
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle CBV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle SRV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				// NOTE : to handle UAV
+			}
+			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
+				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				//SetComputeRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
+				commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
+			}
+			rootParamIndex++;
+		}
 	}
 
-	void Command::SetPipeline(ComputePipelineHandle computePipeline)
+	void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
 	{
-		commandList_->SetPipelineState(computePipeline->GetPipelineState().Get());
+		commandList_->SetComputeRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 	}
 
-	void Command::SetGraphicsRootSig(RootSignatureHandle graphicsRootSig)
+	void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
 	{
-		commandList_->SetGraphicsRootSignature(graphicsRootSig->GetRootSignature().Get());
+		commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	}
 
 	void Command::SetComputeRootSig(RootSignatureHandle computeRootSig)
@@ -240,26 +266,6 @@ namespace sqrp
 	void Command::SetDescriptorHeap(DescriptorManagerHandle descManager)
 	{
 		commandList_->SetDescriptorHeaps(1, descManager->GetDescriptorHeap().GetAddressOf());
-	}
-
-	void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
-	{
-		commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-	}
-
-	void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
-	{
-		commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-	}
-
-	void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
-	{
-		commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
-	}
-
-	void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
-	{
-		commandList_->SetComputeRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 	}
 
 	void Command::SetGraphicsResource(RootSignatureHandle graphicsRootSig)
@@ -293,35 +299,29 @@ namespace sqrp
 		}
 	}
 
-	void Command::SetComputeResource(RootSignatureHandle computeRootSig)
+	void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
 	{
-		SetComputeRootSig(computeRootSig);
-		int rootParamIndex = 0;
-		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
-			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				SetDescriptorHeap(descManager);
-				SetComputeRootDescriptorTable(rootParamIndex, descManager);
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle CBV
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle SRV
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle UAV
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				//SetComputeRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
-				commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
-			}
-			rootParamIndex++;
-		}
+		commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
+	}
+
+	void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
+	{
+		commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+	}
+
+	void Command::SetGraphicsRootSig(RootSignatureHandle graphicsRootSig)
+	{
+		commandList_->SetGraphicsRootSignature(graphicsRootSig->GetRootSignature().Get());
+	}
+
+	void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)
+	{
+		commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
+	}
+
+	void Command::SetPipeline(ComputePipelineHandle computePipeline)
+	{
+		commandList_->SetPipelineState(computePipeline->GetPipelineState().Get());
 	}
 
 	void Command::SetRayTracingState(StateObjectHandle stateObject)
@@ -329,9 +329,9 @@ namespace sqrp
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
 	}
 
-	bool Command::WaitCommand()
+	bool Command::WaitCommand(QueueType queueType)
 	{
-		if (!fence_->WaitCommand(*this)) {
+		if (!fence_->WaitCommand(*this, queueType)) {
 			return false;
 		}
 		return true;
@@ -373,10 +373,10 @@ namespace sqrp
 		return latestCommandList_;
 	}
 
-	ComPtr<ID3D12CommandQueue> Command::GetCommandQueue() const
+	/*ComPtr<ID3D12CommandQueue> Command::GetCommandQueue() const
 	{
 		return commandQueue_;
-	}
+	}*/
 
 	Fence& Command::GetFence()
 	{

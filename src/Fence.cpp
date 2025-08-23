@@ -18,13 +18,20 @@ namespace sqrp
 		fence_->SetName(name_.c_str());
 	}
 
-	bool Fence::WaitCommand(Command& command)
+	bool Fence::WaitCommand(Command& command, QueueType queueType)
 	{
 		command.GetCommandList()->Close();
 
 		ID3D12CommandList* cmdLists[] = { command.GetCommandList().Get() };
-		command.GetCommandQueue()->ExecuteCommandLists(1, cmdLists);
-		HRESULT result = command.GetCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		HRESULT result;
+		if (queueType == QueueType::Graphics) {
+			pDevice_->GetGraphicsCommandQueue()->ExecuteCommandLists(1, cmdLists);
+			result = pDevice_->GetGraphicsCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		}
+		else if (queueType == QueueType::Compute) {
+			pDevice_->GetComputeCommandQueue()->ExecuteCommandLists(1, cmdLists);
+			result = pDevice_->GetComputeCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		}
 
 		if (FAILED(result)) {
 			return false;

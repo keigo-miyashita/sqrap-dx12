@@ -112,18 +112,20 @@ namespace sqrp
 		HINSTANCE hInstance_ = 0;
 		WNDCLASSEX windowClass_ = { 0 }; // If it isn't initialized as 0, window cannot create !!!
 		HWND hwnd_ = 0;
-		unsigned int window_width_ = 1280;
-		unsigned int window_height_ = 720;
+		unsigned int windowWidth_ = 1280;
+		unsigned int windowHeight_ = 720;
 
 	public:
 		Application();
-		Application(std::string windowName, unsigned int window_width = 1280, unsigned int window_height = 720);
+		Application(std::string windowName, unsigned int windowWidth = 1280, unsigned int windowHeight = 720);
 		~Application() = default;
 		// WindowÇÃèâä˙âªä÷êî
 		void CreateGameWindow(std::string windowName);
 		virtual int Input(UINT msg, WPARAM wparam, LPARAM lparam);
-		virtual bool Init();
-		virtual void Run();
+		bool Init();
+		virtual bool OnStart();
+		virtual void OnRender();
+		void Run();
 		virtual void Terminate();
 		HWND GetWindowHWND() const;
 		UINT GetWindowWidth() const;

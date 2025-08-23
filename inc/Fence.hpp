@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Device.hpp"
+
 namespace sqrp
 {
 	class Command;
@@ -21,7 +23,7 @@ namespace sqrp
 	public:
 		Fence(const Device& device, std::wstring name = L"");
 		~Fence() = default;
-		bool WaitCommand(Command& command);
+		bool WaitCommand(Command& command, QueueType queueType = QueueType::Graphics);
 
 		ComPtr<ID3D12Fence> GetFence();
 		UINT64 GetFenceVal();

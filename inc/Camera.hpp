@@ -4,6 +4,12 @@
 
 namespace sqrp
 {
+	struct CameraMatrix
+	{
+		DirectX::XMMATRIX view;
+		DirectX::XMMATRIX proj;
+	};
+
 	class Camera
 	{
 	private:

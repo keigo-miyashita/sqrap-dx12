@@ -50,7 +50,7 @@ void SampleScene::Render()
 	camera_.Update();
 	void* rawPtr = cameraBuffer_->Map();
 	if (rawPtr) {
-		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
+		RayTracigCameraMatrix* pCamera = static_cast<RayTracigCameraMatrix*>(rawPtr);
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
 		pCamera->invViewProj = camera_.GetInvViewProj();
@@ -124,10 +124,10 @@ bool SampleScene::Init(const Application& app)
 	);
 	
 	// Resources
-	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
+	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(RayTracigCameraMatrix)), 1);
 	void* rawPtr = cameraBuffer_->Map();
 	if (rawPtr) {
-		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
+		RayTracigCameraMatrix* pCamera = static_cast<RayTracigCameraMatrix*>(rawPtr);
 		pCamera->view = camera_.GetView();
 		pCamera->proj = camera_.GetProj();
 		pCamera->invViewProj = camera_.GetInvViewProj();

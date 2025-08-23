@@ -5,7 +5,7 @@
 
 #include "MeshShaderScene.hpp"
 
-class MeshShaderApp : sqrp::Application
+class MeshShaderApp : public sqrp::Application
 {
 private:
 	template<typename T>
@@ -15,7 +15,7 @@ private:
 public:
 	MeshShaderApp(std::string windowName, unsigned int window_width = 1280, unsigned int window_height = 720);
 	~MeshShaderApp() = default;
-	virtual bool Init() override;
-	virtual void Run() override;
+	virtual bool InitMember() override;
+	virtual void Render() override;
 	virtual void Terminate() override;
 };

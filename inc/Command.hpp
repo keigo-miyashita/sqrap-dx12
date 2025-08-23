@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "Device.hpp"
+
 #include "Alias.hpp"
 
 #define StableCommandList ID3D12GraphicsCommandList9
@@ -37,14 +39,13 @@ namespace sqrp
 		ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
 		ComPtr<StableCommandList> stableCommandList_ = nullptr;
 		ComPtr<LatestCommandList> latestCommandList_ = nullptr;
-		ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
+		//ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
 		FenceHandle fence_;
 
 		void CreateCommandList();
 		void InitializeStableCommandList();
 		void InitializeLatestCommandList();
-		void CreateCommandQueue();
-
+		//void CreateCommandQueue();
 
 	public:
 		Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"");
@@ -60,19 +61,19 @@ namespace sqrp
 		void DrawGUI(GUIHandle GUI);
 		void ExecuteIndirect(IndirectHandle indirect);
 		void SetMesh(MeshHandle mesh);
-		void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
-		void SetPipeline(ComputePipelineHandle computePipeline);
-		void SetGraphicsRootSig(RootSignatureHandle graphicsRootSig);
+		void SetComputeResource(RootSignatureHandle computeRootSig);
+		void SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
+		void SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
 		void SetComputeRootSig(RootSignatureHandle computeRootSig);
 		void SetDescriptorHeap(DescriptorManagerHandle descManager);
-		void SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
-		void SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
-		void SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
-		void SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
 		void SetGraphicsResource(RootSignatureHandle graphicsRootSig);
-		void SetComputeResource(RootSignatureHandle computeRootSig);
+		void SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
+		void SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
+		void SetGraphicsRootSig(RootSignatureHandle graphicsRootSig);
+		void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
+		void SetPipeline(ComputePipelineHandle computePipeline);
 		void SetRayTracingState(StateObjectHandle stateObject);
-		bool WaitCommand();
+		bool WaitCommand(QueueType queueType = QueueType::Graphics);
 
 		// "init" prefixed methods perform initialization and internally invoke WaitCommand to ensure readiness.
 		void InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement);
@@ -82,7 +83,7 @@ namespace sqrp
 		ComPtr<ID3D12GraphicsCommandList> GetCommandList() const;
 		ComPtr<StableCommandList> GetStableCommandList() const;
 		ComPtr<LatestCommandList> GetLatestCommandList() const;
-		ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
+		//ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
 		Fence& GetFence();
 	};
 }

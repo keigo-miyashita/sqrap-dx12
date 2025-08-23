@@ -3,7 +3,7 @@
 #include <pch.hpp>
 #include <sqrap.hpp>
 
-struct CameraMatrix
+struct RayTracigCameraMatrix
 {
 	DirectX::XMMATRIX view;
 	DirectX::XMMATRIX proj;

@@ -27,6 +27,10 @@ namespace sqrp
 	class Shader;
 	class SwapChain;
 
+	enum class QueueType {
+		Graphics, Compute
+	};
+
 	class Device
 	{
 	private:
@@ -39,6 +43,8 @@ namespace sqrp
 		ComPtr<IDXGIAdapter4> adapter_ = nullptr;
 		ComPtr<StableDevice> stableDevice_ = nullptr;
 		ComPtr<LatestDevice> latestDevice_ = nullptr;
+		ComPtr<ID3D12CommandQueue> graphicsCommandQueue_ = nullptr;
+		ComPtr<ID3D12CommandQueue> computeCommandQueue_ = nullptr;
 
 		void EnableFeatures(std::vector<UUID>& features) const;
 		void CreateDXDevice(std::wstring gpuVendorName);
@@ -46,6 +52,7 @@ namespace sqrp
 		void InitializeLatestDevice();
 		bool CheckWorkGraphSupport();
 		void CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice);
+		void CreateCommandQueue();
 
 	public:
 		Device();
@@ -80,5 +87,7 @@ namespace sqrp
 		ComPtr<ID3D12Device> GetDevice() const;
 		ComPtr<StableDevice> GetStableDevice() const;
 		ComPtr<LatestDevice> GetLatestDevice() const;
+		ComPtr<ID3D12CommandQueue> GetGraphicsCommandQueue() const;
+		ComPtr<ID3D12CommandQueue> GetComputeCommandQueue() const;
 	};
 }

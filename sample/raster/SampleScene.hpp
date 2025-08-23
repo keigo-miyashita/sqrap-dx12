@@ -3,12 +3,6 @@
 #include <pch.hpp>
 #include <sqrap.hpp>
 
-struct CameraMatrix
-{
-	DirectX::XMMATRIX view;
-	DirectX::XMMATRIX proj;
-};
-
 struct Light
 {
 	DirectX::XMFLOAT4 pos;

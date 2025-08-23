@@ -5,7 +5,7 @@
 
 #include "SampleScene.hpp"
 
-class SampleApplication : sqrp::Application
+class SampleApplication : public sqrp::Application
 {
 private:
 	template<typename T>
@@ -15,7 +15,7 @@ private:
 public:
 	SampleApplication(std::string windowName, unsigned int window_width = 1280, unsigned int window_height = 720);
 	~SampleApplication() = default;
-	virtual bool Init() override;
-	virtual void Run() override;
+	virtual bool InitMember() override;
+	virtual void Render() override;
 	virtual void Terminate() override;
 };

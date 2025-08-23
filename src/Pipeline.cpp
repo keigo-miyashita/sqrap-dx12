@@ -10,9 +10,33 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	GraphicsDesc::GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC>& inputLayouts) : inputLayouts_(inputLayouts)
+	GraphicsDesc::GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts) : inputLayouts_(inputLayouts)
 	{
 
+	}
+
+	GraphicsDesc& GraphicsDesc::SetRootSignature(RootSignatureHandle rootSignature)
+	{
+		rootSignature_ = rootSignature;
+		return *this;
+	}
+
+	GraphicsDesc& GraphicsDesc::SetVS(ShaderHandle VS)
+	{
+		VS_ = VS;
+		return *this;
+	}
+
+	GraphicsDesc& GraphicsDesc::SetPS(ShaderHandle PS)
+	{
+		PS_ = PS;
+		return *this;
+	}
+
+	GraphicsDesc& GraphicsDesc::SetPrimitiveType(D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType)
+	{
+		primitiveType_ = primitiveType;
+		return *this;
 	}
 
 	void GraphicsPipeline::CreateGraphicsPipelineState()

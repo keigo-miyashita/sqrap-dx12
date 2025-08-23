@@ -29,7 +29,7 @@ namespace sqrp
 		swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 		swapChainDesc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-		HRESULT result = pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pCommand_->GetCommandQueue().Get(),
+		HRESULT result = pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pDevice_->GetGraphicsCommandQueue().Get(),
 			hwnd,
 			&swapChainDesc1,
 			nullptr,
@@ -126,6 +126,44 @@ namespace sqrp
 		CreateSwapChain(hwnd, winSize);
 
 		CreateDepthStencilBuffer(winSize);
+	}
+
+	void SwapChain::BeginRender()
+	{
+		auto bbIdx = swapChain_->GetCurrentBackBufferIndex();
+
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		pCommand_->GetCommandList()->ResourceBarrier(1, &barrier);
+
+		auto rtvHandle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+		rtvHandle.ptr += bbIdx * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		auto dsvHandle = dsvHeap_->GetCPUDescriptorHandleForHeapStart();
+		pCommand_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
+		// Clear depth buffer
+		pCommand_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+		// Clear display
+		float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+		pCommand_->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+		// Set viewport and scissors
+		pCommand_->GetCommandList()->RSSetViewports(1, &viewport_);
+		pCommand_->GetCommandList()->RSSetScissorRects(1, &scissorsRect_);
+	}
+
+	void SwapChain::EndRender()
+	{
+		auto bbIdx = swapChain_->GetCurrentBackBufferIndex();
+
+		// Transit render target to present
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		pCommand_->GetCommandList()->ResourceBarrier(1, &barrier);
+
+		pCommand_->WaitCommand();
+
+		swapChain_->Present(1, 0);
 	}
 
 	ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain()
