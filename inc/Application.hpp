@@ -121,12 +121,12 @@ namespace sqrp
 		~Application() = default;
 		// WindowÇÃèâä˙âªä÷êî
 		void CreateGameWindow(std::string windowName);
-		virtual int Input(UINT msg, WPARAM wparam, LPARAM lparam);
+		bool Input(UINT msg, WPARAM wparam, LPARAM lparam);
 		bool Init();
-		virtual bool OnStart();
-		virtual void OnRender();
 		void Run();
-		virtual void Terminate();
+		virtual bool OnStart();
+		virtual void OnUpdate();
+		virtual void OnTerminate();
 		HWND GetWindowHWND() const;
 		UINT GetWindowWidth() const;
 		UINT GetWindowHeight() const;

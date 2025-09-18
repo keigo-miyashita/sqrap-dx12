@@ -197,11 +197,11 @@ namespace sqrp
 		windowHeight_ = windowHeight;
 	}
 
-	int Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
+	bool Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		Input::GetRawState(msg, wparam, lparam);
 
-		return 0;
+		return true;
 	}
 
 	bool Application::Init()
@@ -216,16 +216,6 @@ namespace sqrp
 		OnStart();
 
 		return true;
-	}
-
-	bool Application::OnStart()
-	{
-		return false;
-	}
-
-	void Application::OnRender()
-	{
-
 	}
 
 	void Application::Run()
@@ -249,11 +239,24 @@ namespace sqrp
 
 			Input::Update();
 
-			OnRender();
+			OnUpdate();
 		}
+
+		OnTerminate();
+		UnregisterClass(windowClass_.lpszClassName, windowClass_.hInstance);
 	}
 
-	void Application::Terminate()
+	bool Application::OnStart()
+	{
+		return false;
+	}
+
+	void Application::OnUpdate()
+	{
+
+	}
+
+	void Application::OnTerminate()
 	{
 
 	}

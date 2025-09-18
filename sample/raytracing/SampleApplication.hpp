@@ -3,19 +3,83 @@
 #include <pch.hpp>
 #include <sqrap.hpp>
 
-#include "SampleScene.hpp"
+struct RayTracigCameraMatrix
+{
+	DirectX::XMMATRIX view;
+	DirectX::XMMATRIX proj;
+	DirectX::XMMATRIX invViewProj;
+	DirectX::XMMATRIX invView;
+	DirectX::XMFLOAT4 cameraPosition;
+};
+
+struct Light
+{
+	DirectX::XMFLOAT4 pos;
+	DirectX::XMFLOAT4 color;
+};
+
+struct Color
+{
+	DirectX::XMFLOAT4 color;
+};
 
 class SampleApplication : public sqrp::Application
 {
 private:
 	template<typename T>
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
-	SampleScene sampleScene_;
+	//SampleScene sampleScene_;
+	sqrp::Device device_;
+	sqrp::DXC dxc_;
+	sqrp::CommandHandle command_;
+	sqrp::SwapChainHandle swapChain_;
+	// GUI
+	sqrp::GUIHandle GUI_;
+
+	// Mesh
+	sqrp::ASMeshHandle suzanneASMesh_;
+	sqrp::MeshHandle suzanneMesh_;
+
+	// Scene Items
+	sqrp::Camera camera_;
+	Light light0_;
+
+	// AccelerationStructure
+	sqrp::BLASHandle suzanneBLAS_;
+	sqrp::TLASHandle sceneTLAS_;
+
+	// Resources
+	sqrp::BufferHandle cameraBuffer_;
+	sqrp::BufferHandle light0Buffer_;
+	sqrp::TextureHandle outputTexture_;
+
+	// Shaders
+	sqrp::ShaderHandle rayGen_;
+	sqrp::ShaderHandle closestHit_;
+	sqrp::ShaderHandle miss_;
+
+	// Descriptor
+	sqrp::DescriptorManagerHandle suzanneDescManager_;
+
+	// RootSignature
+	sqrp::RootSignatureHandle suzanneRootSignature_;
+
+	// Resource Set
+	sqrp::ResourceSetHandle suzanneResourceSet_;
+
+	// Pipeline
+	sqrp::StateObjectHandle rayTracingStates_;
+
+	// RayTracing
+	sqrp::RayTracingHandle rayTracing_;
+
+	sqrp::ConstantsHandle ColorConstants_;
+	Color diffuseColor_;
 
 public:
 	SampleApplication(std::string windowName, unsigned int window_width = 1280, unsigned int window_height = 720);
 	~SampleApplication() = default;
-	virtual bool InitMember() override;
-	virtual void Render() override;
-	virtual void Terminate() override;
+	virtual bool OnStart() override;
+	virtual void OnUpdate() override;
+	virtual void OnTerminate() override;
 };

@@ -1,7 +1,7 @@
 add_executable(${PROJECT_NAME}-sample-meshshader)
 target_compile_features(${PROJECT_NAME}-sample-meshshader PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME}-sample-meshshader PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
-target_sources(${PROJECT_NAME}-sample-meshshader PRIVATE main.cpp "MeshShaderApp.cpp" "MeshShaderScene.cpp" "MeshShaderApp.cpp" "MeshShaderScene.cpp")
+target_sources(${PROJECT_NAME}-sample-meshshader PRIVATE main.cpp "MeshShaderApp.cpp")
 
 target_link_libraries(
     ${PROJECT_NAME}-sample-meshshader PRIVATE

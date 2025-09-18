@@ -12,11 +12,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 #endif
 	auto app = SampleApplication("Raytracing Sample");
 
-	if (!app.Init()) {
-		return -1;
+	try {
+		if (!app.Init()) {
+			return -1;
+		}
+		app.Run();
+		app.OnTerminate();
 	}
-	app.Run();
-	app.Terminate();
+	catch (const std::exception& e) {
+		std::cerr << "—áŠO‚ª”­¶‚µ‚Ü‚µ‚½: " << e.what() << std::endl;
+	}
 
 	return 0;
 }
