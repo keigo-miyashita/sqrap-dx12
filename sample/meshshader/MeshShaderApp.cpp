@@ -42,29 +42,15 @@ bool MeshShaderApp::OnStart()
 
 	// Resources
 	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
-	void* rawPtr = cameraBuffer_->Map();
-	if (rawPtr) {
-		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
-		pCamera->view = camera_.GetView();
-		pCamera->proj = camera_.GetProj();
-		cameraBuffer_->Unmap();
-	}
+	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
 
 	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
-	rawPtr = light0Buffer_->Map();
-	if (rawPtr) {
-		Light* pLight = static_cast<Light*>(rawPtr);
-		*pLight = light0_;
-		light0Buffer_->Unmap();
-	}
+	light0Buffer_->Write(light0_);
 
 	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(TransformMatrix)), 1);
-	rawPtr = sphere0Buffer_->Map();
-	if (rawPtr) {
-		TransformMatrix* pTransformMatrix = static_cast<TransformMatrix*>(rawPtr);
-		*pTransformMatrix = sphere0_;
-		sphere0Buffer_->Unmap();
-	}
+	sphere0Buffer_->Write(sphere0_);
+
+	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"MeshShader.hlsl";
@@ -87,12 +73,9 @@ bool MeshShaderApp::OnStart()
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	sphere0DescManager_},
-			{RootParamType::Constant,	DirectRootParamDesc{3, 4}},
+			{RootParamType::Constant,	DirectRootParamDesc{3, 4, (void*)(&diffuseColor_)}},
 		}
-		);
-
-	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
-	ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
+	);
 
 	MeshDesc meshDesc = {};
 	meshDesc.rootSignature_ = sphere0RootSignature_;
@@ -105,24 +88,15 @@ bool MeshShaderApp::OnStart()
 
 void MeshShaderApp::OnUpdate()
 {
-	swapChain_->BeginRender();
+	command_->BeginRender(swapChain_);
 
 	camera_.Update();
-	void* rawPtr = cameraBuffer_->Map();
-	if (rawPtr) {
-		CameraMatrix* pCamera = static_cast<CameraMatrix*>(rawPtr);
-		pCamera->view = camera_.GetView();
-		pCamera->proj = camera_.GetProj();
-		cameraBuffer_->Unmap();
-	}
+	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
 
 	UINT num_dispatch_thread = sphere_->GetNumIndices() / 3 / 64 + 1;
 
 	command_->GetStableCommandList()->SetPipelineState(lambert_->GetPipelineState().Get());
-	command_->SetGraphicsRootSig(sphere0RootSignature_);
-	command_->SetDescriptorHeap(sphere0DescManager_);
-	command_->SetGraphicsRootDescriptorTable(0, sphere0DescManager_);
-	command_->SetGraphicsRoot32BitConstants(1, ColorConstants_);
+	command_->SetGraphicsResource(sphere0RootSignature_);
 	command_->GetStableCommandList()->DispatchMesh(num_dispatch_thread, 1, 1);
 
 	// GUI
@@ -136,7 +110,7 @@ void MeshShaderApp::OnUpdate()
 		command_->DrawGUI(GUI_);
 	}
 
-	swapChain_->EndRender();
+	command_->EndRender(swapChain_);
 };
 
 void MeshShaderApp::OnTerminate()

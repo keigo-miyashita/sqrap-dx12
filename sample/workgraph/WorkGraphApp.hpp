@@ -38,7 +38,6 @@ private:
 	sqrp::BufferHandle cameraBuffer_;
 	sqrp::BufferHandle light0Buffer_;
 	sqrp::BufferHandle sphere0Buffer_;
-	sqrp::ConstantsHandle ColorConstants_;
 	Color diffuseColor_;
 
 	// Shaders

@@ -46,30 +46,18 @@ bool SampleApplication::OnStart()
 
 	// Resources
 	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(RayTracigCameraMatrix)), 1);
-	void* rawPtr = cameraBuffer_->Map();
-	if (rawPtr) {
-		RayTracigCameraMatrix* pCamera = static_cast<RayTracigCameraMatrix*>(rawPtr);
-		pCamera->view = camera_.GetView();
-		pCamera->proj = camera_.GetProj();
-		pCamera->invViewProj = camera_.GetInvViewProj();
-		pCamera->invView = camera_.GetInvView();
-		pCamera->cameraPosition = XMFLOAT4(0.0f, 0.0f, -5.0f, 1.0f);
-		cameraBuffer_->Unmap();
-	}
+	cameraBuffer_->Write(RayTracigCameraMatrix{ camera_.GetView(), camera_.GetProj(), camera_.GetInvViewProj(), camera_.GetInvView(), XMFLOAT4(0.0f, 0.0f, -5.0f, 1.0f) });
 
 	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
-	rawPtr = light0Buffer_->Map();
-	if (rawPtr) {
-		Light* pLight = static_cast<Light*>(rawPtr);
-		*pLight = light0_;
-		light0Buffer_->Unmap();
-	}
+	light0Buffer_->Write(light0_);
 
 	outputTexture_ = device_.CreateTexture(
 		TextureDim::Tex2D,
 		TextureType::Unordered,
 		0, DXGI_FORMAT_R8G8B8A8_UNORM, GetWindowWidth(), GetWindowHeight(), 1
 	);
+
+	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"raytracing.hlsl";
@@ -95,12 +83,11 @@ bool SampleApplication::OnStart()
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	suzanneDescManager_},
-			{RootParamType::Constant,	DirectRootParamDesc{2, 4}}
+			{RootParamType::Constant,	DirectRootParamDesc{2, 4, (void*)(&diffuseColor_)}}
 		}
 	);
 
-	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
-	ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
+	//ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
 
 	// NOTE : ResourceSet create example
 	// This samples does not use local rootsignature, so it is not necessaliry
@@ -148,24 +135,12 @@ bool SampleApplication::OnStart()
 
 void SampleApplication::OnUpdate()
 {
-	swapChain_->BeginRender();
+	command_->BeginRender(swapChain_);
 
 	camera_.Update();
-	void* rawPtr = cameraBuffer_->Map();
-	if (rawPtr) {
-		RayTracigCameraMatrix* pCamera = static_cast<RayTracigCameraMatrix*>(rawPtr);
-		pCamera->view = camera_.GetView();
-		pCamera->proj = camera_.GetProj();
-		pCamera->invViewProj = camera_.GetInvViewProj();
-		pCamera->invView = camera_.GetInvView();
-		pCamera->cameraPosition = camera_.GetPos();
-		cameraBuffer_->Unmap();
-	}
+	cameraBuffer_->Write(RayTracigCameraMatrix{ camera_.GetView(), camera_.GetProj(), camera_.GetInvViewProj(), camera_.GetInvView(), camera_.GetPos() });	
 
-	command_->SetComputeRootSig(suzanneRootSignature_);
-	command_->SetDescriptorHeap(suzanneDescManager_);
-	command_->SetComputeRootDescriptorTable(0, suzanneDescManager_);
-	command_->SetComputeRoot32BitConstants(1, ColorConstants_);
+	command_->SetRayTracingResource(suzanneRootSignature_);
 	command_->SetRayTracingState(rayTracingStates_);
 	command_->DispatchRays(rayTracing_);
 
@@ -182,7 +157,7 @@ void SampleApplication::OnUpdate()
 		command_->DrawGUI(GUI_);
 	}
 
-	swapChain_->EndRender();
+	command_->EndRender(swapChain_);
 }
 
 void SampleApplication::OnTerminate()

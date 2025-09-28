@@ -25,6 +25,7 @@ namespace sqrp
 	class Resource;
 	class ResourceSet;
 	class RootSignature;
+	class SwapChain;
 
 	class Command
 	{
@@ -50,6 +51,8 @@ namespace sqrp
 	public:
 		Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"");
 		~Command() = default;
+		void BeginRender(SwapChainHandle swapchain);
+		void EndRender(SwapChainHandle swapchain);
 		void AddDrawIndexed(MeshHandle mesh, UINT numInstances);
 		void AddDrawIndexedLine(MeshHandle mesh, UINT numInstances);
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
@@ -70,6 +73,7 @@ namespace sqrp
 		void SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
 		void SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);
 		void SetGraphicsRootSig(RootSignatureHandle graphicsRootSig);
+		void SetRayTracingResource(RootSignatureHandle rayTracingRootSig);
 		void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
 		void SetPipeline(ComputePipelineHandle computePipeline);
 		void SetRayTracingState(StateObjectHandle stateObject);

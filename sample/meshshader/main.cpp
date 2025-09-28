@@ -17,7 +17,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 			return -1;
 		}
 		app.Run();
-		app.OnTerminate();
 	}
 	catch (const std::exception& e) {
 		std::cerr << "—áŠO‚ª”­¶‚µ‚Ü‚µ‚½: " << e.what() << std::endl;

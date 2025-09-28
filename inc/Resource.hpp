@@ -92,7 +92,7 @@ namespace sqrp
 
 		UINT GetStrideSize() const;
 		UINT GetNumElement() const;
-		UINT GetOffsetCounter() const;;
+		UINT GetOffsetCounter() const;
 	};
 
 	enum class TextureType

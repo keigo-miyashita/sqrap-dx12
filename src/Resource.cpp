@@ -313,7 +313,7 @@ namespace sqrp
 		void* pData = nullptr;
 		HRESULT result = resource_->Map(0, nullptr, &pData);
 		if (FAILED(result)) {
-			cerr << "Failed to map buffer" << endl;;
+			cerr << "Failed to map buffer" << endl;
 			return nullptr;
 		}
 		return pData;

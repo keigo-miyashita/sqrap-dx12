@@ -9,6 +9,7 @@
 #include "Pipeline.hpp"
 #include "Resource.hpp"
 #include "Rootsignature.hpp"
+#include "Swapchain.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -77,6 +78,46 @@ namespace sqrp
 		//CreateCommandQueue();
 
 		fence_ = pDevice_->CreateFence(name);
+	}
+
+	void Command::BeginRender(SwapChainHandle swapchain)
+	{
+		auto bbIdx = swapchain->GetSwapChain()->GetCurrentBackBufferIndex();
+
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+		commandList_->ResourceBarrier(1, &barrier);
+
+		auto rtvHandle = swapchain->GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
+		rtvHandle.ptr += bbIdx * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		auto dsvHandle = swapchain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
+		// Clear depth buffer
+		commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+		// Clear display
+		float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+		commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+
+		// Set viewport and scissors
+		auto viewPort = swapchain->GetViewPort();
+		auto scissorRect = swapchain->GetRect();
+		commandList_->RSSetViewports(1, &(viewPort));
+		commandList_->RSSetScissorRects(1, &(scissorRect));
+	}
+
+	void Command::EndRender(SwapChainHandle swapchain)
+	{
+		auto bbIdx = swapchain->GetSwapChain()->GetCurrentBackBufferIndex();
+
+		// Transit render target to present
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		commandList_->ResourceBarrier(1, &barrier);
+
+		WaitCommand();
+
+		swapchain->GetSwapChain()->Present(1, 0);
 	}
 
 	void Command::AddDrawIndexed(MeshHandle mesh, UINT numInstances)
@@ -312,6 +353,11 @@ namespace sqrp
 	void Command::SetGraphicsRootSig(RootSignatureHandle graphicsRootSig)
 	{
 		commandList_->SetGraphicsRootSignature(graphicsRootSig->GetRootSignature().Get());
+	}
+
+	void Command::SetRayTracingResource(RootSignatureHandle rayTracingRootSig)
+	{
+		SetComputeResource(rayTracingRootSig);
 	}
 
 	void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)

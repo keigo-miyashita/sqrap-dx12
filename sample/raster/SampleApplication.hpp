@@ -37,6 +37,7 @@ private:
 	sqrp::BufferHandle cameraBuffer_;
 	sqrp::BufferHandle light0Buffer_;
 	sqrp::BufferHandle sphere0Buffer_;
+	Color diffuseColor_;
 
 	// Shaders
 	sqrp::ShaderHandle simpleVS_;
@@ -50,9 +51,6 @@ private:
 
 	// Pipeline
 	sqrp::GraphicsPipelineHandle lambert_;
-
-	sqrp::ConstantsHandle ColorConstants_;
-	Color diffuseColor_;
 
 public:
 	SampleApplication(std::string windowName, unsigned int window_width = 1280, unsigned int window_height = 720);
