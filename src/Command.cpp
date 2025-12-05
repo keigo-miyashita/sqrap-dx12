@@ -67,7 +67,8 @@ namespace sqrp
 		commandQueue_->SetName((cmdQueueName + name_).c_str());
 	}*/
 
-	Command::Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType, wstring name) : pDevice_(&device), commandType_(commandType), name_(name)
+	Command::Command(const Device& device, std::wstring name, D3D12_COMMAND_LIST_TYPE commandType)
+		: pDevice_(&device), commandType_(commandType), name_(name)
 	{
 		CreateCommandList();
 
@@ -385,7 +386,7 @@ namespace sqrp
 
 	void Command::InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement)
 	{
-		BufferHandle uploadBuffer_ = pDevice_->CreateBuffer(BufferType::Upload, strideSize, numElement);
+		BufferHandle uploadBuffer_ = pDevice_->CreateBuffer(L"Upload", BufferType::Upload, strideSize, numElement);
 
 		uploadBuffer_->Upload(pData, strideSize, numElement);
 

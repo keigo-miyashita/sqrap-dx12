@@ -18,10 +18,10 @@ bool SampleApplication::OnStart()
 
 	GUI_ = device_.CreateGUI(GetWindowHWND());
 
-	command_ = device_.CreateCommand();
+	command_ = device_.CreateCommand(L"General");
 
 	SIZE size = { GetWindowWidth(), GetWindowHeight() };
-	swapChain_ = device_.CreateSwapChain(command_, GetWindowHWND(), size);
+	swapChain_ = device_.CreateSwapChain(L"Main", command_, GetWindowHWND(), size);
 
 	// ASMesh
 	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";
@@ -35,9 +35,10 @@ bool SampleApplication::OnStart()
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	suzanneBLAS_ = device_.CreateBLAS(command_, suzanneASMesh_);
+	suzanneBLAS_ = device_.CreateBLAS(L"suzanne", command_, suzanneASMesh_);
 	XMMATRIX modelMat = XMMatrixMultiply(XMMatrixRotationY(XMConvertToRadians(180)), XMMatrixIdentity());
 	sceneTLAS_ = device_.CreateTLAS(
+		L"scene",
 		command_,
 		{
 			{modelMat, 0, suzanneBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
@@ -45,13 +46,14 @@ bool SampleApplication::OnStart()
 	);
 
 	// Resources
-	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(RayTracigCameraMatrix)), 1);
+	cameraBuffer_ = device_.CreateBuffer(L"camera", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(RayTracigCameraMatrix)), 1);
 	cameraBuffer_->Write(RayTracigCameraMatrix{ camera_.GetView(), camera_.GetProj(), camera_.GetInvViewProj(), camera_.GetInvView(), XMFLOAT4(0.0f, 0.0f, -5.0f, 1.0f) });
 
-	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	light0Buffer_ = device_.CreateBuffer(L"light0", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
 	light0Buffer_->Write(light0_);
 
 	outputTexture_ = device_.CreateTexture(
+		L"output",
 		TextureDim::Tex2D,
 		TextureType::Unordered,
 		0, DXGI_FORMAT_R8G8B8A8_UNORM, GetWindowWidth(), GetWindowHeight(), 1
@@ -67,6 +69,7 @@ bool SampleApplication::OnStart()
 
 	// Descriptor Manager
 	suzanneDescManager_ = device_.CreateDescriptorManager(
+		L"suzanne",
 		HeapType::Resource,
 		{
 			{ cameraBuffer_,					ViewType::CBV, 0},
@@ -80,6 +83,7 @@ bool SampleApplication::OnStart()
 	);
 	// RootSignature
 	suzanneRootSignature_ = device_.CreateRootSignature(
+		L"suzanne",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	suzanneDescManager_},
@@ -101,6 +105,7 @@ bool SampleApplication::OnStart()
 
 	// StateObject
 	rayTracingStates_ = device_.CreateStateObject(
+		L"rayTracing",
 		{
 			StateObjectType::Raytracing,
 			StateObjectDesc::RayTracingDesc
@@ -124,6 +129,7 @@ bool SampleApplication::OnStart()
 	);
 
 	rayTracing_ = device_.CreateRaytracing(
+		L"rayTracing",
 		rayTracingStates_,
 		GetWindowWidth(),
 		GetWindowHeight(),

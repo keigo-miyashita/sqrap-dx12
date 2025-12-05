@@ -18,10 +18,10 @@ bool MeshShaderApp::OnStart()
 
 	GUI_ = device_.CreateGUI(GetWindowHWND());
 
-	command_ = device_.CreateCommand();
+	command_ = device_.CreateCommand(L"General");
 
 	SIZE size = { GetWindowWidth(), GetWindowHeight() };
-	swapChain_ = device_.CreateSwapChain(command_, GetWindowHWND(), size);
+	swapChain_ = device_.CreateSwapChain(L"Main", command_, GetWindowHWND(), size);
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";
@@ -41,13 +41,13 @@ bool MeshShaderApp::OnStart()
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 
 	// Resources
-	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
+	cameraBuffer_ = device_.CreateBuffer(L"camera", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
 	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
 
-	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	light0Buffer_ = device_.CreateBuffer(L"light0", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
 	light0Buffer_->Write(light0_);
 
-	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(TransformMatrix)), 1);
+	sphere0Buffer_ = device_.CreateBuffer(L"sphere0", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(TransformMatrix)), 1);
 	sphere0Buffer_->Write(sphere0_);
 
 	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
@@ -59,6 +59,7 @@ bool MeshShaderApp::OnStart()
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
+		L"sphere0",
 		HeapType::Resource,
 		{
 			{ cameraBuffer_,				ViewType::CBV, 0},
@@ -70,6 +71,7 @@ bool MeshShaderApp::OnStart()
 	);
 	// RootSignature
 	sphere0RootSignature_ = device_.CreateRootSignature(
+		L"sphere0",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	sphere0DescManager_},
@@ -81,7 +83,7 @@ bool MeshShaderApp::OnStart()
 	meshDesc.rootSignature_ = sphere0RootSignature_;
 	meshDesc.MS_ = simpleMS_;
 	meshDesc.PS_ = lambertPS_;
-	lambert_ = device_.CreateMeshPipeline(meshDesc);
+	lambert_ = device_.CreateMeshPipeline(L"lamber", meshDesc);
 
 	return true;
 };

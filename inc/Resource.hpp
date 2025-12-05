@@ -69,7 +69,7 @@ namespace sqrp
 		static UINT AlignForUAVCounter(UINT size);
 		static UINT AlignForConstantBuffer(UINT size);
 
-		Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name = L"");
+		Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement);
 		~Buffer() = default;
 
 		void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
@@ -120,7 +120,7 @@ namespace sqrp
 		DXGI_FORMAT format_;
 
 	public:
-		Texture(const Device& device, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name = L"");
+		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth);
 		Texture();
 		~Texture() = default;
 		void* Map();
@@ -148,7 +148,7 @@ namespace sqrp
 		UINT size_;
 
 	public:
-		AS(const Device& device, UINT size, std::wstring name = L"");
+		AS(const Device& device, std::wstring name, UINT size);
 		~AS() = default;
 
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;

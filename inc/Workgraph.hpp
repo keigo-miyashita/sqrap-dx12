@@ -36,7 +36,7 @@ namespace sqrp
 	public:
 		static UINT AlignForLocalSigBuffer(UINT size);
 		static UINT CopyMem(void* dest, const void* data, UINT size);
-		WorkGraph(const Device& device, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, std::wstring name = L"");
+		WorkGraph(const Device& device, std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0);
 		~WorkGraph() = default;
 
 		D3D12_GPU_VIRTUAL_ADDRESS_RANGE GetBackingMemoryAddressRange();

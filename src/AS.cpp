@@ -35,10 +35,10 @@ namespace sqrp
 		pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 		cout << "BLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
-		scratchBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1);
+		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_BLAS_scratch", BufferType::Unordered, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1);
 
 		cout << "BLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-		ASBuffer_ = pDevice_->CreateAS((UINT)prebuildInfo.ResultDataMaxSizeInBytes);
+		ASBuffer_ = pDevice_->CreateAS(name_ + L"_BLAS", (UINT)prebuildInfo.ResultDataMaxSizeInBytes);
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 		buildASDesc.Inputs = buildInputs;
@@ -54,7 +54,7 @@ namespace sqrp
 		command_->WaitCommand();
 	}
 
-	BLAS::BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name)
+	BLAS::BLAS(const Device& device, std::wstring name, CommandHandle command, ASMeshHandle mesh)
 		: pDevice_(&device), command_(command), name_(name)
 	{
 		CreateBLAS(mesh);
@@ -84,7 +84,7 @@ namespace sqrp
 		}
 
 		shared_ptr<Buffer> uploadBuffer;
-		uploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
+		uploadBuffer = pDevice_->CreateBuffer(L"_upload", BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 		void* rawPtr = uploadBuffer->Map();
 		if (rawPtr) {
 			D3D12_RAYTRACING_INSTANCE_DESC* pDesc = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(rawPtr);
@@ -92,7 +92,7 @@ namespace sqrp
 			uploadBuffer->Unmap();
 		}
 		cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
-		instanceDescBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
+		instanceDescBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 
 		command_->CopyBuffer(uploadBuffer, instanceDescBuffer_);
 		command_->WaitCommand();
@@ -108,10 +108,10 @@ namespace sqrp
 		pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 		cout << "TLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
-		scratchBuffer_ = pDevice_->CreateBuffer(BufferType::Unordered, prebuildInfo.ScratchDataSizeInBytes, 1);
+		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_scratch", BufferType::Unordered, prebuildInfo.ScratchDataSizeInBytes, 1);
 
 		cout << "TLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-		ASBuffer_ = pDevice_->CreateAS(prebuildInfo.ResultDataMaxSizeInBytes);
+		ASBuffer_ = pDevice_->CreateAS(name_ + L"_TLAS", prebuildInfo.ResultDataMaxSizeInBytes);
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 		buildASDesc.Inputs = buildInputs;
@@ -125,7 +125,7 @@ namespace sqrp
 		command_->WaitCommand();
 	}
 
-	TLAS::TLAS(const Device& device, CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name)
+	TLAS::TLAS(const Device& device, std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs)
 		: pDevice_(&device), command_(command), tlasDescs_(tlasDescs), name_(name)
 	{
 		CreateTLAS();

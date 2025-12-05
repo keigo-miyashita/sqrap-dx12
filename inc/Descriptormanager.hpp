@@ -36,9 +36,9 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
+		std::wstring name_;
 		// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
 		HeapType heapType_;
-		std::wstring name_;
 		ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
 		UINT viewOffset_ = 0;
 		UINT numDescriptor_ = 0;
@@ -60,7 +60,7 @@ namespace sqrp
 		void CreateSampler();
 
 	public:
-		DescriptorManager(const Device& pDevice, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE, std::wstring name = L"");
+		DescriptorManager(const Device& pDevice, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
 		~DescriptorManager() = default;
 		ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() const;
 		HeapType GetHeapType() const;

@@ -34,7 +34,7 @@ namespace sqrp
 
 
 	public:
-		SwapChain(const Device& device, CommandHandle command, const HWND& hwnd, SIZE winSize, std::wstring name = L"");
+		SwapChain(const Device& device, std::wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize);
 		~SwapChain() = default;
 
 		void BeginRender();

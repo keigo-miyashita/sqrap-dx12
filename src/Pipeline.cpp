@@ -81,7 +81,7 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	GraphicsPipeline::GraphicsPipeline(const Device& device, const GraphicsDesc& desc, std::wstring name)
+	GraphicsPipeline::GraphicsPipeline(const Device& device, std::wstring name, const GraphicsDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
 		CreateGraphicsPipelineState();
@@ -97,7 +97,7 @@ namespace sqrp
 
 	}
 
-	MeshPipeline::MeshPipeline(const Device& device, const MeshDesc& desc, std::wstring name)
+	MeshPipeline::MeshPipeline(const Device& device, std::wstring name, const MeshDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
 		D3DX12_MESH_SHADER_PIPELINE_STATE_DESC meshPSDesc = {};
@@ -156,7 +156,7 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	ComputePipeline::ComputePipeline(const Device& device, const ComputeDesc& desc, std::wstring name)
+	ComputePipeline::ComputePipeline(const Device& device, std::wstring name, const ComputeDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
 		CreateComputePipelineState();
@@ -167,7 +167,7 @@ namespace sqrp
 		return pipeline_;
 	}
 
-	StateObject::StateObject(const Device& device, const StateObjectDesc soDesc, std::wstring name)
+	StateObject::StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc)
 		: pDevice_(&device), soDesc_(soDesc), name_(name)
 	{
 		if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {

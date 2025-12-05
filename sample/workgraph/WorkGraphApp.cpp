@@ -18,10 +18,10 @@ bool WorkGraphApp::OnStart()
 
 	GUI_ = device_.CreateGUI(GetWindowHWND());
 
-	command_ = device_.CreateCommand();
+	command_ = device_.CreateCommand(L"General");
 
 	SIZE size = { GetWindowWidth(), GetWindowHeight() };
-	swapChain_ = device_.CreateSwapChain(command_, GetWindowHWND(), size);
+	swapChain_ = device_.CreateSwapChain(L"Main", command_, GetWindowHWND(), size);
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";
@@ -41,13 +41,13 @@ bool WorkGraphApp::OnStart()
 	sphere0_.invTransModel = XMMatrixTranspose(XMMatrixInverse(nullptr, sphere0_.model));
 
 	// Resources
-	cameraBuffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
+	cameraBuffer_ = device_.CreateBuffer(L"camera", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(CameraMatrix)), 1);
 	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
 
-	light0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
+	light0Buffer_ = device_.CreateBuffer(L"light0", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
 	light0Buffer_->Write(light0_);
 
-	sphere0Buffer_ = device_.CreateBuffer(BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(TransformMatrix)), 1);
+	sphere0Buffer_ = device_.CreateBuffer(L"sphere0", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(TransformMatrix)), 1);
 	sphere0Buffer_->Write(sphere0_);
 
 	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
@@ -59,6 +59,7 @@ bool WorkGraphApp::OnStart()
 
 	// Descriptor Manager
 	sphere0DescManager_ = device_.CreateDescriptorManager(
+		L"sphere0",
 		HeapType::Resource,
 		{
 			{ cameraBuffer_,				ViewType::CBV, 0},
@@ -70,6 +71,7 @@ bool WorkGraphApp::OnStart()
 	);
 	// RootSignature
 	sphere0RootSignature_ = device_.CreateRootSignature(
+		L"sphere0",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	sphere0DescManager_},
@@ -78,6 +80,7 @@ bool WorkGraphApp::OnStart()
 		);
 
 	workGraphStateObject_ = device_.CreateStateObject(
+		L"WorkGraph",
 		{
 			StateObjectType::WorkGraphMesh,
 			StateObjectDesc::WorkGraphDesc
@@ -94,7 +97,7 @@ bool WorkGraphApp::OnStart()
 		}
 	);
 
-	workGraph_ = device_.CreateWorkGraph(workGraphStateObject_, 1, 1);
+	workGraph_ = device_.CreateWorkGraph(L"", workGraphStateObject_, 1, 1);
 
 	return true;
 };

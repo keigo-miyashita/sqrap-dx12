@@ -22,15 +22,15 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		CommandHandle command_;
 		std::wstring name_;
+		CommandHandle command_;
 		ASHandle ASBuffer_;
 		BufferHandle scratchBuffer_;
 		void CreateBLAS(ASMeshHandle mesh);
 
 	public:
 
-		BLAS(const Device& device, CommandHandle command, ASMeshHandle mesh, std::wstring name = L"");
+		BLAS(const Device& device, std::wstring name, CommandHandle command, ASMeshHandle mesh);
 		~BLAS() = default;
 
 		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
@@ -61,7 +61,7 @@ namespace sqrp
 
 	public:
 
-		TLAS(const Device& device, CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name = L"");
+		TLAS(const Device& device, std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs);
 		~TLAS() = default;
 		ASHandle GetASBuffer() const;
 		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();

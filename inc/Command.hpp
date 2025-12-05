@@ -34,8 +34,8 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		D3D12_COMMAND_LIST_TYPE commandType_;
 		std::wstring name_;
+		D3D12_COMMAND_LIST_TYPE commandType_;
 		ComPtr<ID3D12CommandAllocator> commandAllocator_ = nullptr;
 		ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
 		ComPtr<StableCommandList> stableCommandList_ = nullptr;
@@ -49,7 +49,7 @@ namespace sqrp
 		//void CreateCommandQueue();
 
 	public:
-		Command(const Device& device, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, std::wstring name = L"");
+		Command(const Device& device, std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT);
 		~Command() = default;
 		void BeginRender(SwapChainHandle swapchain);
 		void EndRender(SwapChainHandle swapchain);

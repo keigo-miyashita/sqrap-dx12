@@ -10,13 +10,13 @@ using namespace DirectX;
 namespace sqrp
 {
 	Indirect::Indirect(const Device& device,
+		std::wstring name,
 		std::initializer_list<IndirectDesc> indirectDescs,
 		RootSignatureHandle rootSignature,
 		UINT byteStride,
 		UINT maxCommandCount,
 		BufferHandle argumentBuffer,
-		BufferHandle counterBuffer,
-		std::wstring name
+		BufferHandle counterBuffer
 	) : pDevice_(&device), maxCommandCount_(maxCommandCount), argumentBuffer_(argumentBuffer), counterBuffer_(counterBuffer), name_(name)
 	{
 		for (auto indirectDesc : indirectDescs) {
@@ -88,6 +88,9 @@ namespace sqrp
 		}
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateCommandSignature : " + to_string(result));
+		}
+		else {
+			cmdSig_->SetName((name_ + L"_CommandSignature").c_str());
 		}
 	}
 

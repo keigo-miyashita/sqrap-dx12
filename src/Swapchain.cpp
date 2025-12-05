@@ -53,7 +53,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain : " + to_string(result));
 		}
-		rtvHeap_->SetName(L"RenderTargetViewHeap");
+		rtvHeap_->SetName((name_ + L"RenderTargetViewHeap").c_str());
 
 		backBuffers_.resize(swapChainDesc1.BufferCount);
 
@@ -99,7 +99,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateCommittedResource for SwapChain's DepthStencilBuffer : " + to_string(result));
 		}
-		depthStencilBuffer_->SetName(L"DepthStencilBuffer");
+		depthStencilBuffer_->SetName((name_ + L"DepthStencilBuffer").c_str());
 
 		D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 		dsvHeapDesc.NumDescriptors = 1;
@@ -110,7 +110,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain's DepthStencilBuffer : " + to_string(result));
 		}
-		dsvHeap_->SetName(L"DepthStencilHeap");
+		dsvHeap_->SetName((name_ + L"DepthStencilHeap").c_str());
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 		dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -120,7 +120,8 @@ namespace sqrp
 		pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	SwapChain::SwapChain(const Device& device, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize, std::wstring name) : pDevice_(&device), pCommand_(command), name_(name)
+	SwapChain::SwapChain(const Device& device, std::wstring name, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize)
+		: pDevice_(&device), pCommand_(command), name_(name)
 	{
 
 		CreateSwapChain(hwnd, winSize);

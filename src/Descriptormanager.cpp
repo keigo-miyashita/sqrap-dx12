@@ -37,7 +37,7 @@ namespace sqrp
 		viewOffset_++;
 	}
 
-	DescriptorManager::DescriptorManager(const Device& device, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags, std::wstring name)
+	DescriptorManager::DescriptorManager(const Device& device, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags)
 		: pDevice_(&device), heapType_(heapType), name_(name)
 	{
 		numDescriptor_ = descManagerDesc.size();
@@ -56,7 +56,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateDescriptorHeap : " + to_string(result));
 		}
-		descHeap_->SetName(name_.c_str());
+		descHeap_->SetName((name_ + L"DescriptorHeap").c_str());
 
 		ViewType currentType = ViewType::NONE;
 		for (auto desc : descManagerDesc) {

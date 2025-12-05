@@ -23,7 +23,7 @@ namespace sqrp
 		return size;
 	}
 
-	WorkGraph::WorkGraph(const Device& device, StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name)
+	WorkGraph::WorkGraph(const Device& device, std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs)
 		: pDevice_(&device), name_(name)
 	{
 		ComPtr<ID3D12StateObjectProperties1> soProp = nullptr;
@@ -51,6 +51,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateCommittedResource for backingmemory : " + to_string(result));
 		}
+		backingMemory_->SetName((name_ + L"_WorkGraph_BackingMemory").c_str());
 		backingMemoryAddressRange_.SizeInBytes = memReqs_.MaxSizeInBytes;
 		backingMemoryAddressRange_.StartAddress = backingMemory_->GetGPUVirtualAddress();
 		numEntryPoints_ = workGraphProp_->GetNumEntrypoints(workGraphIndex_);
@@ -74,7 +75,7 @@ namespace sqrp
 				}
 			}
 			if (maxLocalRootSigSize != 0) {
-				localRootSigBuffer_ = pDevice_->CreateBuffer(BufferType::Upload, maxLocalRootSigSize, numLocalRootSig);
+				localRootSigBuffer_ = pDevice_->CreateBuffer(L"_WorkGraph_localRootSig", BufferType::Upload, maxLocalRootSigSize, numLocalRootSig);
 				void* rawPtr = localRootSigBuffer_->Map();
 				for (auto& programDesc : workGraphDesc.programDescs_) {
 					if (programDesc.resourceSet_) {

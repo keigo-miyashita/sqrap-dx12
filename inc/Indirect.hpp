@@ -39,13 +39,13 @@ namespace sqrp
 	public:
 		Indirect(
 			const Device& device,
+			std::wstring name,
 			std::initializer_list<IndirectDesc> indirectDescs,
 			RootSignatureHandle rootSignature,
 			UINT byteStride,
 			UINT maxCommandCount = 0,
 			BufferHandle argumentBuffer = nullptr,
-			BufferHandle counterBuffer = nullptr,
-			std::wstring name = L""
+			BufferHandle counterBuffer = nullptr
 		);
 		~Indirect() = default;
 		ComPtr<ID3D12CommandSignature> GetCommandSignature() const;

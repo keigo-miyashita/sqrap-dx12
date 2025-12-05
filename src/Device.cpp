@@ -226,9 +226,9 @@ namespace sqrp
 		}
 	}
 
-	std::shared_ptr<AS> Device::CreateAS(UINT size, std::wstring name) const
+	std::shared_ptr<AS> Device::CreateAS(std::wstring name, UINT size) const
 	{
-		return make_shared<AS>(*this, size, name);
+		return make_shared<AS>(*this, name, size);
 	}
 
 	ASMeshHandle Device::CreateASMesh(CommandHandle command, std::string modelPath) const
@@ -236,34 +236,34 @@ namespace sqrp
 		return make_shared<ASMesh>(*this, command, modelPath);
 	}
 
-	ASMeshHandle Device::CreateASMesh(CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const
+	ASMeshHandle Device::CreateASMesh(std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const
 	{
-		return make_shared<ASMesh>(*this, command, ASVertices, indices);
+		return make_shared<ASMesh>(*this, name, command, ASVertices, indices);
 	}
 
-	BLASHandle Device::CreateBLAS(CommandHandle command, ASMeshHandle mesh, std::wstring name) const
+	BLASHandle Device::CreateBLAS(std::wstring name, CommandHandle command, ASMeshHandle mesh) const
 	{
-		return make_shared<BLAS>(*this, command, mesh, name);
+		return make_shared<BLAS>(*this, name, command, mesh);
 	}
 
-	BufferHandle Device::CreateBuffer(BufferType type, UINT strideSize, UINT numElement, std::wstring name) const
+	BufferHandle Device::CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement) const
 	{
-		return make_shared<Buffer>(*this, type, strideSize, numElement, name);
+		return make_shared<Buffer>(*this, name, type, strideSize, numElement);
 	}
 
-	CommandHandle Device::CreateCommand(D3D12_COMMAND_LIST_TYPE commandType, std::wstring name) const
+	CommandHandle Device::CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType) const
 	{
-		return make_shared<Command>(*this, commandType, name);
+		return make_shared<Command>(*this, name, commandType);
 	}
 
-	ComputePipelineHandle Device::CreateComputePipeline(const ComputeDesc& desc, std::wstring name) const
+	ComputePipelineHandle Device::CreateComputePipeline(std::wstring name, const ComputeDesc& desc) const
 	{
-		return make_shared<ComputePipeline>(*this, desc, name);
+		return make_shared<ComputePipeline>(*this, name, desc);
 	}
 
-	DescriptorManagerHandle Device::CreateDescriptorManager(HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags, std::wstring name) const
+	DescriptorManagerHandle Device::CreateDescriptorManager(std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags) const
 	{
-		return make_shared<DescriptorManager>(*this, heapType, descManagerDesc, flags, name);
+		return make_shared<DescriptorManager>(*this, name, heapType, descManagerDesc, flags);
 	}
 
 	FenceHandle Device::CreateFence(std::wstring name) const
@@ -271,9 +271,9 @@ namespace sqrp
 		return make_shared<Fence>(*this, name);
 	}
 
-	GraphicsPipelineHandle Device::CreateGraphicsPipeline(const GraphicsDesc& desc, std::wstring name) const
+	GraphicsPipelineHandle Device::CreateGraphicsPipeline(std::wstring name, const GraphicsDesc& desc) const
 	{
-		return make_shared<GraphicsPipeline>(*this, desc, name);
+		return make_shared<GraphicsPipeline>(*this, name, desc);
 	}
 
 	GUIHandle Device::CreateGUI(const HWND& hwnd) const
@@ -281,9 +281,9 @@ namespace sqrp
 		return make_shared<GUI>(*this, hwnd);
 	}
 
-	IndirectHandle Device::CreateIndirect(std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount, BufferHandle argumentBuffer, BufferHandle counterBuffer, std::wstring name) const
+	IndirectHandle Device::CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount, BufferHandle argumentBuffer, BufferHandle counterBuffer) const
 	{
-		return make_shared<Indirect>(*this, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer, name);
+		return make_shared<Indirect>(*this, name, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer);
 	}
 
 	MeshHandle Device::CreateMesh(CommandHandle command, std::string modelPath) const
@@ -291,49 +291,49 @@ namespace sqrp
 		return make_shared<Mesh>(*this, command, modelPath);
 	}
 
-	MeshHandle Device::CreateMesh(CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
+	MeshHandle Device::CreateMesh(std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
 	{
-		return make_shared<Mesh>(*this, command, vertices, indices);
+		return make_shared<Mesh>(*this, name, command, vertices, indices);
 	}
 
-	MeshPipelineHandle Device::CreateMeshPipeline(const MeshDesc& desc, std::wstring name) const
+	MeshPipelineHandle Device::CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const
 	{
-		return make_shared<MeshPipeline>(*this, desc, name);
+		return make_shared<MeshPipeline>(*this, name, desc);
 	}
 
-	RayTracingHandle Device::CreateRaytracing(StateObjectHandle stateObject, UINT width, UINT height, UINT depth, std::wstring name) const
+	RayTracingHandle Device::CreateRaytracing(std::wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth) const
 	{
-		return make_shared<RayTracing>(*this, stateObject, width, height, depth, name);
+		return make_shared<RayTracing>(*this, name, stateObject, width, height, depth);
 	}
 
-	RootSignatureHandle Device::CreateRootSignature(D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name) const
+	RootSignatureHandle Device::CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const
 	{
-		return make_shared<RootSignature>(*this, flag, rootParams, name);
+		return make_shared<RootSignature>(*this, name, flag, rootParams);
 	}
 
-	StateObjectHandle Device::CreateStateObject(const StateObjectDesc soDesc, std::wstring name) const
+	StateObjectHandle Device::CreateStateObject(std::wstring name, const StateObjectDesc soDesc) const
 	{
-		return make_shared<StateObject>(*this, soDesc, name);
+		return make_shared<StateObject>(*this, name, soDesc);
 	}
 
-	SwapChainHandle Device::CreateSwapChain(CommandHandle command, const HWND& hwnd, SIZE winSize, std::wstring name) const
+	SwapChainHandle Device::CreateSwapChain(std::wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize) const
 	{
-		return make_shared<SwapChain>(*this, command, hwnd, winSize, name);
+		return make_shared<SwapChain>(*this, name, command, hwnd, winSize);
 	}
 
-	TextureHandle Device::CreateTexture(TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+	TextureHandle Device::CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
 	{
-		return make_shared<Texture>(*this, texDim, type, strideSize, format, width, height, depth, name);
+		return make_shared<Texture>(*this, name, texDim, type, strideSize, format, width, height, depth);
 	}
 
-	TLASHandle Device::CreateTLAS(CommandHandle command, const std::vector<TLASDesc>& tlasDescs, std::wstring name) const
+	TLASHandle Device::CreateTLAS(std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs) const
 	{
-		return make_shared<TLAS>(*this, command, tlasDescs, name);
+		return make_shared<TLAS>(*this, name, command, tlasDescs);
 	}
 
-	WorkGraphHandle Device::CreateWorkGraph(StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs, std::wstring name) const
+	WorkGraphHandle Device::CreateWorkGraph(std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs) const
 	{
-		return make_shared<WorkGraph>(*this, stateObject, maxInputRecords, maxNodeInputs, name);
+		return make_shared<WorkGraph>(*this, name, stateObject, maxInputRecords, maxNodeInputs);
 	}
 
 	ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const

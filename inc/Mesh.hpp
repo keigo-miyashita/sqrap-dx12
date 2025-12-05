@@ -5,6 +5,8 @@
 #include "Alias.hpp"
 namespace sqrp
 {
+	std::wstring StringToWString(const std::string& str);
+
 	class Buffer;
 	class Command;
 	class Device;
@@ -29,6 +31,7 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
+		std::wstring name_ = L"";
 		CommandHandle command_;
 		std::vector<Vertex> vertices_;
 		BufferHandle vertexBuffer_;
@@ -43,7 +46,7 @@ namespace sqrp
 
 	public:
 		Mesh(const Device& device, CommandHandle command, std::string modelPath);
-		Mesh(const Device& device, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+		Mesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 		~Mesh() = default;
 		BufferHandle GetVertexBuffer() const;
 		D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
@@ -62,6 +65,7 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
+		std::wstring name_ = L"";
 		CommandHandle command_;
 		std::vector<ASVertex> ASVertices_;
 		BufferHandle vertexBuffer_;
@@ -76,7 +80,7 @@ namespace sqrp
 
 	public:
 		ASMesh(const Device& device, CommandHandle command, std::string modelPath);
-		ASMesh(const Device& device, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
+		ASMesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
 		~ASMesh() = default;
 		BufferHandle GetVertexBuffer() const;
 		D3D12_VERTEX_BUFFER_VIEW GetVBView() const;

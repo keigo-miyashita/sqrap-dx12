@@ -50,7 +50,7 @@ namespace sqrp
 		UINT size_ = 0;
 
 	public:
-		RootSignature(const Device& device, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams, std::wstring name = L"");
+		RootSignature(const Device& device, std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams);
 		~RootSignature() = default;
 		ComPtr<ID3D12RootSignature> GetRootSignature() const;
 		UINT GetSize() const;

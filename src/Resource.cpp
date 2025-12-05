@@ -84,7 +84,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to create buffer : " + to_string(result));
 		}
-		resource_->SetName(name_.c_str());
+		resource_->SetName((name_ + L"_Buffer").c_str());
 		return true;
 	}
 
@@ -100,7 +100,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to create buffer : " + to_string(result));
 		}
-		resource_->SetName(name_.c_str());
+		resource_->SetName((name_ + L"_Counter_Buffer").c_str());
 		return true;
 	}
 
@@ -115,7 +115,7 @@ namespace sqrp
 		return (size + 0xff) & ~0xff;
 	}
 
-	Buffer::Buffer(const Device& device, BufferType type, UINT strideSize, UINT numElement, std::wstring name)
+	Buffer::Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement)
 		: Resource(device, ResourceType::Buffer, name), type_(type), strideSize_(strideSize), numElement_(numElement)
 	{
 		if (type == BufferType::Counter) {
@@ -256,7 +256,7 @@ namespace sqrp
 		return offsetCounter_;
 	}
 
-	Texture::Texture(const Device& device, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, std::wstring name)
+	Texture::Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
 		: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth)
 	{
 		if (type_ == TextureType::Default) {
@@ -299,7 +299,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to create buffer : " + to_string(result));
 		}
-		resource_->SetName(name_.c_str());
+		resource_->SetName((name_ + L"_Texture").c_str());
 	}
 
 	Texture::Texture()
@@ -398,7 +398,7 @@ namespace sqrp
 		resource_ = resource;
 	}
 
-	AS::AS(const Device& device, UINT size, std::wstring name)
+	AS::AS(const Device& device, std::wstring name, UINT size)
 		: Resource(device, ResourceType::AS, name), size_(size)
 	{
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -411,7 +411,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateCommittedResource for AS : " + to_string(result));
 		}
-		resource_->SetName(name_.c_str());
+		resource_->SetName((name_ + L"_AS").c_str());
 	}
 
 	void AS::CreateSRV(DescriptorManager& descManager, UINT viewOffset)

@@ -16,6 +16,21 @@ using namespace DirectX;
 
 namespace sqrp
 {
+	std::wstring StringToWString(const std::string& str)
+	{
+		int size_needed = MultiByteToWideChar(CP_UTF8, 0,
+			str.c_str(), (int)str.size(),
+			nullptr, 0);
+
+		std::wstring result(size_needed, 0);
+
+		MultiByteToWideChar(CP_UTF8, 0,
+			str.c_str(), (int)str.size(),
+			&result[0], size_needed);
+
+		return result;
+	}
+
 	bool Mesh::LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
 		tinygltf::Model model;
@@ -86,7 +101,7 @@ namespace sqrp
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices_.size() * sizeof(Vertex));
 		shared_ptr<Buffer> vertexUploadBuffer;
-		vertexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(Vertex), vertices_.size());
+		vertexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), vertices_.size());
 		void* rawPtr = vertexUploadBuffer->Map();
 		if (rawPtr) {
 			Vertex* pVertex = static_cast<Vertex*>(rawPtr);
@@ -94,7 +109,7 @@ namespace sqrp
 			vertexUploadBuffer->Unmap();
 		}
 
-		vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(Vertex), vertices_.size());
+		vertexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), vertices_.size());
 		command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
 		command_->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
@@ -109,7 +124,7 @@ namespace sqrp
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
 		shared_ptr<Buffer> indexUploadBuffer;
-		indexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(uint32_t), indices_.size());
+		indexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices_.size());
 		void* rawPtr = indexUploadBuffer->Map();
 		if (rawPtr) {
 			uint32_t* pIndex = static_cast<uint32_t*>(rawPtr);
@@ -117,7 +132,7 @@ namespace sqrp
 			indexUploadBuffer->Unmap();
 		}
 
-		indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
+		indexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), indices_.size());
 		command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
 		command_->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
@@ -130,13 +145,17 @@ namespace sqrp
 	Mesh::Mesh(const Device& device, CommandHandle command, std::string modelPath)
 		: pDevice_(&device), command_(command)
 	{
+		std::filesystem::path fullPath = modelPath;
+		std::string name = fullPath.stem().string();
+		name_ = StringToWString(name);
+
 		LoadModel(modelPath, vertices_, indices_);
 		CreateVertexBuffer();
 		CreateIndexBuffer();
 	}
 
-	Mesh::Mesh(const Device& device, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
-		: pDevice_(&device), command_(command), vertices_(vertices), indices_(indices)
+	Mesh::Mesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+		: pDevice_(&device), command_(command), vertices_(vertices), indices_(indices), name_(name)
 	{
 		CreateVertexBuffer();
 		CreateIndexBuffer();
@@ -231,7 +250,7 @@ namespace sqrp
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(ASVertices_.size() * sizeof(ASVertex));
 		shared_ptr<Buffer> vertexUploadBuffer;
-		vertexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(ASVertices_), ASVertices_.size());
+		vertexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Vertex", BufferType::Upload, sizeof(ASVertices_), ASVertices_.size());
 		void* rawPtr = vertexUploadBuffer->Map();
 		if (rawPtr) {
 			ASVertex* pVertex = static_cast<ASVertex*>(rawPtr);
@@ -239,7 +258,7 @@ namespace sqrp
 			vertexUploadBuffer->Unmap();
 		}
 
-		vertexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
+		vertexBuffer_ = pDevice_->CreateBuffer(L"_Vertex", BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
 		command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
 		command_->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
@@ -254,7 +273,7 @@ namespace sqrp
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
 		shared_ptr<Buffer> indexUploadBuffer;
-		indexUploadBuffer = pDevice_->CreateBuffer(BufferType::Upload, sizeof(uint32_t), indices_.size());
+		indexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices_.size());
 		void* rawPtr = indexUploadBuffer->Map();
 		if (rawPtr) {
 			uint32_t* pIndex = static_cast<uint32_t*>(rawPtr);
@@ -262,7 +281,7 @@ namespace sqrp
 			indexUploadBuffer->Unmap();
 		}
 
-		indexBuffer_ = pDevice_->CreateBuffer(BufferType::Default, sizeof(uint32_t), indices_.size());
+		indexBuffer_ = pDevice_->CreateBuffer(L"_Index", BufferType::Default, sizeof(uint32_t), indices_.size());
 		command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
 		command_->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
@@ -275,13 +294,16 @@ namespace sqrp
 	ASMesh::ASMesh(const Device& device, CommandHandle command, std::string modelPath)
 		: pDevice_(&device), command_(command)
 	{
+		std::filesystem::path fullPath = modelPath;
+		std::string name = fullPath.stem().string();
+		name_ = StringToWString(name);
 		LoadModelForAS(modelPath, ASVertices_, indices_);
 		CreateVertexBuffer();
 		CreateIndexBuffer();
 	}
 
-	ASMesh::ASMesh(const Device& device, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices)
-		: pDevice_(&device), command_(command), ASVertices_(ASVertices), indices_(indices)
+	ASMesh::ASMesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices)
+		: pDevice_(&device), command_(command), ASVertices_(ASVertices), indices_(indices), name_(name)
 	{
 		CreateVertexBuffer();
 		CreateIndexBuffer();
