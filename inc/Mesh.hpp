@@ -32,6 +32,7 @@ namespace sqrp
 
 		const Device* pDevice_ = nullptr;
 		std::wstring name_ = L"";
+		bool isWritable_ = false;
 		CommandHandle command_;
 		std::vector<Vertex> vertices_;
 		BufferHandle vertexBuffer_;
@@ -47,7 +48,13 @@ namespace sqrp
 	public:
 		Mesh(const Device& device, CommandHandle command, std::string modelPath);
 		Mesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+		// For writable mesh
+		Mesh(const Device& device, std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum);
 		~Mesh() = default;
+
+		void UpdateVBView(UINT numVertices);
+		void UpdateIBView(UINT numIndices);
+
 		BufferHandle GetVertexBuffer() const;
 		D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 		const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;

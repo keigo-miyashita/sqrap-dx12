@@ -115,39 +115,39 @@ namespace sqrp
 		return (size + 0xff) & ~0xff;
 	}
 
-	Buffer::Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement)
+	Buffer::Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag)
 		: Resource(device, ResourceType::Buffer, name), type_(type), strideSize_(strideSize), numElement_(numElement)
 	{
 		if (type == BufferType::Counter) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
-			rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+			rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
 			rscState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			CreateCounterBuffer();
 		}
 		else {
 			if (type == BufferType::Default) {
 				heapType_ = D3D12_HEAP_TYPE_DEFAULT;
-				rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+				rscFlag_ = D3D12_RESOURCE_FLAG_NONE | resourceFlag;
 				rscState_ = D3D12_RESOURCE_STATE_COMMON;
 			}
 			else if (type == BufferType::Upload) {
 				heapType_ = D3D12_HEAP_TYPE_UPLOAD;
-				rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+				rscFlag_ = D3D12_RESOURCE_FLAG_NONE | resourceFlag;
 				rscState_ = D3D12_RESOURCE_STATE_COPY_SOURCE;
 			}
 			else if (type == BufferType::Read) {
 				heapType_ = D3D12_HEAP_TYPE_READBACK;
-				rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
+				rscFlag_ = D3D12_RESOURCE_FLAG_NONE | resourceFlag;
 				rscState_ = D3D12_RESOURCE_STATE_COPY_DEST;
 			}
 			else if (type == BufferType::Unordered) {
 				heapType_ = D3D12_HEAP_TYPE_DEFAULT;
-				rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
 				rscState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			}
 			else if (type == BufferType::AS) {
 				heapType_ = D3D12_HEAP_TYPE_DEFAULT;
-				rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
 				rscState_ = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 			}
 			CreateBuffer();
@@ -185,6 +185,13 @@ namespace sqrp
 		else {
 			cerr << "Failed to upload buffer" << endl;
 		}
+	}
+
+	void Buffer::Write(const void* src, UINT size)
+	{
+		void* rawPtr = Map();
+		std::memcpy(rawPtr, src, size);
+		Unmap();
 	}
 
 	void Buffer::CreateCBV(DescriptorManager& descManager, UINT viewOffset)

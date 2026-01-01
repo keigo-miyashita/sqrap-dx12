@@ -64,7 +64,7 @@ namespace sqrp
 		ASMeshHandle			CreateASMesh(CommandHandle command, std::string modelPath) const;
 		ASMeshHandle			CreateASMesh(std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
 		BLASHandle				CreateBLAS(std::wstring name, CommandHandle command, ASMeshHandle mesh) const;
-		BufferHandle			CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement) const;
+		BufferHandle			CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE) const;
 		CommandHandle			CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT) const;
 		ComputePipelineHandle	CreateComputePipeline(std::wstring name, const ComputeDesc& desc) const;
 		DescriptorManagerHandle	CreateDescriptorManager(std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE) const;
@@ -74,6 +74,7 @@ namespace sqrp
 		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount = 0, BufferHandle argumentBuffer = nullptr, BufferHandle counterBuffer = nullptr) const;
 		MeshHandle				CreateMesh(CommandHandle command, std::string modelPath) const;
 		MeshHandle				CreateMesh(std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
+		MeshHandle				CreateMesh(std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum) const;
 		MeshPipelineHandle		CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const;
 		RayTracingHandle		CreateRaytracing(std::wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth) const;
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;

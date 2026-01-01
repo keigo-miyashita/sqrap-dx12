@@ -109,7 +109,8 @@ namespace sqrp
 			vertexUploadBuffer->Unmap();
 		}
 
-		vertexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), vertices_.size());
+		BufferType type = isWritable_ ? BufferType::Unordered : BufferType::Default;
+		vertexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Vertex", type, sizeof(Vertex), vertices_.size());
 		command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
 		command_->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
@@ -132,7 +133,8 @@ namespace sqrp
 			indexUploadBuffer->Unmap();
 		}
 
-		indexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), indices_.size());
+		BufferType type = isWritable_ ? BufferType::Unordered : BufferType::Default;
+		indexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Index", type, sizeof(uint32_t), indices_.size());
 		command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
 		command_->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
@@ -159,6 +161,25 @@ namespace sqrp
 	{
 		CreateVertexBuffer();
 		CreateIndexBuffer();
+	}
+
+	Mesh::Mesh(const Device& device, std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum)
+		: pDevice_(&device), command_(command), name_(name), isWritable_(true)
+	{
+		vertices_.resize(verticesNum);
+		indices_.resize(indicesNum);
+		CreateVertexBuffer();
+		CreateIndexBuffer();
+	}
+
+	void Mesh::UpdateVBView(UINT numVertices)
+	{
+		vbView_.SizeInBytes = numVertices * sizeof(Vertex);
+	}
+
+	void Mesh::UpdateIBView(UINT numIndices)
+	{
+		ibView_.SizeInBytes = numIndices * sizeof(uint32_t);
 	}
 
 	BufferHandle Mesh::GetVertexBuffer() const

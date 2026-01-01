@@ -246,9 +246,9 @@ namespace sqrp
 		return make_shared<BLAS>(*this, name, command, mesh);
 	}
 
-	BufferHandle Device::CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement) const
+	BufferHandle Device::CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag) const
 	{
-		return make_shared<Buffer>(*this, name, type, strideSize, numElement);
+		return make_shared<Buffer>(*this, name, type, strideSize, numElement, resourceFlag);
 	}
 
 	CommandHandle Device::CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType) const
@@ -294,6 +294,11 @@ namespace sqrp
 	MeshHandle Device::CreateMesh(std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
 	{
 		return make_shared<Mesh>(*this, name, command, vertices, indices);
+	}
+
+	MeshHandle Device::CreateMesh(std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum) const
+	{
+		return make_shared<Mesh>(*this, name, command, verticesNum, indicesNum);
 	}
 
 	MeshPipelineHandle Device::CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const

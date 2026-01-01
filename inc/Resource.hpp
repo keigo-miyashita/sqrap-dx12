@@ -69,7 +69,7 @@ namespace sqrp
 		static UINT AlignForUAVCounter(UINT size);
 		static UINT AlignForConstantBuffer(UINT size);
 
-		Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement);
+		Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE);
 		~Buffer() = default;
 
 		void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
@@ -84,6 +84,7 @@ namespace sqrp
 
 			Unmap();
 		}
+		void Write(const void* src, UINT size);
 
 		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
