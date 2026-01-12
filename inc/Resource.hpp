@@ -84,6 +84,15 @@ namespace sqrp
 
 			Unmap();
 		}
+		template<typename T>
+		void Write(std::vector<T>& dest)
+		{
+			void* rawPtr = Map();
+			T* castedPtr = static_cast<T*>(rawPtr);
+			memcpy(castedPtr, dest.data(), sizeof(T) * dest.size());
+
+			Unmap();
+		}
 		void Write(const void* src, UINT size);
 		template<typename T>
 		void Read(std::vector<T>& dest)
