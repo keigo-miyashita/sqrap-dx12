@@ -85,6 +85,15 @@ namespace sqrp
 			Unmap();
 		}
 		void Write(const void* src, UINT size);
+		template<typename T>
+		void Read(std::vector<T>& dest)
+		{
+			void* rawPtr = Map();
+
+			std::memcpy(dest.data(), rawPtr, dest.size() * sizeof(T));
+
+			Unmap();
+		}
 
 		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
