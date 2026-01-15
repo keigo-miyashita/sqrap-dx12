@@ -24,7 +24,7 @@ namespace sqrp
 		ResourceType rscType_;
 		D3D12_HEAP_TYPE heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
-		D3D12_RESOURCE_STATES rscState_ = D3D12_RESOURCE_STATE_COMMON;
+		D3D12_RESOURCE_STATES initialState_ = D3D12_RESOURCE_STATE_COMMON;
 
 	public:
 		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
@@ -41,9 +41,9 @@ namespace sqrp
 		ResourceType GetResourceType() const;
 		D3D12_HEAP_TYPE GetHeapType() const;
 		D3D12_RESOURCE_FLAGS GetResourceFlag() const;
-		D3D12_RESOURCE_STATES GetResourceState() const;
+		D3D12_RESOURCE_STATES GetInitialState() const;
 
-		void SetResourceState(D3D12_RESOURCE_STATES rscState);
+		//void SetResourceState(D3D12_RESOURCE_STATES rscState);
 	};
 
 	enum class BufferType
@@ -94,8 +94,17 @@ namespace sqrp
 			Unmap();
 		}
 		void Write(const void* src, UINT size);
+		template<typename T, std::size_t N>
+		void Read(std::array<T, N> dest)
+		{
+			void* rawPtr = Map();
+
+			std::memcpy(dest.data(), rawPtr, dest.size() * sizeof(T));
+
+			Unmap();
+		}
 		template<typename T>
-		void Read(std::vector<T>& dest)
+		void Read(std::vector<T> dest)
 		{
 			void* rawPtr = Map();
 

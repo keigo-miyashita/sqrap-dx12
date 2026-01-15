@@ -142,15 +142,20 @@ namespace sqrp
 		commandList_->ResourceBarrier(numBarriers, pBarriers);
 	}
 
-	void Command::CopyBuffer(ResourceHandle srcResource, ResourceHandle destResource)
+	void Command::Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers)
+	{
+		commandList_->ResourceBarrier(barriers.size(), barriers.data());
+	}
+
+	void Command::CopyBuffer(ResourceHandle srcResource, D3D12_RESOURCE_STATES srcCurrentState, ResourceHandle destResource, D3D12_RESOURCE_STATES destCurrentState)
 	{
 		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
-		if (srcResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), srcResource->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+			auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), srcCurrentState, D3D12_RESOURCE_STATE_COPY_SOURCE);
 			rscBarriers.push_back(srcBarrier);
 		}
-		if (destResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), destResource->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
+			auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), destCurrentState, D3D12_RESOURCE_STATE_COPY_DEST);
 			rscBarriers.push_back(destBarrier);
 		}
 
@@ -160,12 +165,12 @@ namespace sqrp
 		commandList_->CopyResource(destResource->GetResource().Get(), srcResource->GetResource().Get());
 
 		rscBarriers.clear();
-		if (srcResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcResource->GetResourceState());
+		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+			auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcCurrentState);
 			rscBarriers.push_back(srcbarrier);
 		}
-		if (destResource->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destResource->GetResourceState());
+		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
+			auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destCurrentState);
 			rscBarriers.push_back(destbarrier);
 		}
 		if (rscBarriers.size() != 0) {
@@ -173,15 +178,15 @@ namespace sqrp
 		}
 	}
 
-	void Command::CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHandle destBuffer, UINT destOffset, UINT numBytes)
+	void Command::CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, D3D12_RESOURCE_STATES srcCurrentState, BufferHandle destBuffer, UINT destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT numBytes)
 	{
 		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
-		if (srcBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), srcBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+			auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), srcCurrentState, D3D12_RESOURCE_STATE_COPY_SOURCE);
 			rscBarriers.push_back(srcBarrier);
 		}
-		if (destBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), destBuffer->GetResourceState(), D3D12_RESOURCE_STATE_COPY_DEST);
+		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
+			auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), destCurrentState, D3D12_RESOURCE_STATE_COPY_DEST);
 			rscBarriers.push_back(destBarrier);
 		}
 
@@ -191,12 +196,12 @@ namespace sqrp
 		commandList_->CopyBufferRegion(destBuffer->GetResource().Get(), destOffset, srcBuffer->GetResource().Get(), srcOffset, numBytes);
 
 		rscBarriers.clear();
-		if (srcBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcBuffer->GetResourceState());
+		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
+			auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcCurrentState);
 			rscBarriers.push_back(srcbarrier);
 		}
-		if (destBuffer->GetResourceState() != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destBuffer->GetResourceState());
+		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
+			auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destCurrentState);
 			rscBarriers.push_back(destbarrier);
 		}
 		if (rscBarriers.size() != 0) {
@@ -386,11 +391,11 @@ namespace sqrp
 
 	void Command::InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement)
 	{
-		BufferHandle uploadBuffer_ = pDevice_->CreateBuffer(L"Upload", BufferType::Upload, strideSize, numElement);
+		BufferHandle uploadBuffer = pDevice_->CreateBuffer(L"Upload", BufferType::Upload, strideSize, numElement);
 
-		uploadBuffer_->Upload(pData, strideSize, numElement);
+		uploadBuffer->Upload(pData, strideSize, numElement);
 
-		this->CopyBufferRegion(uploadBuffer_, 0, buffer, 0, strideSize * numElement);
+		this->CopyBufferRegion(uploadBuffer, 0, uploadBuffer->GetInitialState(), buffer, 0, buffer->GetInitialState(), strideSize * numElement);
 
 		this->WaitCommand();
 	}

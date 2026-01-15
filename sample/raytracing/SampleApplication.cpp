@@ -150,7 +150,7 @@ void SampleApplication::OnUpdate()
 	command_->SetRayTracingState(rayTracingStates_);
 	command_->DispatchRays(rayTracing_);
 
-	command_->CopyBuffer(outputTexture_, (swapChain_->GetCurrentBackBuffer()));
+	command_->CopyBuffer(outputTexture_, outputTexture_->GetInitialState(), (swapChain_->GetCurrentBackBuffer()), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// GUI
 	{

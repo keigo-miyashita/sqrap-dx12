@@ -56,8 +56,9 @@ namespace sqrp
 		void AddDrawIndexed(MeshHandle mesh, UINT numInstances);
 		void AddDrawIndexedLine(MeshHandle mesh, UINT numInstances);
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
-		void CopyBuffer(ResourceHandle srcResource, ResourceHandle destResource);
-		void CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, BufferHandle destBuffer, UINT destOffset, UINT numBytes);
+		void Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers);
+		void CopyBuffer(ResourceHandle srcResource, D3D12_RESOURCE_STATES srcCurrentState, ResourceHandle destResource, D3D12_RESOURCE_STATES destCurrentState);
+		void CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, D3D12_RESOURCE_STATES srcCurrentState, BufferHandle destBuffer, UINT destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT numBytes);
 		void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
 		void DispatchRays(RayTracingHandle rayTracing);
 		void DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum);

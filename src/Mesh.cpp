@@ -111,7 +111,8 @@ namespace sqrp
 
 		BufferType type = isWritable_ ? BufferType::Unordered : BufferType::Default;
 		vertexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Vertex", type, sizeof(Vertex), vertices_.size());
-		command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
+
+		command_->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
 		command_->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
@@ -135,7 +136,8 @@ namespace sqrp
 
 		BufferType type = isWritable_ ? BufferType::Unordered : BufferType::Default;
 		indexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Index", type, sizeof(uint32_t), indices_.size());
-		command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
+
+		command_->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
 		command_->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
@@ -280,7 +282,8 @@ namespace sqrp
 		}
 
 		vertexBuffer_ = pDevice_->CreateBuffer(L"_Vertex", BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
-		command_->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
+
+		command_->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
 		command_->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
@@ -303,7 +306,8 @@ namespace sqrp
 		}
 
 		indexBuffer_ = pDevice_->CreateBuffer(L"_Index", BufferType::Default, sizeof(uint32_t), indices_.size());
-		command_->CopyBuffer(indexUploadBuffer, indexBuffer_);
+
+		command_->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
 		command_->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
