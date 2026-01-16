@@ -95,7 +95,7 @@ namespace sqrp
 		}
 		void Write(const void* src, UINT size);
 		template<typename T, std::size_t N>
-		void Read(std::array<T, N> dest)
+		void Read(std::array<T, N>& dest)
 		{
 			void* rawPtr = Map();
 
@@ -104,7 +104,7 @@ namespace sqrp
 			Unmap();
 		}
 		template<typename T>
-		void Read(std::vector<T> dest)
+		void Read(std::vector<T>& dest)
 		{
 			void* rawPtr = Map();
 
