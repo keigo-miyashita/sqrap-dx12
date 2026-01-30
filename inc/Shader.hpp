@@ -21,7 +21,7 @@ namespace sqrp
 		std::wstring entryName_;
 
 	public:
-		Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath = L"");
+		Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"");
 		~Shader() = default;
 		ComPtr<IDxcBlob> GetBlob() const;
 		std::wstring GetEntryName() const;

@@ -35,7 +35,7 @@ namespace sqrp
 		InitializeDxc();
 	}
 
-	void DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath) const
+	void DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath) const
 	{
 		ComPtr<IDxcIncludeHandler> incHandler_ = nullptr;
 		ComPtr<IDxcBlob> incBlob_ = nullptr;
@@ -58,6 +58,11 @@ namespace sqrp
 		}
 
 		vector<const wchar_t*> options;
+		if (!additionalOption.empty()) {
+			for (int i = 0; i < additionalOption.size(); i++) {
+				options.push_back(additionalOption[i]);
+			}
+		}
 #ifdef _DEBUG
 		options.push_back(L"-Zi");
 		options.push_back(L"-Fd");
@@ -106,9 +111,9 @@ namespace sqrp
 		dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
 	}
 
-	std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)
+	std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath)
 	{
-		return make_shared<Shader>(*this, shaderType, fileName, entry, includePath);
+		return make_shared<Shader>(*this, shaderType, fileName, entry, additionalOption, includePath);
 	}
 
 	ComPtr<IDxcCompiler> DXC::GetCompiler()

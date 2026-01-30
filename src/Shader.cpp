@@ -6,10 +6,10 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Shader::Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::wstring& includePath)
+	Shader::Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath)
 		: pDxc_(&dxc), shaderType_(shaderType), entryName_(entry)
 	{
-		pDxc_->CompileShader(blob_, shaderType_, fileName, entry, includePath);
+		pDxc_->CompileShader(blob_, shaderType_, fileName, entry, additionalOption, includePath);
 	}
 
 	ComPtr<IDxcBlob> Shader::GetBlob() const
