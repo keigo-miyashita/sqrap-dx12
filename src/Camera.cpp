@@ -86,6 +86,11 @@ namespace sqrp
 		return position_;
 	}
 
+	DirectX::XMFLOAT3 Camera::GetRotation()
+	{
+		return rotation_;
+	}
+
 	DirectX::XMFLOAT3 Camera::GetFront()
 	{
 		XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
@@ -171,5 +176,15 @@ namespace sqrp
 	void Camera::GetRotateScale(float scale)
 	{
 		rotateScale_ = scale;
+	}
+
+	void Camera::SetPosition(DirectX::XMFLOAT3 position)
+	{
+		position_ = DirectX::XMFLOAT4(position.x, position.y, position.z, 1.0f);
+	}
+
+	void Camera::SetRotation(DirectX::XMFLOAT3 rotation)
+	{
+		rotation_ = rotation;
 	}
 }

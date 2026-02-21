@@ -37,6 +37,7 @@ namespace sqrp
 
 		void Update();
 		DirectX::XMFLOAT4 GetPos();
+		DirectX::XMFLOAT3 GetRotation();
 		DirectX::XMFLOAT3 GetFront();
 		DirectX::XMFLOAT3 GetUp();
 		DirectX::XMFLOAT3 GetRight();
@@ -51,5 +52,8 @@ namespace sqrp
 
 		void SetMoveScale(float scale);
 		void GetRotateScale(float scale);
+
+		void SetPosition(DirectX::XMFLOAT3 position);
+		void SetRotation(DirectX::XMFLOAT3 rotation);
 	};
 }
