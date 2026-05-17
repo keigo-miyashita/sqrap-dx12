@@ -84,6 +84,8 @@ namespace sqrp
 		TLASHandle				CreateTLAS(std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs) const;
 		WorkGraphHandle			CreateWorkGraph(std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
 
+		void ExecuteCommandList(CommandHandle command, QueueType queueType = QueueType::Graphics);
+
 		ComPtr<IDXGIFactory7> GetDXGIFactory() const;
 		ComPtr<ID3D12Device> GetDevice() const;
 		ComPtr<StableDevice> GetStableDevice() const;

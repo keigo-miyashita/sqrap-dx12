@@ -258,6 +258,12 @@ namespace sqrp
 		}
 	}
 
+	void Command::Reset()
+	{
+		commandAllocator_->Reset();
+		commandList_->Reset(commandAllocator_.Get(), nullptr);
+	}
+
 	void Command::SetMesh(MeshHandle mesh)
 	{
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());

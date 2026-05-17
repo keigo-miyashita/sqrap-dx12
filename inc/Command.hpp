@@ -64,6 +64,7 @@ namespace sqrp
 		void DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum);
 		void DrawGUI(GUIHandle GUI);
 		void ExecuteIndirect(IndirectHandle indirect);
+		void Reset();
 		void SetMesh(MeshHandle mesh);
 		void SetComputeResource(RootSignatureHandle computeRootSig);
 		void SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);

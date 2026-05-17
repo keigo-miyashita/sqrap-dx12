@@ -16,6 +16,16 @@ namespace sqrp
 			throw std::runtime_error("Failed to CreateFence : " + to_string(result));
 		}
 		fence_->SetName(name_.c_str());
+
+		hEvent_ = CreateEvent(nullptr, false, false, nullptr);
+		if (hEvent_ == nullptr) {
+			throw std::runtime_error("Failed to CreateEvent for fence");
+		}
+	}
+
+	Fence::~Fence()
+	{
+		CloseHandle(hEvent_);
 	}
 
 	bool Fence::WaitCommand(Command& command, QueueType queueType)
@@ -38,19 +48,48 @@ namespace sqrp
 		}
 
 		if (fence_->GetCompletedValue() < fenceVal_) {
-			auto event = CreateEvent(nullptr, false, false, nullptr);
+			/*auto event = CreateEvent(nullptr, false, false, nullptr);
 			if (event == nullptr) {
 				return false;
-			}
-			fence_->SetEventOnCompletion(fenceVal_, event);
-			WaitForSingleObject(event, INFINITE);
-			CloseHandle(event);
+			}*/
+			fence_->SetEventOnCompletion(fenceVal_, hEvent_);
+			WaitForSingleObject(hEvent_, INFINITE);
+			//CloseHandle(event);
 		}
 
 		command.GetCommandAllocator()->Reset();
 		command.GetCommandList()->Reset(command.GetCommandAllocator().Get(), nullptr);
 
 		return true;
+	}
+
+	bool Fence::Signal(QueueType queueType)
+	{
+		HRESULT result;
+		if (queueType == QueueType::Graphics) {
+			result = pDevice_->GetGraphicsCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		}
+		else if (queueType == QueueType::Compute) {
+			result = pDevice_->GetComputeCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		}
+
+		if (FAILED(result)) {
+			return false;
+		}
+	}
+	void Fence::WaitSignal()
+	{
+		if (fence_->GetCompletedValue() < fenceVal_) {
+			fence_->SetEventOnCompletion(fenceVal_, hEvent_);
+			WaitForSingleObject(hEvent_, INFINITE);
+		}
+	}
+
+	bool Fence::CheckSignal()
+	{
+		auto completedVal = fence_->GetCompletedValue();
+
+		return !(completedVal < fenceVal_);
 	}
 
 	ComPtr<ID3D12Fence> Fence::GetFence()

@@ -341,6 +341,17 @@ namespace sqrp
 		return make_shared<WorkGraph>(*this, name, stateObject, maxInputRecords, maxNodeInputs);
 	}
 
+	void Device::ExecuteCommandList(CommandHandle command, QueueType queueType)
+	{
+		ID3D12CommandList* cmdLists[] = { command->GetCommandList().Get() };
+		if (queueType == QueueType::Graphics) {
+			graphicsCommandQueue_->ExecuteCommandLists(1, cmdLists);
+		}
+		else if (queueType == QueueType::Compute) {
+			computeCommandQueue_->ExecuteCommandLists(1, cmdLists);
+		}
+	}
+
 	ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
 	{
 		return dxgiFactory_;
