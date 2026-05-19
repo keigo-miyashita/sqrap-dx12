@@ -40,13 +40,11 @@ namespace sqrp
 		ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
 		ComPtr<StableCommandList> stableCommandList_ = nullptr;
 		ComPtr<LatestCommandList> latestCommandList_ = nullptr;
-		//ComPtr<ID3D12CommandQueue> commandQueue_ = nullptr;
 		FenceHandle fence_;
 
 		void CreateCommandList();
 		void InitializeStableCommandList();
 		void InitializeLatestCommandList();
-		//void CreateCommandQueue();
 
 	public:
 		Command(const Device& device, std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -89,7 +87,6 @@ namespace sqrp
 		ComPtr<ID3D12GraphicsCommandList> GetCommandList() const;
 		ComPtr<StableCommandList> GetStableCommandList() const;
 		ComPtr<LatestCommandList> GetLatestCommandList() const;
-		//ComPtr<ID3D12CommandQueue> GetCommandQueue() const;
 		Fence& GetFence();
 	};
 }

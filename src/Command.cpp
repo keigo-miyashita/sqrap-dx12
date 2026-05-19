@@ -19,7 +19,6 @@ namespace sqrp
 {
 	void Command::CreateCommandList()
 	{
-		commandType_ = commandType_;
 		HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateCommandAllocator : " + to_string(result));
@@ -52,21 +51,6 @@ namespace sqrp
 		latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
 	}
 
-	/*void Command::CreateCommandQueue()
-	{
-		D3D12_COMMAND_QUEUE_DESC cmdQueueDesc = {};
-		cmdQueueDesc.Type = commandType_;
-		cmdQueueDesc.NodeMask = 0;
-		cmdQueueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-		cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-		HRESULT result = pDevice_->GetDevice()->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(commandQueue_.ReleaseAndGetAddressOf()));
-		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateCommandQueue : " + to_string(result));
-		}
-		wstring cmdQueueName = L"CommandQueue";
-		commandQueue_->SetName((cmdQueueName + name_).c_str());
-	}*/
-
 	Command::Command(const Device& device, std::wstring name, D3D12_COMMAND_LIST_TYPE commandType)
 		: pDevice_(&device), commandType_(commandType), name_(name)
 	{
@@ -75,8 +59,6 @@ namespace sqrp
 		InitializeStableCommandList();
 
 		InitializeLatestCommandList();
-
-		//CreateCommandQueue();
 
 		fence_ = pDevice_->CreateFence(name);
 	}
@@ -389,10 +371,7 @@ namespace sqrp
 
 	bool Command::WaitCommand(QueueType queueType)
 	{
-		if (!fence_->WaitCommand(*this, queueType)) {
-			return false;
-		}
-		return true;
+		return fence_->WaitCommand(*this, queueType);
 	}
 
 	void Command::InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement)
@@ -430,11 +409,6 @@ namespace sqrp
 	{
 		return latestCommandList_;
 	}
-
-	/*ComPtr<ID3D12CommandQueue> Command::GetCommandQueue() const
-	{
-		return commandQueue_;
-	}*/
 
 	Fence& Command::GetFence()
 	{
