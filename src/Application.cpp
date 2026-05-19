@@ -41,7 +41,6 @@ namespace sqrp
 		case WM_MOUSEMOVE:
 		case WM_LBUTTONDOWN:
 		case WM_LBUTTONUP:
-		case WM_MOUSEWHEEL:
 		{
 			int xPos = GET_X_LPARAM(lparam);
 			int yPos = GET_Y_LPARAM(lparam);
@@ -54,12 +53,21 @@ namespace sqrp
 			else if (msg == WM_LBUTTONUP) {
 				isPushedLButton_ = false;
 			}
-			else if (msg == WM_MOUSEWHEEL) {
-				short wheelDelta = GET_WHEEL_DELTA_WPARAM(wparam);
-				wheel_ = wheelDelta;
-			}
 			break;
 		}
+		case WM_MOUSEWHEEL:
+		{
+			// WM_MOUSEWHEEL ã® lparam ã¯ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã®ãŸã‚ currentMousePos_ ã‚’æ›´æ–°ã—ãªã„
+			short wheelDelta = GET_WHEEL_DELTA_WPARAM(wparam);
+			wheel_ += wheelDelta;
+			break;
+		}
+		case WM_RBUTTONDOWN:
+			isPushedRButton_ = true;
+			break;
+		case WM_RBUTTONUP:
+			isPushedRButton_ = false;
+			break;
 		}
 	}
 
@@ -90,7 +98,9 @@ namespace sqrp
 
 	int Input::GetWheel()
 	{
-		return wheel_;
+		int w = wheel_;
+		wheel_ = 0;
+		return w;
 	}
 
 	MousePosition Input::GetPushedPos()
@@ -206,8 +216,8 @@ namespace sqrp
 
 	bool Application::Init()
 	{
-		// Comƒ|ƒCƒ“ƒ^‚ğg‚¤€”õ
-		// ‘æ“ñˆø”‚Íƒ}ƒ‹ƒ`ƒXƒŒƒbƒh‚Ö‚Ì‘Î‰
+		// Comï¿½|ï¿½Cï¿½ï¿½ï¿½^ï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íƒ}ï¿½ï¿½ï¿½`ï¿½Xï¿½ï¿½ï¿½bï¿½hï¿½Ö‚Ì‘Î‰ï¿½
 		if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
 			return false;
 		}

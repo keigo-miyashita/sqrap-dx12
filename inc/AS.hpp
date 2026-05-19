@@ -13,7 +13,7 @@ namespace sqrp
 	class Device;
 	class Fence;
 	class Mesh;
-	class Resouce;
+	class Resource;
 
 	class BLAS
 	{
@@ -39,7 +39,7 @@ namespace sqrp
 	struct TLASDesc
 	{
 		DirectX::XMMATRIX transform_;
-		UINT instanceMask_ = 0x0;
+		UINT instanceMask_ = 0xff;
 		BLASHandle blas_;
 		D3D12_RAYTRACING_INSTANCE_FLAGS flags_;
 	};

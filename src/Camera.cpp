@@ -29,11 +29,55 @@ namespace sqrp
 		fovYAngle_ = fovYAngle;
 		nearZ_ = nearZ;
 		farZ_ = farZ;
+		mode_ = CameraMode::FreeMove;
 
 		return true;
 	}
 
-	void Camera::Update()
+	// azimuth_ / elevation_ は rotation_.y / rotation_.x と同じ角度規則を使う
+	// position = target - radius * front(azimuth, elevation)
+	XMFLOAT3 Camera::ComputeOrbitalPosition() const
+	{
+		float azRad = XMConvertToRadians(azimuth_);
+		float elRad = XMConvertToRadians(elevation_);
+		float cosEl = cosf(elRad);
+		XMFLOAT3 front(sinf(azRad) * cosEl, -sinf(elRad), cosf(azRad) * cosEl);
+		return XMFLOAT3(
+			target_.x - radius_ * front.x,
+			target_.y - radius_ * front.y,
+			target_.z - radius_ * front.z
+		);
+	}
+
+	void Camera::SetMode(CameraMode mode)
+	{
+		if (mode == mode_) return;
+
+		if (mode == CameraMode::Orbital) {
+			// FreeMove → Orbital: 現在の視線方向・位置を引き継ぐ
+			azimuth_ = rotation_.y;
+			elevation_ = std::clamp(rotation_.x, -89.0f, 89.0f);
+			XMFLOAT3 front = GetFront();
+			target_.x = position_.x + front.x * radius_;
+			target_.y = position_.y + front.y * radius_;
+			target_.z = position_.z + front.z * radius_;
+		}
+		else {
+			// Orbital → FreeMove: オービタル状態から位置・回転を引き継ぐ
+			XMFLOAT3 pos = ComputeOrbitalPosition();
+			position_ = XMFLOAT4(pos.x, pos.y, pos.z, 1.0f);
+			rotation_ = XMFLOAT3(elevation_, azimuth_, 0.0f);
+		}
+
+		mode_ = mode;
+	}
+
+	CameraMode Camera::GetMode() const
+	{
+		return mode_;
+	}
+
+	void Camera::UpdateFreeMove()
 	{
 		XMFLOAT3 front = GetFront();
 		XMFLOAT3 right = GetRight();
@@ -70,28 +114,69 @@ namespace sqrp
 		}
 
 		if (Input::IsPushedLButton()) {
-			auto pushedMousePos = Input::GetPushedPos();
-			auto prevMousePos = Input::GetPrevPos();
-			auto currentMousePos = Input::GetPos();
-
-			/*rotation_.x += (currentMousePos.y - prevMousePos.y) * moveScale;
-			rotation_.y += (currentMousePos.x - prevMousePos.x) * moveScale;*/
 			rotation_.x += Input::GetDeltaPos().y * rotateScale_;
 			rotation_.y += Input::GetDeltaPos().x * rotateScale_;
 		}
 	}
 
-	DirectX::XMFLOAT4 Camera::GetPos()
+	void Camera::UpdateOrbital()
 	{
+		// 左ドラッグ: オービット（水平・垂直回転）
+		if (Input::IsPushedLButton()) {
+			azimuth_ += Input::GetDeltaPos().x * rotateScale_;
+			elevation_ += Input::GetDeltaPos().y * rotateScale_;
+			elevation_ = std::clamp(elevation_, -89.0f, 89.0f);
+		}
+
+		// ホイール: ズーム（radius を比率で変化させて距離感を一定に保つ）
+		int wheel = Input::GetWheel();
+		if (wheel != 0) {
+			radius_ *= (1.0f - static_cast<float>(wheel) * zoomScale_);
+			radius_ = std::clamp(radius_, minRadius_, maxRadius_);
+		}
+
+		// 右ドラッグ: パン（ターゲット点をカメラ平面内で移動）
+		if (Input::IsPushedRButton()) {
+			float azRad = XMConvertToRadians(azimuth_);
+			float elRad = XMConvertToRadians(elevation_);
+			XMFLOAT3 front(sinf(azRad) * cosf(elRad), -sinf(elRad), cosf(azRad) * cosf(elRad));
+			XMFLOAT3 worldUp(0.0f, 1.0f, 0.0f);
+			XMFLOAT3 right, camUp;
+			XMStoreFloat3(&right, XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&worldUp), XMLoadFloat3(&front))));
+			XMStoreFloat3(&camUp, XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&front), XMLoadFloat3(&right))));
+
+			// マウス右移動でシーンが右にスクロールするよう target を左へ移動
+			float scale = panScale_ * radius_;
+			auto delta = Input::GetDeltaPos();
+			target_.x += (-right.x * delta.x + camUp.x * delta.y) * scale;
+			target_.y += (-right.y * delta.x + camUp.y * delta.y) * scale;
+			target_.z += (-right.z * delta.x + camUp.z * delta.y) * scale;
+		}
+	}
+
+	void Camera::Update()
+	{
+		if (mode_ == CameraMode::FreeMove)
+			UpdateFreeMove();
+		else
+			UpdateOrbital();
+	}
+
+	XMFLOAT4 Camera::GetPos()
+	{
+		if (mode_ == CameraMode::Orbital) {
+			XMFLOAT3 pos = ComputeOrbitalPosition();
+			return XMFLOAT4(pos.x, pos.y, pos.z, 1.0f);
+		}
 		return position_;
 	}
 
-	DirectX::XMFLOAT3 Camera::GetRotation()
+	XMFLOAT3 Camera::GetRotation()
 	{
 		return rotation_;
 	}
 
-	DirectX::XMFLOAT3 Camera::GetFront()
+	XMFLOAT3 Camera::GetFront()
 	{
 		XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 		XMMATRIX rotationX = XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(rotation_.x));
@@ -103,7 +188,7 @@ namespace sqrp
 		return frontDir;
 	}
 
-	DirectX::XMFLOAT3 Camera::GetUp()
+	XMFLOAT3 Camera::GetUp()
 	{
 		XMFLOAT3 frontDir = GetFront();
 		XMFLOAT3 rightDir = GetRight();
@@ -113,7 +198,7 @@ namespace sqrp
 		return upDir;
 	}
 
-	DirectX::XMFLOAT3 Camera::GetRight()
+	XMFLOAT3 Camera::GetRight()
 	{
 		XMFLOAT3 frontDir = GetFront();
 		XMFLOAT3 yPlusDir = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -123,8 +208,19 @@ namespace sqrp
 		return rightDir;
 	}
 
-	DirectX::XMMATRIX Camera::GetView()
+	XMFLOAT3 Camera::GetTarget()
 	{
+		return target_;
+	}
+
+	XMMATRIX Camera::GetView()
+	{
+		if (mode_ == CameraMode::Orbital) {
+			XMFLOAT3 pos = ComputeOrbitalPosition();
+			XMFLOAT3 worldUp(0.0f, 1.0f, 0.0f);
+			return XMMatrixLookAtLH(XMLoadFloat3(&pos), XMLoadFloat3(&target_), XMLoadFloat3(&worldUp));
+		}
+
 		XMFLOAT4 targetPos;
 		XMFLOAT4 cameraPos = position_;
 		XMFLOAT3 frontDir = GetFront();
@@ -133,17 +229,17 @@ namespace sqrp
 		return XMMatrixLookAtLH(XMLoadFloat4(&cameraPos), XMLoadFloat4(&targetPos), XMLoadFloat3(&upDir));
 	}
 
-	DirectX::XMMATRIX Camera::GetProj()
+	XMMATRIX Camera::GetProj()
 	{
 		return XMMatrixPerspectiveFovLH(XMConvertToRadians(fovYAngle_), aspectRatio_, nearZ_, farZ_);
 	}
 
-	DirectX::XMMATRIX Camera::GetInvViewProj()
+	XMMATRIX Camera::GetInvViewProj()
 	{
 		return XMMatrixInverse(nullptr, XMMatrixMultiply(GetView(), GetProj()));
 	}
 
-	DirectX::XMMATRIX Camera::GetInvView()
+	XMMATRIX Camera::GetInvView()
 	{
 		return XMMatrixInverse(nullptr, GetView());
 	}
@@ -158,6 +254,16 @@ namespace sqrp
 		return rotateScale_;
 	}
 
+	float Camera::GetZoomScale()
+	{
+		return zoomScale_;
+	}
+
+	float Camera::GetPanScale()
+	{
+		return panScale_;
+	}
+
 	float* Camera::GetMoveScalePtr()
 	{
 		return &moveScale_;
@@ -168,12 +274,22 @@ namespace sqrp
 		return &rotateScale_;
 	}
 
+	float* Camera::GetZoomScalePtr()
+	{
+		return &zoomScale_;
+	}
+
+	float* Camera::GetPanScalePtr()
+	{
+		return &panScale_;
+	}
+
 	void Camera::SetMoveScale(float scale)
 	{
 		moveScale_ = scale;
 	}
 
-	void Camera::GetRotateScale(float scale)
+	void Camera::SetRotateScale(float scale)
 	{
 		rotateScale_ = scale;
 	}
@@ -186,5 +302,15 @@ namespace sqrp
 	void Camera::SetRotation(DirectX::XMFLOAT3 rotation)
 	{
 		rotation_ = rotation;
+	}
+
+	void Camera::SetTarget(DirectX::XMFLOAT3 target)
+	{
+		target_ = target;
+	}
+
+	void Camera::SetRadius(float radius)
+	{
+		radius_ = std::clamp(radius, minRadius_, maxRadius_);
 	}
 }

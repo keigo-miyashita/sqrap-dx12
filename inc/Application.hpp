@@ -20,66 +20,20 @@ namespace sqrp
 			bool isPushed = false;
 		};
 
-		static inline std::unordered_map<UINT, bool> isPushKey_ = {
-			{'A', false},
-			{'B', false},
-			{'C', false},
-			{'D', false},
-			{'E', false},
-			{'F', false},
-			{'G', false},
-			{'H', false},
-			{'I', false},
-			{'J', false},
-			{'K', false},
-			{'L', false},
-			{'M', false},
-			{'N', false},
-			{'O', false},
-			{'P', false},
-			{'Q', false},
-			{'R', false},
-			{'S', false},
-			{'T', false},
-			{'U', false},
-			{'V', false},
-			{'W', false},
-			{'X', false},
-			{'Y', false},
-			{'Z', false},
-			{VK_SPACE, false},
-			{VK_CONTROL, false},
-		};
-		static inline std::unordered_map<UINT, InputLogicalState> isLogicalPushKey_ = {
-			{'A', {false, false}},
-			{'B', {false, false}},
-			{'C', {false, false}},
-			{'D', {false, false}},
-			{'E', {false, false}},
-			{'F', {false, false}},
-			{'G', {false, false}},
-			{'H', {false, false}},
-			{'I', {false, false}},
-			{'J', {false, false}},
-			{'K', {false, false}},
-			{'L', {false, false}},
-			{'M', {false, false}},
-			{'N', {false, false}},
-			{'O', {false, false}},
-			{'P', {false, false}},
-			{'Q', {false, false}},
-			{'R', {false, false}},
-			{'S', {false, false}},
-			{'T', {false, false}},
-			{'U', {false, false}},
-			{'V', {false, false}},
-			{'W', {false, false}},
-			{'X', {false, false}},
-			{'Y', {false, false}},
-			{'Z', {false, false}},
-			{VK_SPACE, {false, false}},
-			{VK_CONTROL, {false, false}},
-		};
+		static inline std::unordered_map<UINT, bool> isPushKey_ = []() {
+			std::unordered_map<UINT, bool> m;
+			for (UINT k = 'A'; k <= 'Z'; ++k) m[k] = false;
+			m[VK_SPACE] = false;
+			m[VK_CONTROL] = false;
+			return m;
+		}();
+		static inline std::unordered_map<UINT, InputLogicalState> isLogicalPushKey_ = []() {
+			std::unordered_map<UINT, InputLogicalState> m;
+			for (UINT k = 'A'; k <= 'Z'; ++k) m[k] = {};
+			m[VK_SPACE] = {};
+			m[VK_CONTROL] = {};
+			return m;
+		}();
 		static inline int wheel_ = 0;
 		static inline bool isPushedLButton_ = false;
 		static inline bool isPushedRButton_ = false;
@@ -107,6 +61,9 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
+		// WindowÔøΩÃèÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ÷êÔøΩ
+		void CreateGameWindow(std::string windowName);
+
 	protected:
 		std::string windowName_ = "Application";
 		HINSTANCE hInstance_ = 0;
@@ -119,8 +76,6 @@ namespace sqrp
 		Application();
 		Application(std::string windowName, unsigned int windowWidth = 1280, unsigned int windowHeight = 720);
 		~Application() = default;
-		// WindowÇÃèâä˙âªä÷êî
-		void CreateGameWindow(std::string windowName);
 		bool Input(UINT msg, WPARAM wparam, LPARAM lparam);
 		bool Init();
 		void Run();

@@ -41,7 +41,7 @@ bool SampleApplication::OnStart()
 		L"scene",
 		command_,
 		{
-			{modelMat, 0, suzanneBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
+			{modelMat, 0xFF, suzanneBLAS_, D3D12_RAYTRACING_INSTANCE_FLAG_NONE}
 		}
 	);
 

@@ -69,7 +69,7 @@ namespace sqrp
 	{
 		vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDesc;
 		instanceDesc.resize(tlasDescs_.size());
-		for (int numDescs = 0; numDescs < tlasDescs_.size(); numDescs++) {
+		for (size_t numDescs = 0; numDescs < tlasDescs_.size(); numDescs++) {
 			D3D12_RAYTRACING_INSTANCE_DESC desc = {};
 			XMFLOAT4X4 transform;
 			XMStoreFloat4x4(&transform, tlasDescs_[numDescs].transform_);
@@ -78,7 +78,7 @@ namespace sqrp
 					instanceDesc[numDescs].Transform[i][j] = transform.m[i][j];
 				}
 			}
-			instanceDesc[numDescs].InstanceMask = 0xFF;
+			instanceDesc[numDescs].InstanceMask = tlasDescs_[numDescs].instanceMask_;
 			instanceDesc[numDescs].AccelerationStructure = tlasDescs_[numDescs].blas_->GetASAddress();
 			instanceDesc[numDescs].Flags = tlasDescs_[numDescs].flags_;
 		}

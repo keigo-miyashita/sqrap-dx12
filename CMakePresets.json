@@ -25,9 +25,6 @@
       "architecture": {
         "value": "x64",
         "strategy": "external"
-      },
-      "toolset": {
-        "value": "host=x64"
       }
     },
     {
@@ -44,9 +41,6 @@
       "architecture": {
         "value": "x64",
         "strategy": "external"
-      },
-      "toolset": {
-        "value": "host=x64"
       }
     }
   ],
