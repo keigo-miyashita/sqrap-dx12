@@ -48,7 +48,7 @@ namespace sqrp
 		void UpdateOrbital();
 
 	public:
-		Camera();
+		Camera() = default;
 		~Camera() = default;
 
 		bool Init(

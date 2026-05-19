@@ -2,17 +2,11 @@
 
 #include "Application.hpp"
 
-using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
 
 namespace sqrp
 {
-	Camera::Camera()
-	{
-
-	}
-
 	bool Camera::Init(
 		float aspectRatio,
 		DirectX::XMFLOAT3 position,
