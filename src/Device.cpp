@@ -164,12 +164,7 @@ namespace sqrp
 		computeCommandQueue_->SetName(L"ComputeCommandQueue");
 	}
 
-	Device::Device()
-	{
-
-	}
-
-	void Device::Init(wstring gpuVenorName)
+	void Device::Init(wstring gpuVendorName)
 	{
 #ifdef _DEBUG
 		EnableDebugLayer();
@@ -178,7 +173,7 @@ namespace sqrp
 		vector<UUID> features = { D3D12ExperimentalShaderModels, D3D12StateObjectsExperiment };
 		EnableFeatures(features);
 
-		CreateDXDevice(gpuVenorName);
+		CreateDXDevice(gpuVendorName);
 
 		InitializeStableDevice();
 
@@ -187,7 +182,7 @@ namespace sqrp
 		CreateCommandQueue();
 	}
 
-	void Device::Init(wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice)
+	void Device::Init(wstring gpuVendorName, ComPtr<ID3D12DebugDevice>& debugDevice)
 	{
 #ifdef _DEBUG
 		EnableDebugLayer();
@@ -196,7 +191,7 @@ namespace sqrp
 		vector<UUID> features = { D3D12ExperimentalShaderModels, D3D12StateObjectsExperiment };
 		EnableFeatures(features);
 
-		CreateDXDevice(gpuVenorName);
+		CreateDXDevice(gpuVendorName);
 
 		InitializeLatestDevice();
 
@@ -326,7 +321,7 @@ namespace sqrp
 		return make_shared<SwapChain>(*this, name, command, hwnd, winSize);
 	}
 
-	TextureHandle Device::CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
+	TextureHandle Device::CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth) const
 	{
 		return make_shared<Texture>(*this, name, texDim, type, strideSize, format, width, height, depth);
 	}

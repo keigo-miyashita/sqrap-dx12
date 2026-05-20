@@ -55,10 +55,10 @@ namespace sqrp
 		void CreateCommandQueue();
 
 	public:
-		Device();
+		Device() = default;
 		~Device() = default;
-		void Init(std::wstring gpuVenorName);
-		void Init(std::wstring gpuVenorName, ComPtr<ID3D12DebugDevice>& debugDevice);
+		void Init(std::wstring gpuVendorName);
+		void Init(std::wstring gpuVendorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 		void ShowUsedVramSize();
 		ASHandle				CreateAS(std::wstring name, UINT size) const;
 		ASMeshHandle			CreateASMesh(CommandHandle command, std::string modelPath) const;
@@ -80,7 +80,7 @@ namespace sqrp
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;
 		StateObjectHandle		CreateStateObject(std::wstring name, const StateObjectDesc soDesc) const;
 		SwapChainHandle			CreateSwapChain(std::wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize) const;
-		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth);
+		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth) const;
 		TLASHandle				CreateTLAS(std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs) const;
 		WorkGraphHandle			CreateWorkGraph(std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
 
