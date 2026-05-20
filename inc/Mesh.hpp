@@ -42,8 +42,8 @@ namespace sqrp
 		D3D12_INDEX_BUFFER_VIEW ibView_;
 
 		static bool LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
-		virtual HRESULT CreateVertexBuffer();
-		HRESULT CreateIndexBuffer();
+		virtual void CreateVertexBuffer();
+		void CreateIndexBuffer();
 
 	public:
 		Mesh(const Device& device, CommandHandle command, std::string modelPath);
@@ -82,8 +82,8 @@ namespace sqrp
 		D3D12_INDEX_BUFFER_VIEW ibView_;
 
 		static bool LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices);
-		HRESULT CreateVertexBuffer();
-		HRESULT CreateIndexBuffer();
+		void CreateVertexBuffer();
+		void CreateIndexBuffer();
 
 	public:
 		ASMesh(const Device& device, CommandHandle command, std::string modelPath);

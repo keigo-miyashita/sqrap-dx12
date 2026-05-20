@@ -96,10 +96,8 @@ namespace sqrp
 		return true;
 	}
 
-	HRESULT Mesh::CreateVertexBuffer()
+	void Mesh::CreateVertexBuffer()
 	{
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(vertices_.size() * sizeof(Vertex));
 		shared_ptr<Buffer> vertexUploadBuffer;
 		vertexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), vertices_.size());
 		void* rawPtr = vertexUploadBuffer->Map();
@@ -117,14 +115,10 @@ namespace sqrp
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
 		vbView_.StrideInBytes = sizeof(Vertex);
-
-		return S_OK;
 	}
 
-	HRESULT Mesh::CreateIndexBuffer()
+	void Mesh::CreateIndexBuffer()
 	{
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
 		shared_ptr<Buffer> indexUploadBuffer;
 		indexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices_.size());
 		void* rawPtr = indexUploadBuffer->Map();
@@ -142,8 +136,6 @@ namespace sqrp
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
-
-		return S_OK;
 	}
 
 	Mesh::Mesh(const Device& device, CommandHandle command, std::string modelPath)
@@ -268,12 +260,10 @@ namespace sqrp
 		return true;
 	}
 
-	HRESULT ASMesh::CreateVertexBuffer()
+	void ASMesh::CreateVertexBuffer()
 	{
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(ASVertices_.size() * sizeof(ASVertex));
 		shared_ptr<Buffer> vertexUploadBuffer;
-		vertexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Vertex", BufferType::Upload, sizeof(ASVertices_), ASVertices_.size());
+		vertexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Vertex", BufferType::Upload, sizeof(ASVertex), ASVertices_.size());
 		void* rawPtr = vertexUploadBuffer->Map();
 		if (rawPtr) {
 			ASVertex* pVertex = static_cast<ASVertex*>(rawPtr);
@@ -281,21 +271,17 @@ namespace sqrp
 			vertexUploadBuffer->Unmap();
 		}
 
-		vertexBuffer_ = pDevice_->CreateBuffer(L"_Vertex", BufferType::Default, sizeof(ASVertices_), ASVertices_.size());
+		vertexBuffer_ = pDevice_->CreateBuffer(L"_Vertex", BufferType::Default, sizeof(ASVertex), ASVertices_.size());
 
 		command_->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
 		command_->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
 		vbView_.StrideInBytes = sizeof(ASVertex);
-
-		return S_OK;
 	}
 
-	HRESULT ASMesh::CreateIndexBuffer()
+	void ASMesh::CreateIndexBuffer()
 	{
-		auto heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		auto resDesc = CD3DX12_RESOURCE_DESC::Buffer(indices_.size() * sizeof(uint32_t));
 		shared_ptr<Buffer> indexUploadBuffer;
 		indexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices_.size());
 		void* rawPtr = indexUploadBuffer->Map();
@@ -312,8 +298,6 @@ namespace sqrp
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
-
-		return S_OK;
 	}
 
 	ASMesh::ASMesh(const Device& device, CommandHandle command, std::string modelPath)
