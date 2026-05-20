@@ -9,7 +9,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	bool GUI::InitializeGUI(const HWND& hwnd)
+	void GUI::InitializeGUI(const HWND& hwnd)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -19,18 +19,15 @@ namespace sqrp
 		auto result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(imguiDescHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateDescriptorHeap for GUI : " + to_string(result));
-			return false;
 		}
 
 		if (ImGui::CreateContext() == nullptr) {
 			throw std::runtime_error("Failed to ImGui::CreateContext : " + to_string(result));
-			return false;
 		}
 
 		bool binResult = ImGui_ImplWin32_Init(hwnd);
 		if (!binResult) {
 			throw std::runtime_error("Failed to ImGui_ImplWin32_Init");
-			return false;
 		}
 
 		auto imguiCPUHandle = imguiDescHeap_->GetCPUDescriptorHandleForHeapStart();
@@ -38,10 +35,7 @@ namespace sqrp
 		binResult = ImGui_ImplDX12_Init(pDevice_->GetDevice().Get(), 2, DXGI_FORMAT_R8G8B8A8_UNORM, imguiDescHeap_.Get(), imguiCPUHandle, imguiGPUHandle);
 		if (!binResult) {
 			throw std::runtime_error("Failed to ImGui_ImplDX12_Init");
-			return false;
 		}
-
-		return true;
 	}
 
 	GUI::GUI(const Device& device, const HWND& hwnd)
@@ -65,7 +59,6 @@ namespace sqrp
 
 		ImGui::Begin("GUI");
 		ImGui::SetWindowSize(ImVec2(400, 500), ImGuiCond_::ImGuiCond_FirstUseEver);
-
 	}
 
 	void GUI::EndCommand()

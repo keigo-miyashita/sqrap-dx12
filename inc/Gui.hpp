@@ -16,8 +16,7 @@ namespace sqrp
 		const Device* pDevice_ = nullptr;
 		ComPtr<ID3D12DescriptorHeap> imguiDescHeap_ = nullptr;
 
-		bool InitializeGUI(const HWND& hwnd);
-
+		void InitializeGUI(const HWND& hwnd);
 
 	public:
 		GUI(const Device& device, const HWND& hwnd);
