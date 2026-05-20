@@ -167,38 +167,38 @@ namespace sqrp
 		swapChain_->Present(1, 0);
 	}
 
-	ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain()
+	ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain() const
 	{
 		return swapChain_;
 	}
 
-	TextureHandle SwapChain::GetCurrentBackBuffer()
+	TextureHandle SwapChain::GetCurrentBackBuffer() const
 	{
 		auto bbIndex = swapChain_->GetCurrentBackBufferIndex();
 		return backBuffers_[bbIndex];
 	}
 
-	ComPtr<ID3D12DescriptorHeap> SwapChain::GetRtvHeap()
+	ComPtr<ID3D12DescriptorHeap> SwapChain::GetRtvHeap() const
 	{
 		return rtvHeap_;
 	}
 
-	D3D12_VIEWPORT SwapChain::GetViewPort()
+	D3D12_VIEWPORT SwapChain::GetViewPort() const
 	{
 		return viewport_;
 	}
 
-	D3D12_RECT SwapChain::GetRect()
+	D3D12_RECT SwapChain::GetRect() const
 	{
 		return scissorsRect_;
 	}
 
-	ComPtr<ID3D12Resource> SwapChain::GetDepthStencilBuffer()
+	ComPtr<ID3D12Resource> SwapChain::GetDepthStencilBuffer() const
 	{
 		return depthStencilBuffer_;
 	}
 
-	ComPtr<ID3D12DescriptorHeap> SwapChain::GetDsvHeap()
+	ComPtr<ID3D12DescriptorHeap> SwapChain::GetDsvHeap() const
 	{
 		return dsvHeap_;
 	}

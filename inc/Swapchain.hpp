@@ -32,20 +32,19 @@ namespace sqrp
 		void CreateSwapChain(const HWND& hwnd, SIZE winSize);
 		void CreateDepthStencilBuffer(SIZE winSize);
 
-
 	public:
 		SwapChain(const Device& device, std::wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize);
 		~SwapChain() = default;
 
 		void BeginRender();
 		void EndRender();
-		ComPtr<IDXGISwapChain4> GetSwapChain();
-		TextureHandle GetCurrentBackBuffer();
-		ComPtr<ID3D12DescriptorHeap> GetRtvHeap();
-		D3D12_VIEWPORT GetViewPort();
-		D3D12_RECT GetRect();
-		ComPtr<ID3D12Resource> GetDepthStencilBuffer();
-		ComPtr<ID3D12DescriptorHeap> GetDsvHeap();
+		ComPtr<IDXGISwapChain4> GetSwapChain() const;
+		TextureHandle GetCurrentBackBuffer() const;
+		ComPtr<ID3D12DescriptorHeap> GetRtvHeap() const;
+		D3D12_VIEWPORT GetViewPort() const;
+		D3D12_RECT GetRect() const;
+		ComPtr<ID3D12Resource> GetDepthStencilBuffer() const;
+		ComPtr<ID3D12DescriptorHeap> GetDsvHeap() const;
 
 	};
 }
