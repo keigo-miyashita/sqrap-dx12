@@ -15,12 +15,12 @@ namespace sqrp
 
 	}
 
-	DirectX::XMMATRIX Object::GetModelMat()
+	DirectX::XMMATRIX Object::GetModelMat() const
 	{
 		return XMMatrixTranslation(position_.x, position_.y, position_.z) * XMMatrixRotationQuaternion(XMLoadFloat4(&quotRotation_)) * XMMatrixScaling(scale_, scale_, scale_);
 	}
 
-	DirectX::XMMATRIX Object::GetInvTransMat()
+	DirectX::XMMATRIX Object::GetInvTransMat() const
 	{
 		return XMMatrixTranspose(XMMatrixInverse(nullptr, GetModelMat()));
 	}

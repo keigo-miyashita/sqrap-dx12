@@ -17,10 +17,6 @@ namespace sqrp
 	class Object
 	{
 	private:
-		template<typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-	private:
 		MeshHandle mesh_;
 		DirectX::XMFLOAT4 position_;
 		DirectX::XMFLOAT4 quotRotation_;
@@ -35,8 +31,8 @@ namespace sqrp
 		);
 		~Object() = default;
 
-		DirectX::XMMATRIX GetModelMat();
-		DirectX::XMMATRIX GetInvTransMat();
+		DirectX::XMMATRIX GetModelMat() const;
+		DirectX::XMMATRIX GetInvTransMat() const;
 		
 		void SetPosition(DirectX::XMFLOAT4 position);
 		void SetRotation(DirectX::XMFLOAT4 rotation);
