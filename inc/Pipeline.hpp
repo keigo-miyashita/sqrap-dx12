@@ -80,7 +80,7 @@ namespace sqrp
 		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM };
 		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
 
-		MeshDesc();
+		MeshDesc() = default;
 	};
 
 	class MeshPipeline

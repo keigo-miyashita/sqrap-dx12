@@ -92,11 +92,6 @@ namespace sqrp
 		return pipeline_;
 	}
 
-	MeshDesc::MeshDesc()
-	{
-
-	}
-
 	MeshPipeline::MeshPipeline(const Device& device, wstring name, const MeshDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
@@ -205,7 +200,7 @@ namespace sqrp
 					CD3DX12_SHADER_BYTECODE bcLib(miss.shader_->GetBlob()->GetBufferPointer(), miss.shader_->GetBlob()->GetBufferSize());
 					pLib->SetDXILLibrary(&bcLib);
 					pLib->DefineExport(miss.shader_->GetEntryName().c_str());
-					rayGens.push_back(miss.shader_->GetEntryName().c_str());
+					misses.push_back(miss.shader_->GetEntryName().c_str());
 
 					if (miss.localResourceSet_) {
 						auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
