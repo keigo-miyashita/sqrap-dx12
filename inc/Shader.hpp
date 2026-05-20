@@ -6,8 +6,6 @@
 
 namespace sqrp
 {
-	class DXC;
-
 	class Shader
 	{
 	private:
@@ -16,14 +14,14 @@ namespace sqrp
 
 		const DXC* pDxc_ = nullptr;
 		ShaderType shaderType_;
-		// Shader‚ÌByte code‚ðŠi”[
+		// Shaderï¿½ï¿½Byte codeï¿½ï¿½iï¿½[
 		ComPtr<IDxcBlob> blob_ = nullptr;
 		std::wstring entryName_;
 
 	public:
-		Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"");
+		Shader(const DXC& dxc, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, const std::vector<const wchar_t*>& additionalOption = {}, const std::wstring& includePath = L"");
 		~Shader() = default;
 		ComPtr<IDxcBlob> GetBlob() const;
-		std::wstring GetEntryName() const;
+		const std::wstring& GetEntryName() const;
 	};
 }
