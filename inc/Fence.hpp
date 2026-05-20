@@ -7,7 +7,6 @@
 namespace sqrp
 {
 	class Command;
-	class Device;
 
 	class Fence
 	{
@@ -29,7 +28,7 @@ namespace sqrp
 		void WaitSignal(); // Stop CPU until GPU reaches the fence value.
 		bool CheckSignal();// Query the fence value (CPU does not stop)
 
-		ComPtr<ID3D12Fence> GetFence();
-		UINT64 GetFenceVal();
+		ComPtr<ID3D12Fence> GetFence() const;
+		UINT64 GetFenceVal() const;
 	};
 }

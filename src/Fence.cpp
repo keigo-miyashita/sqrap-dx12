@@ -48,13 +48,8 @@ namespace sqrp
 		}
 
 		if (fence_->GetCompletedValue() < fenceVal_) {
-			/*auto event = CreateEvent(nullptr, false, false, nullptr);
-			if (event == nullptr) {
-				return false;
-			}*/
 			fence_->SetEventOnCompletion(fenceVal_, hEvent_);
 			WaitForSingleObject(hEvent_, INFINITE);
-			//CloseHandle(event);
 		}
 
 		command.GetCommandAllocator()->Reset();
@@ -76,6 +71,7 @@ namespace sqrp
 		if (FAILED(result)) {
 			return false;
 		}
+		return true;
 	}
 	void Fence::WaitSignal()
 	{
@@ -92,12 +88,12 @@ namespace sqrp
 		return !(completedVal < fenceVal_);
 	}
 
-	ComPtr<ID3D12Fence> Fence::GetFence()
+	ComPtr<ID3D12Fence> Fence::GetFence() const
 	{
 		return fence_;
 	}
 
-	UINT64 Fence::GetFenceVal()
+	UINT64 Fence::GetFenceVal() const
 	{
 		return fenceVal_;
 	}
