@@ -62,10 +62,10 @@ namespace sqrp
 			rootSigBlob.ReleaseAndGetAddressOf(),
 			errBlob.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
-			throw runtime_error("Failed to D3D12SerializeRootSignature : " + to_string(result));
 			if (errBlob) {
 				OutputDebugStringA((char*)errBlob->GetBufferPointer());
 			}
+			throw runtime_error("Failed to D3D12SerializeRootSignature : " + to_string(result));
 		}
 
 		result = pDevice_->GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf()));
@@ -96,7 +96,7 @@ namespace sqrp
 		return rootParams_;
 	}
 
-	ResourceSet::ResourceSet(RootSignatureHandle rootSignature, vector<ResourceSetDesc> resourceSetDescs)
+	ResourceSet::ResourceSet(RootSignatureHandle rootSignature, const vector<ResourceSetDesc>& resourceSetDescs)
 		: rootSignature_(rootSignature), resourceSetDescs_(resourceSetDescs)
 	{
 	}

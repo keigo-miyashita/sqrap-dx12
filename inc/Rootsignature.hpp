@@ -9,7 +9,6 @@
 
 namespace sqrp
 {
-	class DescriptorManager;
 	class Device;
 
 	enum class RootParamType
@@ -19,11 +18,11 @@ namespace sqrp
 
 	struct DirectRootParamDesc
 	{
-		// Constant‚âDescriptor‚ð’¼Ú“o˜^‚·‚é‚Æ‚«‰º‚Ì1‚Â
+		// Constantï¿½ï¿½Descriptorï¿½ð’¼Ú“oï¿½^ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½
 		UINT numReg_ = 0;
-		// 32BitsConstant—p
-		// 1‚Â32Bits = 4Bytes
-		// —ájfloat4 -> 16 Bytes -> numConstant_ = 4
+		// 32BitsConstantï¿½p
+		// 1ï¿½ï¿½32Bits = 4Bytes
+		// ï¿½ï¿½jfloat4 -> 16 Bytes -> numConstant_ = 4
 		UINT numConstant_ = 0;
 		void* constantPtr_ = nullptr;
 	};
@@ -58,15 +57,6 @@ namespace sqrp
 		const std::vector<RootParameter>& GetRootParametersVec() const;
 	};
 
-	//struct Constants
-	//{
-	//	void* constants_;
-	//	UINT numConstants_ = 0;
-	//	UINT numOffset_ = 0;
-	//};
-
-	//using BindResource = std::variant<D3D12_GPU_DESCRIPTOR_HANDLE, D3D12_GPU_VIRTUAL_ADDRESS, ConstantsHandle>;
-
 	struct ResourceSetDesc
 	{
 		std::variant<DescriptorManagerHandle, BufferHandle, ConstantsHandle> bindResource;
@@ -82,7 +72,7 @@ namespace sqrp
 		std::vector<ResourceSetDesc> resourceSetDescs_;
 
 	public:
-		ResourceSet(RootSignatureHandle rootSignature, std::vector<ResourceSetDesc> resourceSetDescs);
+		ResourceSet(RootSignatureHandle rootSignature, const std::vector<ResourceSetDesc>& resourceSetDescs);
 		~ResourceSet() = default;
 
 		RootSignatureHandle GetRootSignature() const;
