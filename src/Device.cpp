@@ -98,7 +98,6 @@ namespace sqrp
 
 	void Device::InitializeLatestDevice()
 	{
-		bool isInitializedLatestDevice = false;
 		if (CheckWorkGraphSupport()) {
 			HRESULT result = device_->QueryInterface(IID_PPV_ARGS(latestDevice_.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
