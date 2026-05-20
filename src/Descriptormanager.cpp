@@ -40,7 +40,7 @@ namespace sqrp
 	DescriptorManager::DescriptorManager(const Device& device, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags)
 		: pDevice_(&device), heapType_(heapType), name_(name)
 	{
-		numDescriptor_ = descManagerDesc.size();
+		numDescriptor_ = static_cast<UINT>(descManagerDesc.size());
 
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 		if (heapType_ == HeapType::Resource) {
@@ -59,7 +59,7 @@ namespace sqrp
 		descHeap_->SetName((name_ + L"DescriptorHeap").c_str());
 
 		ViewType currentType = ViewType::NONE;
-		for (auto desc : descManagerDesc) {
+		for (const auto& desc : descManagerDesc) {
 			if (desc.type_ != currentType)
 			{
 				currentType = desc.type_;
@@ -138,7 +138,7 @@ namespace sqrp
 
 	UINT DescriptorManager::GetNumDescRanges() const
 	{
-		return descRanges_.size();
+		return static_cast<UINT>(descRanges_.size());
 	}
 
 	const CD3DX12_DESCRIPTOR_RANGE1* DescriptorManager::GetPDescRanges() const
