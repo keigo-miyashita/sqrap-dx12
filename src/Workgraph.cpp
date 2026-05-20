@@ -122,22 +122,22 @@ namespace sqrp
 		//pgDesc_.WorkGraph.NodeLocalRootArgumentsTable = 
 	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS_RANGE WorkGraph::GetBackingMemoryAddressRange()
+	D3D12_GPU_VIRTUAL_ADDRESS_RANGE WorkGraph::GetBackingMemoryAddressRange() const
 	{
 		return backingMemoryAddressRange_;
 	}
 
-	ComPtr<ID3D12Resource> WorkGraph::GetBackingMemory()
+	ComPtr<ID3D12Resource> WorkGraph::GetBackingMemory() const
 	{
 		return backingMemory_;
 	}
 
-	D3D12_PROGRAM_IDENTIFIER WorkGraph::GetProgramID()
+	D3D12_PROGRAM_IDENTIFIER WorkGraph::GetProgramID() const
 	{
 		return workGraphProgramID_;
 	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE WorkGraph::GetLocalSigSize()
+	D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE WorkGraph::GetLocalSigSize() const
 	{
 		return localRootArgumentsTableAddress_;
 	}

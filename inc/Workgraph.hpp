@@ -21,7 +21,7 @@ namespace sqrp
 		ComPtr<ID3D12WorkGraphProperties1> workGraphProp_ = nullptr;
 		D3D12_PROGRAM_IDENTIFIER workGraphProgramID_ = {};
 		D3D12_WORK_GRAPH_MEMORY_REQUIREMENTS memReqs_ = {};
-		// D3D12_GPU_VIRTUAL_ADDRESSÇ∆sizeInBytesÇÇ‡Ç¬ç\ë¢ëÃ
+		// D3D12_GPU_VIRTUAL_ADDRESSÔøΩÔøΩsizeInBytesÔøΩÔøΩÔøΩ¬ç\ÔøΩÔøΩÔøΩÔøΩ
 		D3D12_GPU_VIRTUAL_ADDRESS_RANGE backingMemoryAddressRange_ = {};
 		ComPtr<ID3D12Resource> backingMemory_ = nullptr;
 		BufferHandle localRootSigBuffer_;
@@ -30,7 +30,7 @@ namespace sqrp
 		UINT numEntryPoints_ = 0;
 		UINT numNodes_ = 0;
 
-		// CommandList.SetProgramÇ…ìnÇ∑ç\ë¢ëÃ
+		// CommandList.SetProgramÔøΩ…ìnÔøΩÔøΩÔøΩ\ÔøΩÔøΩÔøΩÔøΩ
 		D3D12_SET_PROGRAM_DESC pgDesc_ = {};
 
 	public:
@@ -39,10 +39,10 @@ namespace sqrp
 		WorkGraph(const Device& device, std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0);
 		~WorkGraph() = default;
 
-		D3D12_GPU_VIRTUAL_ADDRESS_RANGE GetBackingMemoryAddressRange();
-		ComPtr<ID3D12Resource> GetBackingMemory();
-		D3D12_PROGRAM_IDENTIFIER GetProgramID();
-		D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE GetLocalSigSize();
+		D3D12_GPU_VIRTUAL_ADDRESS_RANGE GetBackingMemoryAddressRange() const;
+		ComPtr<ID3D12Resource> GetBackingMemory() const;
+		D3D12_PROGRAM_IDENTIFIER GetProgramID() const;
+		D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE GetLocalSigSize() const;
 		D3D12_SET_PROGRAM_DESC GetProgramDesc() const;
 		D3D12_SET_PROGRAM_DESC* GetPProgramDesc();
 	};
