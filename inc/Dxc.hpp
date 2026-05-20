@@ -41,14 +41,14 @@ namespace sqrp
 		void InitializeDxc();
 
 	public:
-		DXC();
+		DXC() = default;
 		~DXC() = default;
 		void Init();
 		void CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"") const;
-		std::shared_ptr<Shader> CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"");
-		ComPtr<IDxcCompiler> GetCompiler();
-		ComPtr<IDxcLibrary> GetLibarary();
-		ComPtr<IDxcUtils> GetUtils();
+		std::shared_ptr<Shader> CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"") const;
+		ComPtr<IDxcCompiler> GetCompiler() const;
+		ComPtr<IDxcLibrary> GetLibrary() const;
+		ComPtr<IDxcUtils> GetUtils() const;
 		ComPtr<IDxcIncludeHandler> GetIncHandler();
 		ComPtr<IDxcBlob> GetIncBlob();
 	};

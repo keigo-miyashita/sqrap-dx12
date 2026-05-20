@@ -25,11 +25,6 @@ namespace sqrp
 		}
 	}
 
-	DXC::DXC()
-	{
-
-	}
-
 	void DXC::Init()
 	{
 		InitializeDxc();
@@ -37,10 +32,10 @@ namespace sqrp
 
 	void DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath) const
 	{
-		ComPtr<IDxcIncludeHandler> incHandler_ = nullptr;
-		ComPtr<IDxcBlob> incBlob_ = nullptr;
+		ComPtr<IDxcIncludeHandler> incHandler = nullptr;
+		ComPtr<IDxcBlob> incBlob = nullptr;
 
-		HRESULT result = utils_->CreateDefaultIncludeHandler(incHandler_.ReleaseAndGetAddressOf());
+		HRESULT result = utils_->CreateDefaultIncludeHandler(incHandler.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
 			throw std::runtime_error("Failed to CreateDefaultIncludeHandler : " + to_string(result));
 		}
@@ -51,7 +46,7 @@ namespace sqrp
 				throw std::runtime_error("Failed to get include file : ");
 			}
 
-			result = incHandler_->LoadSource(includePath.c_str(), incBlob_.ReleaseAndGetAddressOf());
+			result = incHandler->LoadSource(includePath.c_str(), incBlob.ReleaseAndGetAddressOf());
 			if (FAILED(result)) {
 				throw std::runtime_error("Failed to LoadSource : " + to_string(result));
 			}
@@ -85,10 +80,10 @@ namespace sqrp
 
 		ComPtr<IDxcOperationResult> dxcResult = nullptr;
 		if (!entry.empty()) {
-			result = compiler_->Compile(source.Get(), fileName.c_str(), entry.c_str(), ShaderModel[ToInt(shaderType)].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
+			result = compiler_->Compile(source.Get(), fileName.c_str(), entry.c_str(), ShaderModel[ToInt(shaderType)].c_str(), options.data(), options.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
 		}
 		else {
-			result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[ToInt(shaderType)].c_str(), options.data(), options.size(), nullptr, 0, incHandler_.Get(), dxcResult.ReleaseAndGetAddressOf());
+			result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[ToInt(shaderType)].c_str(), options.data(), options.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
 		}
 		ComPtr<IDxcBlobEncoding> err;
 		if (FAILED(result)) {
@@ -111,22 +106,22 @@ namespace sqrp
 		dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
 	}
 
-	std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath)
+	std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath) const
 	{
 		return make_shared<Shader>(*this, shaderType, fileName, entry, additionalOption, includePath);
 	}
 
-	ComPtr<IDxcCompiler> DXC::GetCompiler()
+	ComPtr<IDxcCompiler> DXC::GetCompiler() const
 	{
 		return compiler_;
 	}
 
-	ComPtr<IDxcLibrary> DXC::GetLibarary()
+	ComPtr<IDxcLibrary> DXC::GetLibrary() const
 	{
 		return library_;
 	}
 
-	ComPtr<IDxcUtils> DXC::GetUtils()
+	ComPtr<IDxcUtils> DXC::GetUtils() const
 	{
 		return utils_;
 	}
