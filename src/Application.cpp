@@ -157,7 +157,7 @@ namespace sqrp
 		}
 	}
 
-	void Application::CreateGameWindow(std::string windowName)
+	void Application::CreateGameWindow(string windowName)
 	{
 		hInstance_ = GetModuleHandle(nullptr);
 		// Create Window class
@@ -199,7 +199,7 @@ namespace sqrp
 		appPtr = this;
 	}
 
-	Application::Application(std::string windowName, unsigned int windowWidth, unsigned int windowHeight)
+	Application::Application(string windowName, unsigned int windowWidth, unsigned int windowHeight)
 	{
 		appPtr = this;
 		windowName_ = windowName;

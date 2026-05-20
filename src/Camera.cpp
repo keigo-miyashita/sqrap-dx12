@@ -9,7 +9,7 @@ namespace sqrp
 {
 	bool Camera::Init(
 		float aspectRatio,
-		DirectX::XMFLOAT3 position,
+		XMFLOAT3 position,
 		float rotateX,
 		float rotateY,
 		float fovYAngle,
@@ -50,7 +50,7 @@ namespace sqrp
 		if (mode == CameraMode::Orbital) {
 			// FreeMove → Orbital: 現在の視線方向・位置を引き継ぐ
 			azimuth_ = rotation_.y;
-			elevation_ = std::clamp(rotation_.x, -89.0f, 89.0f);
+			elevation_ = clamp(rotation_.x, -89.0f, 89.0f);
 			XMFLOAT3 front = GetFront();
 			target_.x = position_.x + front.x * radius_;
 			target_.y = position_.y + front.y * radius_;
@@ -119,14 +119,14 @@ namespace sqrp
 		if (Input::IsPushedLButton()) {
 			azimuth_ += Input::GetDeltaPos().x * rotateScale_;
 			elevation_ += Input::GetDeltaPos().y * rotateScale_;
-			elevation_ = std::clamp(elevation_, -89.0f, 89.0f);
+			elevation_ = clamp(elevation_, -89.0f, 89.0f);
 		}
 
 		// ホイール: ズーム（radius を比率で変化させて距離感を一定に保つ）
 		int wheel = Input::GetWheel();
 		if (wheel != 0) {
 			radius_ *= (1.0f - static_cast<float>(wheel) * zoomScale_);
-			radius_ = std::clamp(radius_, minRadius_, maxRadius_);
+			radius_ = clamp(radius_, minRadius_, maxRadius_);
 		}
 
 		// 右ドラッグ: パン（ターゲット点をカメラ平面内で移動）
@@ -288,23 +288,23 @@ namespace sqrp
 		rotateScale_ = scale;
 	}
 
-	void Camera::SetPosition(DirectX::XMFLOAT3 position)
+	void Camera::SetPosition(XMFLOAT3 position)
 	{
-		position_ = DirectX::XMFLOAT4(position.x, position.y, position.z, 1.0f);
+		position_ = XMFLOAT4(position.x, position.y, position.z, 1.0f);
 	}
 
-	void Camera::SetRotation(DirectX::XMFLOAT3 rotation)
+	void Camera::SetRotation(XMFLOAT3 rotation)
 	{
 		rotation_ = rotation;
 	}
 
-	void Camera::SetTarget(DirectX::XMFLOAT3 target)
+	void Camera::SetTarget(XMFLOAT3 target)
 	{
 		target_ = target;
 	}
 
 	void Camera::SetRadius(float radius)
 	{
-		radius_ = std::clamp(radius, minRadius_, maxRadius_);
+		radius_ = clamp(radius, minRadius_, maxRadius_);
 	}
 }

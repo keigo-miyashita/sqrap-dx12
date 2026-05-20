@@ -10,7 +10,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	GraphicsDesc::GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts) : inputLayouts_(inputLayouts)
+	GraphicsDesc::GraphicsDesc(vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts) : inputLayouts_(inputLayouts)
 	{
 
 	}
@@ -76,12 +76,12 @@ namespace sqrp
 
 		auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateGraphicsPipelineState : " + to_string(result));
+			throw runtime_error("Failed to CreateGraphicsPipelineState : " + to_string(result));
 		}
 		pipeline_->SetName(name_.c_str());
 	}
 
-	GraphicsPipeline::GraphicsPipeline(const Device& device, std::wstring name, const GraphicsDesc& desc)
+	GraphicsPipeline::GraphicsPipeline(const Device& device, wstring name, const GraphicsDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
 		CreateGraphicsPipelineState();
@@ -97,7 +97,7 @@ namespace sqrp
 
 	}
 
-	MeshPipeline::MeshPipeline(const Device& device, std::wstring name, const MeshDesc& desc)
+	MeshPipeline::MeshPipeline(const Device& device, wstring name, const MeshDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
 		D3DX12_MESH_SHADER_PIPELINE_STATE_DESC meshPSDesc = {};
@@ -132,7 +132,7 @@ namespace sqrp
 
 		auto result = pDevice_->GetStableDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateMeshPipelineState : " + to_string(result));
+			throw runtime_error("Failed to CreateMeshPipelineState : " + to_string(result));
 		}
 		pipeline_->SetName(name_.c_str());
 	}
@@ -151,12 +151,12 @@ namespace sqrp
 
 		HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateComputePipelineState : " + to_string(result));
+			throw runtime_error("Failed to CreateComputePipelineState : " + to_string(result));
 		}
 		pipeline_->SetName(name_.c_str());
 	}
 
-	ComputePipeline::ComputePipeline(const Device& device, std::wstring name, const ComputeDesc& desc)
+	ComputePipeline::ComputePipeline(const Device& device, wstring name, const ComputeDesc& desc)
 		: pDevice_(&device), desc_(desc), name_(name)
 	{
 		CreateComputePipelineState();
@@ -167,14 +167,14 @@ namespace sqrp
 		return pipeline_;
 	}
 
-	StateObject::StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc)
+	StateObject::StateObject(const Device& device, wstring name, const StateObjectDesc soDesc)
 		: pDevice_(&device), soDesc_(soDesc), name_(name)
 	{
 		if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
 			stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 			auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-			if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_)) {
-				StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_);
+			if (holds_alternative<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_)) {
+				StateObjectDesc::RayTracingDesc rtDesc = get<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_);
 
 				if (rtDesc.globalRootSig_) {
 					auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -185,8 +185,8 @@ namespace sqrp
 					auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 					CD3DX12_SHADER_BYTECODE bcLib(raygen.shader_->GetBlob()->GetBufferPointer(), raygen.shader_->GetBlob()->GetBufferSize());
 					pLib->SetDXILLibrary(&bcLib);
-					// NOTE : ƒGƒ“ƒgƒŠ–¼‚ðŽw’è‚µ‚ÄƒRƒ“ƒpƒCƒ‹‚µ‚Ä‚¢‚é‚Í‚¸‚¾‚ªSetDXILLibrary‚¾‚¯‚¾‚Æƒtƒ@ƒCƒ‹“à‚ÌƒGƒNƒXƒ|[ƒg‚ª‘S•”“o˜^‚³‚ê‚Ä‚µ‚Ü‚¤
-					// –ˆ‰ñ–¾Ž¦‚µ‚È‚¢‚Æ“o˜^‚ªd•¡‚µ‚Ä‚µ‚Ü‚¤
+					// NOTE : ï¿½Gï¿½ï¿½ï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ï¿½wï¿½è‚µï¿½ÄƒRï¿½ï¿½ï¿½pï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Í‚ï¿½ï¿½ï¿½ï¿½ï¿½SetDXILLibraryï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æƒtï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ÌƒGï¿½Nï¿½Xï¿½|ï¿½[ï¿½gï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½oï¿½^ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½
+					// ï¿½ï¿½ï¿½ñ–¾Žï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½Æ“oï¿½^ï¿½ï¿½ï¿½dï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ü‚ï¿½
 					pLib->DefineExport(raygen.shader_->GetEntryName().c_str());
 					rayGens.push_back(raygen.shader_->GetEntryName().c_str());
 
@@ -268,12 +268,12 @@ namespace sqrp
 			stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
 			auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
 			if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
-				// Graphics node‚ðŽg‚¤‚Æ‚«‚Í‰º‚ÌƒRƒƒ“ƒgƒAƒEƒg‚ðŠO‚·.
+				// Graphics nodeï¿½ï¿½gï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Í‰ï¿½ï¿½ÌƒRï¿½ï¿½ï¿½ï¿½ï¿½gï¿½Aï¿½Eï¿½gï¿½ï¿½Oï¿½ï¿½.
 				pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
 			}
 
-			if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
-				StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
+			if (holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
+				StateObjectDesc::WorkGraphDesc wgDesc = get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
 
 				if (wgDesc.globalRootSig_) {
 					auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -336,13 +336,13 @@ namespace sqrp
 		if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
 			HRESULT result = pDevice_->GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
-				throw std::runtime_error("Failed to CreateStateObject : " + to_string(result));
+				throw runtime_error("Failed to CreateStateObject : " + to_string(result));
 			}
 		}
 		else if (soDesc.stateObjectType_ == StateObjectType::WorkGraph || soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
 			HRESULT result = pDevice_->GetLatestDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
-				throw std::runtime_error("Failed to CreateStateObject : " + to_string(result));
+				throw runtime_error("Failed to CreateStateObject : " + to_string(result));
 			}
 		}
 	}
@@ -352,14 +352,14 @@ namespace sqrp
 		return stateObject_;
 	}
 
-	std::wstring StateObject::GetProgramName() const
+	wstring StateObject::GetProgramName() const
 	{
-		if (std::holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
-			StateObjectDesc::WorkGraphDesc wgDesc = std::get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
+		if (holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
+			StateObjectDesc::WorkGraphDesc wgDesc = get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
 			return wgDesc.workGraphProgramName_;
 		}
 		else {
-			throw std::runtime_error("Cannot get program name for raytracing pipeline !");
+			throw runtime_error("Cannot get program name for raytracing pipeline !");
 		}
 	}
 
@@ -373,17 +373,17 @@ namespace sqrp
 		return soDesc_;
 	}
 
-	std::vector<std::wstring> StateObject::GetRayGens() const
+	vector<wstring> StateObject::GetRayGens() const
 	{
 		return rayGens;
 	}
 
-	std::vector<std::wstring> StateObject::GetMisses() const
+	vector<wstring> StateObject::GetMisses() const
 	{
 		return misses;
 	}
 
-	std::vector<std::wstring> StateObject::GetHitGroups() const
+	vector<wstring> StateObject::GetHitGroups() const
 	{
 		return hitGroups;
 	}

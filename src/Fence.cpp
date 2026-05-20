@@ -9,17 +9,17 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Fence::Fence(const Device& device, std::wstring name) : pDevice_(&device), name_(name)
+	Fence::Fence(const Device& device, wstring name) : pDevice_(&device), name_(name)
 	{
 		HRESULT result = pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateFence : " + to_string(result));
+			throw runtime_error("Failed to CreateFence : " + to_string(result));
 		}
 		fence_->SetName(name_.c_str());
 
 		hEvent_ = CreateEvent(nullptr, false, false, nullptr);
 		if (hEvent_ == nullptr) {
-			throw std::runtime_error("Failed to CreateEvent for fence");
+			throw runtime_error("Failed to CreateEvent for fence");
 		}
 	}
 

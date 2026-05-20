@@ -18,23 +18,23 @@ namespace sqrp
 		heapDesc.NumDescriptors = 1;
 		auto result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(imguiDescHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateDescriptorHeap for GUI : " + to_string(result));
+			throw runtime_error("Failed to CreateDescriptorHeap for GUI : " + to_string(result));
 		}
 
 		if (ImGui::CreateContext() == nullptr) {
-			throw std::runtime_error("Failed to ImGui::CreateContext : " + to_string(result));
+			throw runtime_error("Failed to ImGui::CreateContext : " + to_string(result));
 		}
 
 		bool binResult = ImGui_ImplWin32_Init(hwnd);
 		if (!binResult) {
-			throw std::runtime_error("Failed to ImGui_ImplWin32_Init");
+			throw runtime_error("Failed to ImGui_ImplWin32_Init");
 		}
 
 		auto imguiCPUHandle = imguiDescHeap_->GetCPUDescriptorHandleForHeapStart();
 		auto imguiGPUHandle = imguiDescHeap_->GetGPUDescriptorHandleForHeapStart();
 		binResult = ImGui_ImplDX12_Init(pDevice_->GetDevice().Get(), 2, DXGI_FORMAT_R8G8B8A8_UNORM, imguiDescHeap_.Get(), imguiCPUHandle, imguiGPUHandle);
 		if (!binResult) {
-			throw std::runtime_error("Failed to ImGui_ImplDX12_Init");
+			throw runtime_error("Failed to ImGui_ImplDX12_Init");
 		}
 	}
 

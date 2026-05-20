@@ -16,13 +16,13 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	std::wstring StringToWString(const std::string& str)
+	wstring StringToWString(const string& str)
 	{
 		int size_needed = MultiByteToWideChar(CP_UTF8, 0,
 			str.c_str(), (int)str.size(),
 			nullptr, 0);
 
-		std::wstring result(size_needed, 0);
+		wstring result(size_needed, 0);
 
 		MultiByteToWideChar(CP_UTF8, 0,
 			str.c_str(), (int)str.size(),
@@ -31,7 +31,7 @@ namespace sqrp
 		return result;
 	}
 
-	bool Mesh::LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	bool Mesh::LoadModel(string modelPath, vector<Vertex>& vertices, vector<uint32_t>& indices)
 	{
 		tinygltf::Model model;
 		tinygltf::TinyGLTF loader;
@@ -138,11 +138,11 @@ namespace sqrp
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
 	}
 
-	Mesh::Mesh(const Device& device, CommandHandle command, std::string modelPath)
+	Mesh::Mesh(const Device& device, CommandHandle command, string modelPath)
 		: pDevice_(&device), command_(command)
 	{
-		std::filesystem::path fullPath = modelPath;
-		std::string name = fullPath.stem().string();
+		filesystem::path fullPath = modelPath;
+		string name = fullPath.stem().string();
 		name_ = StringToWString(name);
 
 		LoadModel(modelPath, vertices_, indices_);
@@ -150,14 +150,14 @@ namespace sqrp
 		CreateIndexBuffer();
 	}
 
-	Mesh::Mesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
+	Mesh::Mesh(const Device& device, wstring name, CommandHandle command, const vector<Vertex>& vertices, const vector<uint32_t>& indices)
 		: pDevice_(&device), command_(command), vertices_(vertices), indices_(indices), name_(name)
 	{
 		CreateVertexBuffer();
 		CreateIndexBuffer();
 	}
 
-	Mesh::Mesh(const Device& device, std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum)
+	Mesh::Mesh(const Device& device, wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum)
 		: pDevice_(&device), command_(command), name_(name), isWritable_(true)
 	{
 		vertices_.resize(verticesNum);
@@ -216,7 +216,7 @@ namespace sqrp
 		return indices_.size();
 	}
 
-	bool ASMesh::LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices)
+	bool ASMesh::LoadModelForAS(string modelPath, vector<ASVertex>& ASVertices, vector<uint32_t>& indices)
 	{
 		tinygltf::Model model;
 		tinygltf::TinyGLTF loader;
@@ -300,18 +300,18 @@ namespace sqrp
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
 	}
 
-	ASMesh::ASMesh(const Device& device, CommandHandle command, std::string modelPath)
+	ASMesh::ASMesh(const Device& device, CommandHandle command, string modelPath)
 		: pDevice_(&device), command_(command)
 	{
-		std::filesystem::path fullPath = modelPath;
-		std::string name = fullPath.stem().string();
+		filesystem::path fullPath = modelPath;
+		string name = fullPath.stem().string();
 		name_ = StringToWString(name);
 		LoadModelForAS(modelPath, ASVertices_, indices_);
 		CreateVertexBuffer();
 		CreateIndexBuffer();
 	}
 
-	ASMesh::ASMesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices)
+	ASMesh::ASMesh(const Device& device, wstring name, CommandHandle command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices)
 		: pDevice_(&device), command_(command), ASVertices_(ASVertices), indices_(indices), name_(name)
 	{
 		CreateVertexBuffer();

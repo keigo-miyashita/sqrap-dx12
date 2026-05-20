@@ -21,13 +21,13 @@ namespace sqrp
 	{
 		HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateCommandAllocator : " + to_string(result));
+			throw runtime_error("Failed to CreateCommandAllocator : " + to_string(result));
 		}
 		wstring cmdAllocName = L"CommandAllocator";
 		commandAllocator_->SetName((cmdAllocName + name_).c_str());
 		result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateCommandList : " + to_string(result));
+			throw runtime_error("Failed to CreateCommandList : " + to_string(result));
 		}
 		wstring cmdListName = L"CommandList";
 		commandList_->SetName((cmdListName + name_).c_str());
@@ -37,7 +37,7 @@ namespace sqrp
 	{
 		HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to QueryInterface for StableCommandList : " + to_string(result));
+			throw runtime_error("Failed to QueryInterface for StableCommandList : " + to_string(result));
 		}
 		stableCommandList_->SetName((L"StableCommandList" + name_).c_str());
 	}
@@ -46,12 +46,12 @@ namespace sqrp
 	{
 		HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to QueryInterface for LatestCommandList : " + to_string(result));
+			throw runtime_error("Failed to QueryInterface for LatestCommandList : " + to_string(result));
 		}
 		latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
 	}
 
-	Command::Command(const Device& device, std::wstring name, D3D12_COMMAND_LIST_TYPE commandType)
+	Command::Command(const Device& device, wstring name, D3D12_COMMAND_LIST_TYPE commandType)
 		: pDevice_(&device), commandType_(commandType), name_(name)
 	{
 		CreateCommandList();
@@ -124,7 +124,7 @@ namespace sqrp
 		commandList_->ResourceBarrier(numBarriers, pBarriers);
 	}
 
-	void Command::Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers)
+	void Command::Barrier(vector<D3D12_RESOURCE_BARRIER> barriers)
 	{
 		commandList_->ResourceBarrier(barriers.size(), barriers.data());
 	}
@@ -258,24 +258,24 @@ namespace sqrp
 		int rootParamIndex = 0;
 		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
 			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
 				SetDescriptorHeap(descManager);
 				SetComputeRootDescriptorTable(rootParamIndex, descManager);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				// NOTE : to handle CBV
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				// NOTE : to handle SRV
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				// NOTE : to handle UAV
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				//SetComputeRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
 				commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
 			}
@@ -309,24 +309,24 @@ namespace sqrp
 		int rootParamIndex = 0;
 		for (const auto& rootParam_ : graphicsRootSig->GetRootParametersVec()) {
 			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = std::get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
 				SetDescriptorHeap(descManager);
 				SetGraphicsRootDescriptorTable(rootParamIndex, descManager);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				// NOTE : to handle CBV
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				// NOTE : to handle SRV
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				// NOTE : to handle UAV
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
-				DirectRootParamDesc directDesc = std::get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				//SetGraphicsRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
 				commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
 			}

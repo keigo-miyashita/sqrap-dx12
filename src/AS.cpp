@@ -54,7 +54,7 @@ namespace sqrp
 		command_->WaitCommand();
 	}
 
-	BLAS::BLAS(const Device& device, std::wstring name, CommandHandle command, ASMeshHandle mesh)
+	BLAS::BLAS(const Device& device, wstring name, CommandHandle command, ASMeshHandle mesh)
 		: pDevice_(&device), command_(command), name_(name)
 	{
 		CreateBLAS(mesh);
@@ -125,13 +125,13 @@ namespace sqrp
 		command_->WaitCommand();
 	}
 
-	TLAS::TLAS(const Device& device, std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs)
+	TLAS::TLAS(const Device& device, wstring name, CommandHandle command, const vector<TLASDesc>& tlasDescs)
 		: pDevice_(&device), command_(command), tlasDescs_(tlasDescs), name_(name)
 	{
 		CreateTLAS();
 	}
 
-	std::shared_ptr<AS> TLAS::GetASBuffer() const
+	shared_ptr<AS> TLAS::GetASBuffer() const
 	{
 		return ASBuffer_;
 	}

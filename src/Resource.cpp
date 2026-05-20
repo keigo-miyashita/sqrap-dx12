@@ -9,7 +9,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Resource::Resource(const Device& device, ResourceType rscType, std::wstring name)
+	Resource::Resource(const Device& device, ResourceType rscType, wstring name)
 		: pDevice_(&device), rscType_(rscType), name_(name)
 	{
 
@@ -23,21 +23,21 @@ namespace sqrp
 	void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
 	{
 		if (rscType_ == ResourceType::Texture) {
-			throw std::runtime_error("Cannot create CBV for texture !");
+			throw runtime_error("Cannot create CBV for texture !");
 		}
 	}
 
 	void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
 	{
 		if (rscType_ == ResourceType::AS) {
-			throw std::runtime_error("Cannot create CBV for AS !");
+			throw runtime_error("Cannot create CBV for AS !");
 		}
 	}
 
 	void Resource::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
 	{
 		if (rscType_ == ResourceType::Texture) {
-			throw std::runtime_error("Cannot create UAVCounter for texture !");
+			throw runtime_error("Cannot create UAVCounter for texture !");
 		}
 	}
 
@@ -82,7 +82,7 @@ namespace sqrp
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to create buffer : " + to_string(result));
+			throw runtime_error("Failed to create buffer : " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Buffer").c_str());
 		return true;
@@ -98,7 +98,7 @@ namespace sqrp
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignForUAVCounter(strideSize_ * numElement_) + sizeof(UINT), rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to create buffer : " + to_string(result));
+			throw runtime_error("Failed to create buffer : " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Counter_Buffer").c_str());
 		return true;
@@ -115,7 +115,7 @@ namespace sqrp
 		return (size + 0xff) & ~0xff;
 	}
 
-	Buffer::Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag)
+	Buffer::Buffer(const Device& device, wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag)
 		: Resource(device, ResourceType::Buffer, name), type_(type), strideSize_(strideSize), numElement_(numElement)
 	{
 		if (type == BufferType::Counter) {
@@ -190,7 +190,7 @@ namespace sqrp
 	void Buffer::Write(const void* src, UINT size)
 	{
 		void* rawPtr = Map();
-		std::memcpy(rawPtr, src, size);
+		memcpy(rawPtr, src, size);
 		Unmap();
 	}
 
@@ -263,7 +263,7 @@ namespace sqrp
 		return offsetCounter_;
 	}
 
-	Texture::Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
+	Texture::Texture(const Device& device, wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
 		: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth)
 	{
 		if (type_ == TextureType::Default) {
@@ -304,7 +304,7 @@ namespace sqrp
 		rscDesc.Flags = rscFlag_;
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to create buffer : " + to_string(result));
+			throw runtime_error("Failed to create buffer : " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Texture").c_str());
 	}
@@ -395,7 +395,7 @@ namespace sqrp
 		return strideSize_;
 	}
 
-	void Texture::SetName(std::wstring name)
+	void Texture::SetName(wstring name)
 	{
 		name_ = name;
 	}
@@ -405,7 +405,7 @@ namespace sqrp
 		resource_ = resource;
 	}
 
-	AS::AS(const Device& device, std::wstring name, UINT size)
+	AS::AS(const Device& device, wstring name, UINT size)
 		: Resource(device, ResourceType::AS, name), size_(size)
 	{
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -416,7 +416,7 @@ namespace sqrp
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(size_, rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateCommittedResource for AS : " + to_string(result));
+			throw runtime_error("Failed to CreateCommittedResource for AS : " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_AS").c_str());
 	}

@@ -36,12 +36,12 @@ namespace sqrp
 			nullptr,
 			(IDXGISwapChain1**)swapChain_.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateSwapChainForHwnd : " + to_string(result));
+			throw runtime_error("Failed to CreateSwapChainForHwnd : " + to_string(result));
 		}
 
 		result = swapChain_->GetDesc1(&swapChainDesc1);
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to get swapChainDesc1 : " + to_string(result));
+			throw runtime_error("Failed to get swapChainDesc1 : " + to_string(result));
 		}
 
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
@@ -51,7 +51,7 @@ namespace sqrp
 		heapDesc.NumDescriptors = 2;
 		result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain : " + to_string(result));
+			throw runtime_error("Failed to CreateDescriptorHeap for SwapChain : " + to_string(result));
 		}
 		rtvHeap_->SetName((name_ + L"RenderTargetViewHeap").c_str());
 
@@ -70,7 +70,7 @@ namespace sqrp
 			backBuffers_[i]->SetResource(resource);
 			//backBuffers_[i]->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 			if (FAILED(result)) {
-				throw std::runtime_error("Failed to GetBuffer for SwapChain : " + to_string(result));
+				throw runtime_error("Failed to GetBuffer for SwapChain : " + to_string(result));
 			}
 			wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
 			backBuffers_[i]->SetName(nameBackBuffer.c_str());
@@ -97,7 +97,7 @@ namespace sqrp
 			&depthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateCommittedResource for SwapChain's DepthStencilBuffer : " + to_string(result));
+			throw runtime_error("Failed to CreateCommittedResource for SwapChain's DepthStencilBuffer : " + to_string(result));
 		}
 		depthStencilBuffer_->SetName((name_ + L"DepthStencilBuffer").c_str());
 
@@ -108,7 +108,7 @@ namespace sqrp
 
 		result = pDevice_->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateDescriptorHeap for SwapChain's DepthStencilBuffer : " + to_string(result));
+			throw runtime_error("Failed to CreateDescriptorHeap for SwapChain's DepthStencilBuffer : " + to_string(result));
 		}
 		dsvHeap_->SetName((name_ + L"DepthStencilHeap").c_str());
 
@@ -120,7 +120,7 @@ namespace sqrp
 		pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	SwapChain::SwapChain(const Device& device, std::wstring name, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize)
+	SwapChain::SwapChain(const Device& device, wstring name, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize)
 		: pDevice_(&device), pCommand_(command), name_(name)
 	{
 

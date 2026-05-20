@@ -39,7 +39,7 @@ namespace sqrp
 		return size;
 	}
 
-	RayTracing::RayTracing(const Device& device, std::wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth)
+	RayTracing::RayTracing(const Device& device, wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth)
 		: pDevice_(&device), name_(name)
 	{
 		stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp_.ReleaseAndGetAddressOf()));
@@ -48,8 +48,8 @@ namespace sqrp
 		vector<void*> missIDs;
 		vector<void*> hitGroupIDs;
 
-		if (std::holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_)) {
-			StateObjectDesc::RayTracingDesc rtDesc = std::get<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_);
+		if (holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_)) {
+			StateObjectDesc::RayTracingDesc rtDesc = get<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_);
 
 			// All record aligned max record size
 			UINT maxRayGenSize = 0;
@@ -113,18 +113,18 @@ namespace sqrp
 						continue;
 					const auto resourceSetDescs = rayGen.localResourceSet_->GetResourceSetDescs();
 					for (const auto& resourceSetDesc : resourceSetDescs) {
-						if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-							auto descriptorManagerHandle = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
 							auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 							pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 						}
-						else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-							auto bufferHandle = std::get<BufferHandle>(resourceSetDesc.bindResource);
+						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
 							auto add = bufferHandle->GetGPUAddress();
 							pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
 						}
-						else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-							auto constants = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
+						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
 							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
 							pThisRayGen += CopyMem(pThisRayGen, constants.get(), sizeof(float) * constants->GetNumConstants());
 						}
@@ -145,18 +145,18 @@ namespace sqrp
 						continue;
 					const auto resourceSetDescs = miss.localResourceSet_->GetResourceSetDescs();
 					for (const auto& resourceSetDesc : resourceSetDescs) {
-						if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-							auto descriptorManagerHandle = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
 							auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 							pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 						}
-						else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-							auto bufferHandle = std::get<BufferHandle>(resourceSetDesc.bindResource);
+						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
 							auto add = bufferHandle->GetGPUAddress();
 							pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
 						}
-						else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-							auto constants = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
+						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
 							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
 							pThisMiss += CopyMem(pThisMiss, constants.get(), sizeof(float) * constants->GetNumConstants());
 						}
@@ -177,18 +177,18 @@ namespace sqrp
 						continue;
 					const auto resourceSetDescs = hitGroup.localResourceSet_->GetResourceSetDescs();
 					for (const auto& resourceSetDesc : resourceSetDescs) {
-						if (std::holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-							auto descriptorManagerHandle = std::get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
+						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
+							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
 							auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 							pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 						}
-						else if (std::holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-							auto bufferHandle = std::get<BufferHandle>(resourceSetDesc.bindResource);
+						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
+							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
 							auto add = bufferHandle->GetGPUAddress();
 							pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
 						}
-						else if (std::holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-							auto constants = std::get<ConstantsHandle>(resourceSetDesc.bindResource);
+						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
+							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
 							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
 							pThisHitGroup += CopyMem(pThisHitGroup, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
 						}

@@ -13,15 +13,15 @@ namespace sqrp
 	{
 		auto result = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(compiler_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to DxcCreateInstance for compiler_ : " + to_string(result));
+			throw runtime_error("Failed to DxcCreateInstance for compiler_ : " + to_string(result));
 		}
 		result = DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(library_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to DxcCreateInstance for library_ : " + to_string(result));
+			throw runtime_error("Failed to DxcCreateInstance for library_ : " + to_string(result));
 		}
 		result = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(utils_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to DxcCreateInstance for utils_ : " + to_string(result));
+			throw runtime_error("Failed to DxcCreateInstance for utils_ : " + to_string(result));
 		}
 	}
 
@@ -30,25 +30,25 @@ namespace sqrp
 		InitializeDxc();
 	}
 
-	void DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath) const
+	void DXC::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const wstring& fileName, const wstring& entry, vector<const wchar_t*> additionalOption, const wstring& includePath) const
 	{
 		ComPtr<IDxcIncludeHandler> incHandler = nullptr;
 		ComPtr<IDxcBlob> incBlob = nullptr;
 
 		HRESULT result = utils_->CreateDefaultIncludeHandler(incHandler.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateDefaultIncludeHandler : " + to_string(result));
+			throw runtime_error("Failed to CreateDefaultIncludeHandler : " + to_string(result));
 		}
 
 		if (!includePath.empty()) {
 			DWORD attrib = GetFileAttributesW(includePath.c_str());
 			if (attrib == INVALID_FILE_ATTRIBUTES) {
-				throw std::runtime_error("Failed to get include file : ");
+				throw runtime_error("Failed to get include file : ");
 			}
 
 			result = incHandler->LoadSource(includePath.c_str(), incBlob.ReleaseAndGetAddressOf());
 			if (FAILED(result)) {
-				throw std::runtime_error("Failed to LoadSource : " + to_string(result));
+				throw runtime_error("Failed to LoadSource : " + to_string(result));
 			}
 		}
 
@@ -63,7 +63,7 @@ namespace sqrp
 		options.push_back(L"-Fd");
 		wstring erasedExtension = fileName;
 		size_t pos = erasedExtension.find(L'.');
-		if (pos != std::wstring::npos) {
+		if (pos != wstring::npos) {
 			erasedExtension.erase(pos);
 		}
 		options.push_back((erasedExtension + L".pdb").c_str());
@@ -75,7 +75,7 @@ namespace sqrp
 		ComPtr<IDxcBlobEncoding> source = nullptr;
 		result = library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
-			throw std::runtime_error("Failed to CreateBlobFromFile : " + to_string(result));
+			throw runtime_error("Failed to CreateBlobFromFile : " + to_string(result));
 		}
 
 		ComPtr<IDxcOperationResult> dxcResult = nullptr;
@@ -91,7 +91,7 @@ namespace sqrp
 			if (err) {
 				DebugOutputFormatString((char*)err->GetBufferPointer());
 			}
-			throw std::runtime_error("Failed to Compile : " + to_string(result));
+			throw runtime_error("Failed to Compile : " + to_string(result));
 		}
 
 		HRESULT tmpResult;
@@ -101,12 +101,12 @@ namespace sqrp
 			if (err) {
 				DebugOutputFormatString((char*)err->GetBufferPointer());
 			}
-			throw std::runtime_error("Failed to GetResult : " + to_string(result));
+			throw runtime_error("Failed to GetResult : " + to_string(result));
 		}
 		dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
 	}
 
-	std::shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption, const std::wstring& includePath) const
+	shared_ptr<Shader> DXC::CreateShader(ShaderType shaderType, const wstring& fileName, const wstring& entry, vector<const wchar_t*> additionalOption, const wstring& includePath) const
 	{
 		return make_shared<Shader>(*this, shaderType, fileName, entry, additionalOption, includePath);
 	}
