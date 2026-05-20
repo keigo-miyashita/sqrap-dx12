@@ -15,11 +15,6 @@ namespace sqrp
 
 	}
 
-	Resource::Resource()
-	{
-
-	}
-
 	void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
 	{
 		if (rscType_ == ResourceType::Texture) {
@@ -309,12 +304,6 @@ namespace sqrp
 		resource_->SetName((name_ + L"_Texture").c_str());
 	}
 
-	Texture::Texture()
-		: Resource()
-	{
-
-	}
-
 	void* Texture::Map()
 	{
 		void* pData = nullptr;
@@ -395,6 +384,21 @@ namespace sqrp
 		return strideSize_;
 	}
 
+	UINT Texture::GetWidth() const
+	{
+		return width_;
+	}
+
+	UINT Texture::GetHeight() const
+	{
+		return height_;
+	}
+
+	UINT Texture::GetDepth() const
+	{
+		return depth_;
+	}
+
 	void Texture::SetName(wstring name)
 	{
 		name_ = name;
@@ -438,12 +442,12 @@ namespace sqrp
 
 	}
 
-	void* Constants::GetConstants()
+	void* Constants::GetConstants() const
 	{
 		return constants_;
 	}
 
-	UINT Constants::GetNumConstants()
+	UINT Constants::GetNumConstants() const
 	{
 		return numConstants_;
 	}

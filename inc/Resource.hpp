@@ -28,7 +28,7 @@ namespace sqrp
 
 	public:
 		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
-		Resource();
+		Resource() = default;
 		~Resource() = default;
 
 		virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
@@ -85,7 +85,7 @@ namespace sqrp
 			Unmap();
 		}
 		template<typename T>
-		void Write(std::vector<T>& dest)
+		void Write(const std::vector<T>& dest)
 		{
 			void* rawPtr = Map();
 			T* castedPtr = static_cast<T*>(rawPtr);
@@ -149,7 +149,7 @@ namespace sqrp
 
 	public:
 		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth);
-		Texture();
+		Texture() = default;
 		~Texture() = default;
 		void* Map();
 		void Unmap();
@@ -195,7 +195,7 @@ namespace sqrp
 		Constants(void* constants, UINT numConstants);
 		~Constants() = default;
 
-		void* GetConstants();
-		UINT GetNumConstants();
+		void* GetConstants() const;
+		UINT GetNumConstants() const;
 	};
 }
