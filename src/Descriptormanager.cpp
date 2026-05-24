@@ -32,8 +32,11 @@ namespace sqrp
 		viewOffset_++;
 	}
 
-	void DescriptorManager::CreateSampler()
+	void DescriptorManager::CreateSampler(const D3D12_SAMPLER_DESC& desc)
 	{
+		auto cpuHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
+		cpuHandle.ptr += viewOffset_ * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+		pDevice_->GetDevice()->CreateSampler(&desc, cpuHandle);
 		viewOffset_++;
 	}
 
@@ -93,7 +96,7 @@ namespace sqrp
 				break;
 			case ViewType::SAMPLER:
 				numSampler_++;
-				CreateSampler();
+				CreateSampler(desc.samplerDesc_);
 				break;
 			default:
 				break;

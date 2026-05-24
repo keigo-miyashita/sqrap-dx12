@@ -255,11 +255,25 @@ namespace sqrp
 	void Command::SetComputeResource(RootSignatureHandle computeRootSig)
 	{
 		SetComputeRootSig(computeRootSig);
+
+		vector<ID3D12DescriptorHeap*> heaps;
+		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
+			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
+				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				auto heap = descManager->GetDescriptorHeap().Get();
+				if (find(heaps.begin(), heaps.end(), heap) == heaps.end()) {
+					heaps.push_back(heap);
+				}
+			}
+		}
+		if (!heaps.empty()) {
+			commandList_->SetDescriptorHeaps(static_cast<UINT>(heaps.size()), heaps.data());
+		}
+
 		int rootParamIndex = 0;
 		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
 			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
 				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				SetDescriptorHeap(descManager);
 				SetComputeRootDescriptorTable(rootParamIndex, descManager);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
@@ -306,11 +320,25 @@ namespace sqrp
 	void Command::SetGraphicsResource(RootSignatureHandle graphicsRootSig)
 	{
 		SetGraphicsRootSig(graphicsRootSig);
+
+		vector<ID3D12DescriptorHeap*> heaps;
+		for (const auto& rootParam_ : graphicsRootSig->GetRootParametersVec()) {
+			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
+				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
+				auto heap = descManager->GetDescriptorHeap().Get();
+				if (find(heaps.begin(), heaps.end(), heap) == heaps.end()) {
+					heaps.push_back(heap);
+				}
+			}
+		}
+		if (!heaps.empty()) {
+			commandList_->SetDescriptorHeaps(static_cast<UINT>(heaps.size()), heaps.data());
+		}
+
 		int rootParamIndex = 0;
 		for (const auto& rootParam_ : graphicsRootSig->GetRootParametersVec()) {
 			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
 				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				SetDescriptorHeap(descManager);
 				SetGraphicsRootDescriptorTable(rootParamIndex, descManager);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
@@ -383,6 +411,50 @@ namespace sqrp
 		this->CopyBufferRegion(uploadBuffer, 0, uploadBuffer->GetInitialState(), buffer, 0, buffer->GetInitialState(), strideSize * numElement);
 
 		this->WaitCommand();
+	}
+
+	void Command::InitDataToTexture(TextureHandle texture, void* pData, UINT strideSize, UINT width, UINT height)
+	{
+		auto desc = texture->GetResource()->GetDesc();
+		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
+		UINT numRows;
+		UINT64 rowSizeInBytes, totalBytes;
+		pDevice_->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, &numRows, &rowSizeInBytes, &totalBytes);
+
+		BufferHandle uploadBuffer = pDevice_->CreateBuffer(L"TextureUpload", BufferType::Upload, 1, static_cast<UINT>(totalBytes));
+
+		void* pMapped = uploadBuffer->Map();
+		if (pMapped) {
+			uint8_t* dst = static_cast<uint8_t*>(pMapped);
+			const uint8_t* src = static_cast<const uint8_t*>(pData);
+			UINT srcRowPitch = strideSize * width;
+			for (UINT row = 0; row < numRows; ++row) {
+				memcpy(dst + row * footprint.Footprint.RowPitch, src + row * srcRowPitch, srcRowPitch);
+			}
+			uploadBuffer->Unmap();
+		}
+
+		auto toDestBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			texture->GetResource().Get(), texture->GetInitialState(), D3D12_RESOURCE_STATE_COPY_DEST);
+		commandList_->ResourceBarrier(1, &toDestBarrier);
+
+		D3D12_TEXTURE_COPY_LOCATION srcLoc = {};
+		srcLoc.pResource = uploadBuffer->GetResource().Get();
+		srcLoc.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+		srcLoc.PlacedFootprint = footprint;
+
+		D3D12_TEXTURE_COPY_LOCATION dstLoc = {};
+		dstLoc.pResource = texture->GetResource().Get();
+		dstLoc.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+		dstLoc.SubresourceIndex = 0;
+
+		commandList_->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
+
+		auto toInitBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			texture->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, texture->GetInitialState());
+		commandList_->ResourceBarrier(1, &toInitBarrier);
+
+		WaitCommand();
 	}
 
 	D3D12_COMMAND_LIST_TYPE Command::GetCommandType()

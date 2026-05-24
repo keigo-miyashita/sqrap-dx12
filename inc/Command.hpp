@@ -81,6 +81,7 @@ namespace sqrp
 
 		// "init" prefixed methods perform initialization and internally invoke WaitCommand to ensure readiness.
 		void InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement);
+		void InitDataToTexture(TextureHandle texture, void* pData, UINT strideSize, UINT width, UINT height);
 
 		D3D12_COMMAND_LIST_TYPE GetCommandType();
 		ComPtr<ID3D12CommandAllocator> GetCommandAllocator() const;

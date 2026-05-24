@@ -130,7 +130,7 @@ namespace sqrp
 
 	enum class TextureDim
 	{
-		Tex1D, Tex2D, Tex3D,
+		Tex1D, Tex2D, Tex3D, TexCube,
 	};
 
 	class Texture : public Resource
@@ -198,4 +198,14 @@ namespace sqrp
 		void* GetConstants() const;
 		UINT GetNumConstants() const;
 	};
+
+	struct HDRImage
+	{
+		std::vector<float> data;
+		int width    = 0;
+		int height   = 0;
+		int channels = 0;
+	};
+
+	HDRImage LoadHDR(const std::string& path);
 }

@@ -3,6 +3,8 @@
 #include "Descriptormanager.hpp"
 #include "Device.hpp"
 
+#include <stb_image.h>
+
 using namespace Microsoft::WRL;
 using namespace std;
 using namespace DirectX;
@@ -296,6 +298,10 @@ namespace sqrp
 			rscDesc = CD3DX12_RESOURCE_DESC::Tex3D(format_, width_, height_, depth_);
 			rscDesc.MipLevels = 1;
 		}
+		else if (texDim_ == TextureDim::TexCube) {
+			rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_, 6);
+			rscDesc.MipLevels = 1;
+		}
 		rscDesc.Flags = rscFlag_;
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
@@ -348,6 +354,12 @@ namespace sqrp
 			viewDesc.Texture3D.MipLevels = 1;
 			viewDesc.Texture3D.ResourceMinLODClamp = 0.0f;
 		}
+		else if (texDim_ == TextureDim::TexCube) {
+			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+			viewDesc.TextureCube.MostDetailedMip = 0;
+			viewDesc.TextureCube.MipLevels = 1;
+			viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+		}
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
@@ -373,6 +385,13 @@ namespace sqrp
 			viewDesc.Texture3D.MipSlice = 0;
 			viewDesc.Texture3D.FirstWSlice = 0;
 			viewDesc.Texture3D.WSize = 1;
+		}
+		else if (texDim_ == TextureDim::TexCube) {
+			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+			viewDesc.Texture2DArray.MipSlice = 0;
+			viewDesc.Texture2DArray.FirstArraySlice = 0;
+			viewDesc.Texture2DArray.ArraySize = 6;
+			viewDesc.Texture2DArray.PlaneSlice = 0;
 		}
 		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
@@ -450,5 +469,18 @@ namespace sqrp
 	UINT Constants::GetNumConstants() const
 	{
 		return numConstants_;
+	}
+
+	HDRImage LoadHDR(const string& path)
+	{
+		HDRImage img;
+		float* raw = stbi_loadf(path.c_str(), &img.width, &img.height, &img.channels, 4);
+		if (!raw) {
+			throw runtime_error("Failed to load HDR: " + path);
+		}
+		img.channels = 4;
+		img.data.assign(raw, raw + img.width * img.height * img.channels);
+		stbi_image_free(raw);
+		return img;
 	}
 }

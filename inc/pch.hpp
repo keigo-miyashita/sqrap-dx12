@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <cmath>
 #include <filesystem>
 #include <functional>

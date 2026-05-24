@@ -58,6 +58,9 @@ namespace sqrp
 				options.push_back(additionalOption[i]);
 			}
 		}
+		// Extract only the file name from the full path
+		wstring shaderName = fileName.substr(fileName.find_last_of(L"/\\") + 1);
+		wcout << shaderName << L" [" << ShaderModel[ToInt(shaderType)] << L"] " << entry;
 #ifdef _DEBUG
 		options.push_back(L"-Zi");
 		options.push_back(L"-Fd");
@@ -67,8 +70,9 @@ namespace sqrp
 			erasedExtension.erase(pos);
 		}
 		options.push_back((erasedExtension + L".pdb").c_str());
-		cout << "Generate pdb files" << endl;
+		wcout << L" generate gdb";
 #endif // DEBUG
+		wcout << endl;
 		if (shaderType == ShaderType::WorkGraph) {
 			options.push_back(L"-select-validator internal");
 		}

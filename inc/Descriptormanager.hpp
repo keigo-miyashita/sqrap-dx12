@@ -27,6 +27,7 @@ namespace sqrp
 		ViewType type_;
 		UINT numReg_;
 		bool isCounter_ = false;
+		D3D12_SAMPLER_DESC samplerDesc_ = {};
 	};
 
 	class DescriptorManager
@@ -37,7 +38,7 @@ namespace sqrp
 
 		const Device* pDevice_ = nullptr;
 		std::wstring name_;
-		// CBV_SRV_UAB‚Ü‚½‚ÍSampler‚ğ1‚Â‚¸‚ÂiƒLƒ…[‚ÉjƒZƒbƒg‚Å‚«‚é
+		// CBV_SRV_UABï¿½Ü‚ï¿½ï¿½ï¿½Samplerï¿½ï¿½1ï¿½Â‚ï¿½ï¿½Âiï¿½Lï¿½ï¿½ï¿½[ï¿½Éjï¿½Zï¿½bï¿½gï¿½Å‚ï¿½ï¿½ï¿½
 		HeapType heapType_;
 		ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
 		UINT viewOffset_ = 0;
@@ -57,7 +58,7 @@ namespace sqrp
 		void CreateSRV(ResourceHandle resource);
 		void CreateUAV(ResourceHandle resource);
 		void CreateUAVCounter(ResourceHandle resource);
-		void CreateSampler();
+		void CreateSampler(const D3D12_SAMPLER_DESC& desc);
 
 	public:
 		DescriptorManager(const Device& pDevice, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
