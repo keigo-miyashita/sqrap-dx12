@@ -192,6 +192,8 @@ namespace sqrp
 			std::wstring programName_;
 			std::vector<ShaderHandle> shaders_;
 			ResourceSetHandle resourceSet_;
+			std::optional<D3D12_BLEND_DESC>         blendState_;
+			std::optional<D3D12_DEPTH_STENCIL_DESC> depthStencilDesc_;
 		};
 
 		// StateObject setting for work graph
@@ -201,6 +203,8 @@ namespace sqrp
 			std::vector<ShaderExportDesc> exportDescs_;
 			std::vector<ProgramDesc> programDescs_;
 			std::wstring workGraphProgramName_ = L"Program";
+			D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+			D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 		};
 
 		StateObjectType stateObjectType_;

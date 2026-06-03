@@ -30,5 +30,6 @@
 #include <span>
 #include <string>
 #include <unordered_map>
+#include <optional>
 #include <variant>
 #include <vector>

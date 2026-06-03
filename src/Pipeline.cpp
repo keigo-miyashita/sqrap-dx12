@@ -279,6 +279,7 @@ namespace sqrp
 					auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 					CD3DX12_SHADER_BYTECODE bcLib(exportDesc.shader_->GetBlob()->GetBufferPointer(), exportDesc.shader_->GetBlob()->GetBufferSize());
 					pLib->SetDXILLibrary(&bcLib);
+					pLib->DefineExport(exportDesc.shader_->GetEntryName().c_str());
 
 					if (exportDesc.localResourceSet_) {
 						auto pLocalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_LOCAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -291,7 +292,7 @@ namespace sqrp
 				}
 
 				if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
-					// NOTE : 
+					// NOTE :
 					// This wrapper is designed under the assumption
 					// All program use the same topology and RTFormat
 					auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
@@ -299,6 +300,23 @@ namespace sqrp
 					auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
 					pRTFormats->SetNumRenderTargets(1);
 					pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
+
+					auto pBlend = stateObjectDesc_.CreateSubobject<CD3DX12_BLEND_SUBOBJECT>();
+					pBlend->SetAlphaToCoverageEnable(wgDesc.blendState_.AlphaToCoverageEnable);
+					pBlend->SetIndependentBlendEnable(wgDesc.blendState_.IndependentBlendEnable);
+					for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
+						pBlend->SetRenderTarget(i, wgDesc.blendState_.RenderTarget[i]);
+					}
+
+					auto pDepthStencil = stateObjectDesc_.CreateSubobject<CD3DX12_DEPTH_STENCIL_SUBOBJECT>();
+					pDepthStencil->SetDepthEnable(wgDesc.depthStencilDesc_.DepthEnable);
+					pDepthStencil->SetDepthWriteMask(wgDesc.depthStencilDesc_.DepthWriteMask);
+					pDepthStencil->SetDepthFunc(wgDesc.depthStencilDesc_.DepthFunc);
+					pDepthStencil->SetStencilEnable(wgDesc.depthStencilDesc_.StencilEnable);
+					pDepthStencil->SetStencilReadMask(wgDesc.depthStencilDesc_.StencilReadMask);
+					pDepthStencil->SetStencilWriteMask(wgDesc.depthStencilDesc_.StencilWriteMask);
+					pDepthStencil->SetFrontFace(wgDesc.depthStencilDesc_.FrontFace);
+					pDepthStencil->SetBackFace(wgDesc.depthStencilDesc_.BackFace);
 
 					for (auto programDesc : wgDesc.programDescs_) {
 						auto pGenericProgram = stateObjectDesc_.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
@@ -308,6 +326,33 @@ namespace sqrp
 						}
 						pGenericProgram->AddSubobject(*pPrimitiveTopology);
 						pGenericProgram->AddSubobject(*pRTFormats);
+
+						if (programDesc.blendState_.has_value()) {
+							auto pProgramBlend = stateObjectDesc_.CreateSubobject<CD3DX12_BLEND_SUBOBJECT>();
+							pProgramBlend->SetAlphaToCoverageEnable(programDesc.blendState_->AlphaToCoverageEnable);
+							pProgramBlend->SetIndependentBlendEnable(programDesc.blendState_->IndependentBlendEnable);
+							for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
+								pProgramBlend->SetRenderTarget(i, programDesc.blendState_->RenderTarget[i]);
+							}
+							pGenericProgram->AddSubobject(*pProgramBlend);
+						} else {
+							pGenericProgram->AddSubobject(*pBlend);
+						}
+
+						if (programDesc.depthStencilDesc_.has_value()) {
+							auto pProgramDepthStencil = stateObjectDesc_.CreateSubobject<CD3DX12_DEPTH_STENCIL_SUBOBJECT>();
+							pProgramDepthStencil->SetDepthEnable(programDesc.depthStencilDesc_->DepthEnable);
+							pProgramDepthStencil->SetDepthWriteMask(programDesc.depthStencilDesc_->DepthWriteMask);
+							pProgramDepthStencil->SetDepthFunc(programDesc.depthStencilDesc_->DepthFunc);
+							pProgramDepthStencil->SetStencilEnable(programDesc.depthStencilDesc_->StencilEnable);
+							pProgramDepthStencil->SetStencilReadMask(programDesc.depthStencilDesc_->StencilReadMask);
+							pProgramDepthStencil->SetStencilWriteMask(programDesc.depthStencilDesc_->StencilWriteMask);
+							pProgramDepthStencil->SetFrontFace(programDesc.depthStencilDesc_->FrontFace);
+							pProgramDepthStencil->SetBackFace(programDesc.depthStencilDesc_->BackFace);
+							pGenericProgram->AddSubobject(*pProgramDepthStencil);
+						} else {
+							pGenericProgram->AddSubobject(*pDepthStencil);
+						}
 					}
 				}
 
