@@ -15,7 +15,7 @@ namespace sqrp
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		heapDesc.NodeMask = 0;
-		heapDesc.NumDescriptors = 1;
+		heapDesc.NumDescriptors = 1 + kMaxUserTextures; // slot 0: font, slots 1+: user textures
 		auto result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(imguiDescHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("Failed to CreateDescriptorHeap for GUI : " + to_string(result));
@@ -76,5 +76,31 @@ namespace sqrp
 	ComPtr<ID3D12DescriptorHeap> GUI::GetImguiDescHeap() const
 	{
 		return imguiDescHeap_;
+	}
+
+	D3D12_GPU_DESCRIPTOR_HANDLE GUI::RegisterTextureSRV(UINT slot,
+	                                                     ID3D12Resource* resource,
+	                                                     DXGI_FORMAT format)
+	{
+		if (slot == 0 || slot > kMaxUserTextures)
+			throw runtime_error("GUI::RegisterTextureSRV: slot must be 1.." + to_string(kMaxUserTextures));
+
+		UINT inc = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(
+		               D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+		D3D12_CPU_DESCRIPTOR_HANDLE cpu = imguiDescHeap_->GetCPUDescriptorHandleForHeapStart();
+		cpu.ptr += slot * inc;
+
+		D3D12_GPU_DESCRIPTOR_HANDLE gpu = imguiDescHeap_->GetGPUDescriptorHandleForHeapStart();
+		gpu.ptr += slot * inc;
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format                  = format;
+		srvDesc.ViewDimension           = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels     = 1;
+
+		pDevice_->GetDevice()->CreateShaderResourceView(resource, &srvDesc, cpu);
+		return gpu;
 	}
 }

@@ -65,6 +65,11 @@ namespace sqrp
 
 	void Command::BeginRender(SwapChainHandle swapchain)
 	{
+		if (fence_->GetFenceVal() > 0) {
+			fence_->WaitSignal();
+			Reset();
+		}
+
 		auto bbIdx = swapchain->GetSwapChain()->GetCurrentBackBufferIndex();
 
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -92,13 +97,15 @@ namespace sqrp
 
 	void Command::EndRender(SwapChainHandle swapchain)
 	{
-		auto bbIdx = swapchain->GetSwapChain()->GetCurrentBackBufferIndex();
-
-		// Transit render target to present
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		commandList_->ResourceBarrier(1, &barrier);
 
-		WaitCommand();
+		Close();
+
+		ID3D12CommandList* cmdLists[] = { commandList_.Get() };
+		pDevice_->GetGraphicsCommandQueue()->ExecuteCommandLists(1, cmdLists);
+
+		fence_->Signal(QueueType::Graphics);
 
 		swapchain->GetSwapChain()->Present(1, 0);
 	}
@@ -244,6 +251,11 @@ namespace sqrp
 	{
 		commandAllocator_->Reset();
 		commandList_->Reset(commandAllocator_.Get(), nullptr);
+	}
+
+	void Command::Close()
+	{
+		commandList_->Close();
 	}
 
 	void Command::SetMesh(MeshHandle mesh)
