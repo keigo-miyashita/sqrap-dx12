@@ -99,6 +99,7 @@ bool WorkGraphApp::OnStart()
 
 	workGraph_ = device_.CreateWorkGraph(L"", workGraphStateObject_, 1, 1);
 
+	command_->GetCommandList()->Close();
 	return true;
 };
 
@@ -153,5 +154,5 @@ void WorkGraphApp::OnUpdate()
 
 void WorkGraphApp::OnTerminate()
 {
-
+	command_->GetFence().WaitSignal();
 };

@@ -136,6 +136,7 @@ bool SampleApplication::OnStart()
 		1
 	);
 
+	command_->GetCommandList()->Close();
 	return true;
 };
 
@@ -168,4 +169,5 @@ void SampleApplication::OnUpdate()
 
 void SampleApplication::OnTerminate()
 {
+	command_->GetFence().WaitSignal();
 };

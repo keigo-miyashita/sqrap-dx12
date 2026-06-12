@@ -84,6 +84,7 @@ bool SampleApplication::OnStart()
 	lambertDesc.PS_ = lambertPS_;
 	lambert_ = device_.CreateGraphicsPipeline(L"lambert", lambertDesc);
 
+	command_->GetCommandList()->Close();
 	return true;
 };
 
@@ -114,5 +115,5 @@ void SampleApplication::OnUpdate()
 
 void SampleApplication::OnTerminate()
 {
-
+	command_->GetFence().WaitSignal();
 };
