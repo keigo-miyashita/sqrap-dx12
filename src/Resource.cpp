@@ -24,7 +24,7 @@ namespace sqrp
 		}
 	}
 
-	void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
+	void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
 	{
 		if (rscType_ == ResourceType::AS) {
 			throw runtime_error("Cannot create CBV for AS !");
@@ -216,7 +216,7 @@ namespace sqrp
 		pDevice_->GetDevice()->CreateShaderResourceView(resource_.Get(), &viewDesc, heapHandle);
 	}
 
-	void Buffer::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
+	void Buffer::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
 	{
 		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 		viewDesc.Format = DXGI_FORMAT_UNKNOWN;
@@ -260,8 +260,8 @@ namespace sqrp
 		return offsetCounter_;
 	}
 
-	Texture::Texture(const Device& device, wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth)
-		: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth)
+	Texture::Texture(const Device& device, wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels)
+		: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth), mipLevels_(mipLevels)
 	{
 		if (type_ == TextureType::Default) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -287,20 +287,20 @@ namespace sqrp
 		CD3DX12_RESOURCE_DESC rscDesc;
 		if (texDim_ == TextureDim::Tex1D) {
 			rscDesc = CD3DX12_RESOURCE_DESC::Tex1D(format_, width_);
-			rscDesc.MipLevels = 1;
+			rscDesc.MipLevels = mipLevels_;
 		}
 		else if (texDim_ == TextureDim::Tex2D)
 		{
 			rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_);
-			rscDesc.MipLevels = 1;
+			rscDesc.MipLevels = mipLevels_;
 		}
 		else if (texDim_ == TextureDim::Tex3D) {
 			rscDesc = CD3DX12_RESOURCE_DESC::Tex3D(format_, width_, height_, depth_);
-			rscDesc.MipLevels = 1;
+			rscDesc.MipLevels = mipLevels_;
 		}
 		else if (texDim_ == TextureDim::TexCube) {
 			rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_, 6);
-			rscDesc.MipLevels = 1;
+			rscDesc.MipLevels = mipLevels_;
 		}
 		rscDesc.Flags = rscFlag_;
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
@@ -338,12 +338,12 @@ namespace sqrp
 		if (texDim_ == TextureDim::Tex1D) {
 			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
 			viewDesc.Texture1D.MostDetailedMip = 0;
-			viewDesc.Texture1D.MipLevels = 1;
+			viewDesc.Texture1D.MipLevels = mipLevels_;
 		}
 		else if (texDim_ == TextureDim::Tex2D) {
 			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 			viewDesc.Texture2D.MostDetailedMip = 0;
-			viewDesc.Texture2D.MipLevels = 1;
+			viewDesc.Texture2D.MipLevels = mipLevels_;
 			viewDesc.Texture2D.PlaneSlice = 0;
 			viewDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
@@ -351,13 +351,13 @@ namespace sqrp
 		else if (texDim_ == TextureDim::Tex3D) {
 			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
 			viewDesc.Texture3D.MostDetailedMip = 0;
-			viewDesc.Texture3D.MipLevels = 1;
+			viewDesc.Texture3D.MipLevels = mipLevels_;
 			viewDesc.Texture3D.ResourceMinLODClamp = 0.0f;
 		}
 		else if (texDim_ == TextureDim::TexCube) {
 			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 			viewDesc.TextureCube.MostDetailedMip = 0;
-			viewDesc.TextureCube.MipLevels = 1;
+			viewDesc.TextureCube.MipLevels = mipLevels_;
 			viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 		}
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -366,29 +366,29 @@ namespace sqrp
 		pDevice_->GetDevice()->CreateShaderResourceView(resource_.Get(), &viewDesc, heapHandle);
 	}
 
-	void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset)
+	void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
 	{
 		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 		viewDesc.Format = format_;
 		if (texDim_ == TextureDim::Tex1D) {
 			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
-			viewDesc.Texture1D.MipSlice = 0;
+			viewDesc.Texture1D.MipSlice = mipSlice;
 		}
 		else if (texDim_ == TextureDim::Tex2D) {
 			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-			viewDesc.Texture2D.MipSlice = 0;
+			viewDesc.Texture2D.MipSlice = mipSlice;
 			viewDesc.Texture2D.PlaneSlice = 0;
 
 		}
 		else if (texDim_ == TextureDim::Tex3D) {
 			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-			viewDesc.Texture3D.MipSlice = 0;
+			viewDesc.Texture3D.MipSlice = mipSlice;
 			viewDesc.Texture3D.FirstWSlice = 0;
 			viewDesc.Texture3D.WSize = 1;
 		}
 		else if (texDim_ == TextureDim::TexCube) {
 			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-			viewDesc.Texture2DArray.MipSlice = 0;
+			viewDesc.Texture2DArray.MipSlice = mipSlice;
 			viewDesc.Texture2DArray.FirstArraySlice = 0;
 			viewDesc.Texture2DArray.ArraySize = 6;
 			viewDesc.Texture2DArray.PlaneSlice = 0;
@@ -416,6 +416,11 @@ namespace sqrp
 	UINT Texture::GetDepth() const
 	{
 		return depth_;
+	}
+
+	UINT Texture::GetMipLevels() const
+	{
+		return mipLevels_;
 	}
 
 	void Texture::SetName(wstring name)

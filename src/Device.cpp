@@ -285,6 +285,11 @@ namespace sqrp
 		return make_shared<Mesh>(*this, command, modelPath);
 	}
 
+	GLTFMeshHandle Device::CreateGLTFMesh(CommandHandle command, string modelPath) const
+	{
+		return make_shared<GLTFMesh>(*this, command, modelPath);
+	}
+
 	MeshHandle Device::CreateMesh(wstring name, CommandHandle command, const vector<Vertex>& vertices, const vector<uint32_t>& indices) const
 	{
 		return make_shared<Mesh>(*this, name, command, vertices, indices);
@@ -320,9 +325,9 @@ namespace sqrp
 		return make_shared<SwapChain>(*this, name, command, hwnd, winSize);
 	}
 
-	TextureHandle Device::CreateTexture(wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth) const
+	TextureHandle Device::CreateTexture(wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels) const
 	{
-		return make_shared<Texture>(*this, name, texDim, type, strideSize, format, width, height, depth);
+		return make_shared<Texture>(*this, name, texDim, type, strideSize, format, width, height, depth, mipLevels);
 	}
 
 	TLASHandle Device::CreateTLAS(wstring name, CommandHandle command, const vector<TLASDesc>& tlasDescs) const

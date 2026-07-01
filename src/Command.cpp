@@ -110,7 +110,7 @@ namespace sqrp
 		swapchain->GetSwapChain()->Present(1, 0);
 	}
 
-	void Command::AddDrawIndexed(MeshHandle mesh, UINT numInstances)
+	void Command::AddDrawIndexed(MeshBaseHandle mesh, UINT numInstances)
 	{
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
@@ -258,7 +258,7 @@ namespace sqrp
 		commandList_->Close();
 	}
 
-	void Command::SetMesh(MeshHandle mesh)
+	void Command::SetMesh(MeshBaseHandle mesh)
 	{
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());

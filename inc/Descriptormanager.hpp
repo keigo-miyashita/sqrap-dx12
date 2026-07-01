@@ -28,6 +28,7 @@ namespace sqrp
 		UINT numReg_;
 		bool isCounter_ = false;
 		D3D12_SAMPLER_DESC samplerDesc_ = {};
+		UINT mipSlice_ = 0;        // UAV用：書き込み対象のmip
 	};
 
 	class DescriptorManager
@@ -56,7 +57,7 @@ namespace sqrp
 
 		void CreateCBV(ResourceHandle resource);
 		void CreateSRV(ResourceHandle resource);
-		void CreateUAV(ResourceHandle resource);
+		void CreateUAV(ResourceHandle resource, UINT mipSlice = 0);
 		void CreateUAVCounter(ResourceHandle resource);
 		void CreateSampler(const D3D12_SAMPLER_DESC& desc);
 

@@ -41,6 +41,7 @@ namespace sqrp
 		static inline MousePosition prevMousePos_;
 		static inline MousePosition currentMousePos_;
 		static inline MousePosition deltaMousePos_;
+		static inline bool catchInput_ = false;
 
 	public:
 		static void GetRawState(UINT msg, WPARAM wparam, LPARAM lparam);
@@ -53,6 +54,8 @@ namespace sqrp
 		static MousePosition GetPos();
 		static bool IsPushedLButton();
 		static bool IsPushedRButton();
+		static void SetCatchInput(bool catchInput);
+		static bool GetCatchInput();
 	};
 
 	class Application

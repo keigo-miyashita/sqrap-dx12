@@ -20,9 +20,9 @@ namespace sqrp
 		viewOffset_++;
 	}
 
-	void DescriptorManager::CreateUAV(ResourceHandle resource)
+	void DescriptorManager::CreateUAV(ResourceHandle resource, UINT mipSlice)
 	{
-		resource->CreateUAV(*this, viewOffset_);
+		resource->CreateUAV(*this, viewOffset_, mipSlice);
 		viewOffset_++;
 	}
 
@@ -91,7 +91,7 @@ namespace sqrp
 					CreateUAVCounter(desc.resource_);
 				}
 				else {
-					CreateUAV(desc.resource_);
+					CreateUAV(desc.resource_, desc.mipSlice_);
 				}
 				break;
 			case ViewType::SAMPLER:

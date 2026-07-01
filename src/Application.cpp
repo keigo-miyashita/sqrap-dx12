@@ -12,7 +12,7 @@ namespace sqrp
 	{
 		if (ImGui::GetCurrentContext() != nullptr) {
 			ImGuiIO& io = ImGui::GetIO();
-			if (io.WantCaptureMouse) {
+			if (io.WantCaptureMouse && !catchInput_) {
 				isPushedLButton_ = false;
 				isPushedRButton_ = false;
 				for (auto& [vk, rawState] : isPushKey_) {
@@ -133,6 +133,16 @@ namespace sqrp
 		return isPushedRButton_;
 	}
 
+	void Input::SetCatchInput(bool catchInput)
+	{
+		catchInput_ = catchInput;
+	}
+
+	bool Input::GetCatchInput()
+	{
+		return catchInput_;
+	}
+
 	namespace {
 
 		Application* appPtr = nullptr;
@@ -249,7 +259,9 @@ namespace sqrp
 
 			Input::Update();
 
-			OnUpdate();
+			if (isRunning) {
+				OnUpdate();
+			}
 		}
 
 		OnTerminate();

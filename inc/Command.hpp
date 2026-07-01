@@ -51,7 +51,7 @@ namespace sqrp
 		~Command() = default;
 		void BeginRender(SwapChainHandle swapchain);
 		void EndRender(SwapChainHandle swapchain);
-		void AddDrawIndexed(MeshHandle mesh, UINT numInstances);
+		void AddDrawIndexed(MeshBaseHandle mesh, UINT numInstances);
 		void AddDrawIndexedLine(MeshHandle mesh, UINT numInstances);
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
 		void Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers);
@@ -64,7 +64,7 @@ namespace sqrp
 		void ExecuteIndirect(IndirectHandle indirect);
 		void Reset();
 		void Close();
-		void SetMesh(MeshHandle mesh);
+		void SetMesh(MeshBaseHandle mesh);
 		void SetComputeResource(RootSignatureHandle computeRootSig);
 		void SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant);
 		void SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager);

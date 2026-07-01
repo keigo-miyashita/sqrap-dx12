@@ -33,7 +33,7 @@ namespace sqrp
 
 		virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
 		virtual void CreateSRV(DescriptorManager& descManager, UINT viewOffset) = 0;
-		virtual void CreateUAV(DescriptorManager& descManager, UINT viewOffset);
+		virtual void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0);
 		virtual void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset);
 
 		ComPtr<ID3D12Resource> GetResource() const;
@@ -115,7 +115,7 @@ namespace sqrp
 
 		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-		void CreateUAV(DescriptorManager& descManager, UINT viewOffset) override;
+		void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0) override;
 		void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset) override;
 
 		UINT GetStrideSize() const;
@@ -145,10 +145,11 @@ namespace sqrp
 		UINT width_ = 1;
 		UINT height_ = 1;
 		UINT depth_ = 1;
+		UINT mipLevels_ = 1;
 		DXGI_FORMAT format_;
 
 	public:
-		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth);
+		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1);
 		Texture() = default;
 		~Texture() = default;
 		void* Map();
@@ -156,12 +157,13 @@ namespace sqrp
 		void Reset();
 
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-		void CreateUAV(DescriptorManager& descManager, UINT viewOffset) override;
+		void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0) override;
 
 		UINT GetStrideSize() const;
 		UINT GetWidth() const;
 		UINT GetHeight() const;
 		UINT GetDepth() const;
+		UINT GetMipLevels() const;
 
 		void SetName(std::wstring name);
 		void SetResource(ComPtr<ID3D12Resource> resource);

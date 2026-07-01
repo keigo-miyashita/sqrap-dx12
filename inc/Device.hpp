@@ -73,6 +73,7 @@ namespace sqrp
 		GUIHandle				CreateGUI(const HWND& hwnd) const;
 		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount = 0, BufferHandle argumentBuffer = nullptr, BufferHandle counterBuffer = nullptr) const;
 		MeshHandle				CreateMesh(CommandHandle command, std::string modelPath) const;
+		GLTFMeshHandle			CreateGLTFMesh(CommandHandle command, std::string modelPath) const;
 		MeshHandle				CreateMesh(std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 		MeshHandle				CreateMesh(std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum) const;
 		MeshPipelineHandle		CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const;
@@ -80,7 +81,7 @@ namespace sqrp
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;
 		StateObjectHandle		CreateStateObject(std::wstring name, const StateObjectDesc soDesc) const;
 		SwapChainHandle			CreateSwapChain(std::wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize) const;
-		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth) const;
+		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1) const;
 		TLASHandle				CreateTLAS(std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs) const;
 		WorkGraphHandle			CreateWorkGraph(std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
 
