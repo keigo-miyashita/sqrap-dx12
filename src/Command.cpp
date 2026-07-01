@@ -67,7 +67,9 @@ namespace sqrp
 	{
 		if (fence_->GetFenceVal() > 0) {
 			fence_->WaitSignal();
-			Reset();
+			commandList_->Close(); // open状態(WaitCommand後)でも closed状態でも安全にResetできる
+			commandAllocator_->Reset();
+			commandList_->Reset(commandAllocator_.Get(), nullptr);
 		}
 
 		auto bbIdx = swapchain->GetSwapChain()->GetCurrentBackBufferIndex();
@@ -108,6 +110,11 @@ namespace sqrp
 		fence_->Signal(QueueType::Graphics);
 
 		swapchain->GetSwapChain()->Present(1, 0);
+
+		// 次フレームのUpdate()/Compute()記録のためにリストを再オープン
+		fence_->WaitSignal();
+		commandAllocator_->Reset();
+		commandList_->Reset(commandAllocator_.Get(), nullptr);
 	}
 
 	void Command::AddDrawIndexed(MeshBaseHandle mesh, UINT numInstances)
