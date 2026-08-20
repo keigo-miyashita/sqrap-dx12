@@ -186,14 +186,18 @@ namespace sqrp
 		};
 
 		// Program setting for work graph
+		// blend / depthStencil / rasterizer / topology は指定した場合のみ
+		// WorkGraphDesc 側の既定値を上書きする
 		struct ProgramDesc
 		{
 			NodeType nodeType_;
 			std::wstring programName_;
 			std::vector<ShaderHandle> shaders_;
 			ResourceSetHandle resourceSet_;
-			std::optional<D3D12_BLEND_DESC>         blendState_;
-			std::optional<D3D12_DEPTH_STENCIL_DESC> depthStencilDesc_;
+			std::optional<D3D12_BLEND_DESC>              blendState_;
+			std::optional<D3D12_DEPTH_STENCIL_DESC>      depthStencilDesc_;
+			std::optional<D3D12_RASTERIZER_DESC>         rasterizerDesc_;
+			std::optional<D3D12_PRIMITIVE_TOPOLOGY_TYPE> topologyType_;
 		};
 
 		// StateObject setting for work graph
@@ -205,6 +209,10 @@ namespace sqrp
 			std::wstring workGraphProgramName_ = L"Program";
 			D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 			D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+			D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+			D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+			std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM };
+			DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
 		};
 
 		StateObjectType stateObjectType_;

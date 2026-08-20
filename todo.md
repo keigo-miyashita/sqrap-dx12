@@ -12,3 +12,11 @@
 - Buffer->Map(-, &range)で範囲をコピーする処理を簡単にしたい
 - CommandListに複数スレッドでコマンドをつめるようにする
 - MVP行列構造体をレイトレに対応
+- Commandの開閉状態を追跡する
+	- BeginRenderが閉じたコマンドリストにClose()を呼びCOMMAND_LIST_CLOSEDエラーになる
+	- 開いているときだけClose()するようフラグを持つ。Fence::WaitCommandもResetするので状態通知が要る
+	- サンプル側はOnStart末尾のClose()を削除して回避中
+- EndRenderのSignalをPresentの後に移す
+	- 現状はPresentより前にSignalしており、WaitSignalではPresentの完了を待てない
+	- 終了時にOBJECT_DELETED_WHILE_STILL_IN_USEが出る
+	- サンプルとworkgraphtestはOnTerminateでWaitCommand()を呼んで回避中

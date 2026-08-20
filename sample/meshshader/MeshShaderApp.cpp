@@ -85,7 +85,6 @@ bool MeshShaderApp::OnStart()
 	meshDesc.PS_ = lambertPS_;
 	lambert_ = device_.CreateMeshPipeline(L"lamber", meshDesc);
 
-	command_->GetCommandList()->Close();
 	return true;
 };
 
@@ -118,5 +117,5 @@ void MeshShaderApp::OnUpdate()
 
 void MeshShaderApp::OnTerminate()
 {
-	command_->GetFence().WaitSignal();
+	command_->WaitCommand();   // Present 完了まで待つ (WaitSignal だけでは Present 前のシグナルしか待てない)
 };

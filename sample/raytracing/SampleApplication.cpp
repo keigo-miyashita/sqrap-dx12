@@ -136,7 +136,6 @@ bool SampleApplication::OnStart()
 		1
 	);
 
-	command_->GetCommandList()->Close();
 	return true;
 };
 
@@ -169,5 +168,5 @@ void SampleApplication::OnUpdate()
 
 void SampleApplication::OnTerminate()
 {
-	command_->GetFence().WaitSignal();
+	command_->WaitCommand();   // Present 完了まで待つ (WaitSignal だけでは Present 前のシグナルしか待てない)
 };

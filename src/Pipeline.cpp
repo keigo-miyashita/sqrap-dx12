@@ -292,14 +292,36 @@ namespace sqrp
 				}
 
 				if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
-					// NOTE :
-					// This wrapper is designed under the assumption
-					// All program use the same topology and RTFormat
+					// RTFormat は全プログラムで共通。topology / rasterizer / blend /
+					// depthStencil はここで既定値を作り、ProgramDesc 側に指定があれば上書きする
 					auto pPrimitiveTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
-					pPrimitiveTopology->SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+					pPrimitiveTopology->SetPrimitiveTopologyType(wgDesc.topologyType_);
+
 					auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
-					pRTFormats->SetNumRenderTargets(1);
-					pRTFormats->SetRenderTargetFormat(0, DXGI_FORMAT_R8G8B8A8_UNORM);
+					pRTFormats->SetNumRenderTargets(static_cast<UINT>(wgDesc.RTVFormats_.size()));
+					for (UINT i = 0; i < wgDesc.RTVFormats_.size(); i++) {
+						pRTFormats->SetRenderTargetFormat(i, wgDesc.RTVFormats_[i]);
+					}
+
+					// 深度バッファの形式。宣言しないと「深度ユニットは DSV を要求しているのに
+					// 未宣言」という警告 (STATE_CREATION WARNING #1414) が出る
+					auto pDSFormat = stateObjectDesc_.CreateSubobject<CD3DX12_DEPTH_STENCIL_FORMAT_SUBOBJECT>();
+					pDSFormat->SetDepthStencilFormat(wgDesc.dsvFormat_);
+
+					// D3D12_RASTERIZER_DESC の内容をサブオブジェクトへ写す
+					auto setRasterizer = [](CD3DX12_RASTERIZER_SUBOBJECT* p, const D3D12_RASTERIZER_DESC& d) {
+						p->SetFillMode(d.FillMode);
+						p->SetCullMode(d.CullMode);
+						p->SetFrontCounterClockwise(d.FrontCounterClockwise);
+						p->SetDepthBias(static_cast<FLOAT>(d.DepthBias));
+						p->SetDepthBiasClamp(d.DepthBiasClamp);
+						p->SetSlopeScaledDepthBias(d.SlopeScaledDepthBias);
+						p->SetDepthClipEnable(d.DepthClipEnable);
+						p->SetForcedSampleCount(d.ForcedSampleCount);
+						p->SetConservativeRaster(d.ConservativeRaster);
+					};
+					auto pRasterizer = stateObjectDesc_.CreateSubobject<CD3DX12_RASTERIZER_SUBOBJECT>();
+					setRasterizer(pRasterizer, wgDesc.rasterizerDesc_);
 
 					auto pBlend = stateObjectDesc_.CreateSubobject<CD3DX12_BLEND_SUBOBJECT>();
 					pBlend->SetAlphaToCoverageEnable(wgDesc.blendState_.AlphaToCoverageEnable);
@@ -324,8 +346,24 @@ namespace sqrp
 						for (auto shader : programDesc.shaders_) {
 							pGenericProgram->AddExport(shader->GetEntryName().c_str());
 						}
-						pGenericProgram->AddSubobject(*pPrimitiveTopology);
+						if (programDesc.topologyType_.has_value()) {
+							auto pProgramTopology = stateObjectDesc_.CreateSubobject<CD3DX12_PRIMITIVE_TOPOLOGY_SUBOBJECT>();
+							pProgramTopology->SetPrimitiveTopologyType(*programDesc.topologyType_);
+							pGenericProgram->AddSubobject(*pProgramTopology);
+						} else {
+							pGenericProgram->AddSubobject(*pPrimitiveTopology);
+						}
+
 						pGenericProgram->AddSubobject(*pRTFormats);
+						pGenericProgram->AddSubobject(*pDSFormat);
+
+						if (programDesc.rasterizerDesc_.has_value()) {
+							auto pProgramRasterizer = stateObjectDesc_.CreateSubobject<CD3DX12_RASTERIZER_SUBOBJECT>();
+							setRasterizer(pProgramRasterizer, *programDesc.rasterizerDesc_);
+							pGenericProgram->AddSubobject(*pProgramRasterizer);
+						} else {
+							pGenericProgram->AddSubobject(*pRasterizer);
+						}
 
 						if (programDesc.blendState_.has_value()) {
 							auto pProgramBlend = stateObjectDesc_.CreateSubobject<CD3DX12_BLEND_SUBOBJECT>();
