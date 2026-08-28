@@ -12,6 +12,12 @@ namespace sqrp
 		pDxc_->CompileShader(blob_, shaderType_, fileName, entry, additionalOption, includePath);
 	}
 
+	// コンパイル済みのバイトコードから作る。DXCは呼ばない
+	Shader::Shader(const DXC& dxc, ShaderType shaderType, ComPtr<IDxcBlob> blob, const wstring& entry)
+		: pDxc_(&dxc), shaderType_(shaderType), blob_(blob), entryName_(entry)
+	{
+	}
+
 	ComPtr<IDxcBlob> Shader::GetBlob() const
 	{
 		return blob_;

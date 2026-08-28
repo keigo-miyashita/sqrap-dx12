@@ -20,3 +20,17 @@
 	- 現状はPresentより前にSignalしており、WaitSignalではPresentの完了を待てない
 	- 終了時にOBJECT_DELETED_WHILE_STILL_IN_USEが出る
 	- サンプルとworkgraphtestはOnTerminateでWaitCommand()を呼んで回避中
+
+- Input::GetRawStateがImGui使用中にキーボード入力まで捨てる
+	- 冒頭でio.WantCaptureMouse && !catchInput_のとき、isPushKey_を全てfalseにしてreturnしている
+	- マウスがGUI上にあるだけでWASDやその他のキーが全て死ぬ。マウスとキーボードの判定が分離できていない
+	- さらにWM_MOUSEMOVEも捨てるため、SetCursorPosでカーソルを中央へ戻してもcurrentMousePos_に反映されない
+	- 結果、前フレーム位置との差分が毎フレーム同じ値で出続け、FPS風の視点操作で視点が勝手に回り続ける
+	- WantCaptureMouseはマウス入力のみ、WantCaptureKeyboardはキーボード入力のみに作用させるのが正しい
+	- workgraphtest/implicitはGetAsyncKeyState/GetCursorPosを直接使い、固定中はSetCatchInput(true)にして回避中
+- Camera::UpdateFreeMoveの視点回転が左ボタン押下中に限定されている
+	- FPS風にボタンなしで見回せない。rotation_を外から与えるSetRotationで代用するしかない
+	- Space/Ctrlの上下移動がGetUp()基準なので、見上げた状態では斜めに進む。ワールドY基準の選択肢が欲しい
+	- workgraphtest/implicitはrotateScale_を一時的に0にして内蔵回転を殺し、回転と移動を自前で持って回避中
+- Camera::SetRadius/SetTargetはあるがazimuth/elevationのsetterが無い
+	- オービタルと一人称を行き来すると視点が飛ぶ。注視点から視点へのベクトルを控えて復元するしかない
