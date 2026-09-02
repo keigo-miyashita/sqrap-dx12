@@ -196,9 +196,29 @@ namespace sqrp
 	{
 		XMFLOAT3 frontDir = GetFront();
 		XMFLOAT3 yPlusDir = XMFLOAT3(0.0f, 1.0f, 0.0f);
+		// Looking exactly up/down makes world-up parallel to front.  Use a
+		// stable alternate reference axis so unrestricted pitch remains valid.
+		if (fabsf(frontDir.y) > 0.9999f)
+			yPlusDir = XMFLOAT3(0.0f, 0.0f, 1.0f);
 
 		XMFLOAT3 rightDir;
 		XMStoreFloat3(&rightDir, XMVector3Normalize((XMVector3Cross(XMLoadFloat3(&yPlusDir), XMLoadFloat3(&frontDir)))));
+
+		// Apply roll around the viewing direction.  The default roll is zero,
+		// so this preserves the old camera basis while allowing camera paths to
+		// interpolate all three rotation components.
+		if (fabsf(rotation_.z) > 1e-6f) {
+			XMFLOAT3 upDir;
+			XMStoreFloat3(&upDir, XMVector3Normalize(
+				XMVector3Cross(XMLoadFloat3(&frontDir), XMLoadFloat3(&rightDir))));
+			const float roll = XMConvertToRadians(rotation_.z);
+			const float c = cosf(roll);
+			const float s = sinf(roll);
+			rightDir = XMFLOAT3(
+				rightDir.x * c + upDir.x * s,
+				rightDir.y * c + upDir.y * s,
+				rightDir.z * c + upDir.z * s);
+		}
 		return rightDir;
 	}
 
