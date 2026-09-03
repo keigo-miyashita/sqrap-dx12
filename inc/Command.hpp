@@ -77,6 +77,7 @@ namespace sqrp
 		void SetRayTracingResource(RootSignatureHandle rayTracingRootSig);
 		void SetPipeline(GraphicsPipelineHandle graphicsPipeline);
 		void SetPipeline(ComputePipelineHandle computePipeline);
+		void SetPipeline(MeshPipelineHandle meshPipeline);
 		void SetRayTracingState(StateObjectHandle stateObject);
 		bool WaitCommand(QueueType queueType = QueueType::Graphics);
 

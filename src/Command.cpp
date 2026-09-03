@@ -411,6 +411,11 @@ namespace sqrp
 		commandList_->SetPipelineState(computePipeline->GetPipelineState().Get());
 	}
 
+	void Command::SetPipeline(MeshPipelineHandle meshPipeline)
+	{
+		commandList_->SetPipelineState(meshPipeline->GetPipelineState().Get());
+	}
+
 	void Command::SetRayTracingState(StateObjectHandle stateObject)
 	{
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
