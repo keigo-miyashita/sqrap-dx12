@@ -196,12 +196,16 @@ namespace sqrp
 
 		CreateDXDevice(gpuVendorName);
 
+		InitializeStableDevice();
+
 		InitializeLatestDevice();
 
 #ifdef _DEBUG
 		cout << "Try to create DebugDevice" << endl;
 		CreateDebugDevice(debugDevice);
 #endif // _DEBUG
+
+		CreateCommandQueue();
 	}
 
 	void Device::ShowUsedVramSize()
