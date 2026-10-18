@@ -33,18 +33,21 @@ namespace sqrp
 		command.GetCommandList()->Close();
 
 		ID3D12CommandList* cmdLists[] = { command.GetCommandList().Get() };
-		HRESULT result;
-		if (queueType == QueueType::Graphics) {
-			pDevice_->GetGraphicsCommandQueue()->ExecuteCommandLists(1, cmdLists);
-			result = pDevice_->GetGraphicsCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		ID3D12CommandQueue* cmdQueue = nullptr;
+		switch (queueType) {
+			case QueueType::Graphics:
+				cmdQueue = pDevice_->GetGraphicsCommandQueue().Get();
+				break;
+			case QueueType::Compute:
+				cmdQueue = pDevice_->GetComputeCommandQueue().Get();
+				break;
+			default:
+				throw runtime_error("Fence::WaitCommand : Invalid QueueType");
 		}
-		else if (queueType == QueueType::Compute) {
-			pDevice_->GetComputeCommandQueue()->ExecuteCommandLists(1, cmdLists);
-			result = pDevice_->GetComputeCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
-		}
-
+		cmdQueue->ExecuteCommandLists(1, cmdLists);
+		HRESULT result = cmdQueue->Signal(fence_.Get(), ++fenceVal_);
 		if (FAILED(result)) {
-			return false;
+			throw runtime_error("Fence::Wait Command : failed to signal " + to_string(result));
 		}
 
 		if (fence_->GetCompletedValue() < fenceVal_) {
@@ -60,16 +63,20 @@ namespace sqrp
 
 	bool Fence::Signal(QueueType queueType)
 	{
-		HRESULT result;
-		if (queueType == QueueType::Graphics) {
-			result = pDevice_->GetGraphicsCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
+		ID3D12CommandQueue* cmdQueue = nullptr;
+		switch (queueType) {
+		case QueueType::Graphics:
+			cmdQueue = pDevice_->GetGraphicsCommandQueue().Get();
+			break;
+		case QueueType::Compute:
+			cmdQueue = pDevice_->GetComputeCommandQueue().Get();
+			break;
+		default:
+			throw runtime_error("Fence::WaitCommand : Invalid QueueType");
 		}
-		else if (queueType == QueueType::Compute) {
-			result = pDevice_->GetComputeCommandQueue()->Signal(fence_.Get(), ++fenceVal_);
-		}
-
+		HRESULT result = cmdQueue->Signal(fence_.Get(), ++fenceVal_);
 		if (FAILED(result)) {
-			return false;
+			throw runtime_error("Fence::Signal : failed to signal : " + to_string(result));
 		}
 		return true;
 	}

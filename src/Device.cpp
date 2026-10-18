@@ -18,6 +18,10 @@ namespace {
 	{
 		ComPtr<ID3D12Debug> debugLayer = nullptr;
 		auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
+		if (FAILED(result))
+		{
+			throw runtime_error("Failed to D3D12GetDebugInterface" + to_string(result));
+		}
 		debugLayer->EnableDebugLayer();
 		debugLayer.Reset();
 	}
