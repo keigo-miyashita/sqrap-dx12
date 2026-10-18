@@ -29,7 +29,7 @@ namespace sqrp
 		ComPtr<ID3D12StateObjectProperties1> soProp = nullptr;
 		auto result = stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to QueryInterface for StateObjectProperties1 : " + to_string(result));
+			throw runtime_error("[WorkGraph::WorkGraph] QueryInterface for StateObjectProperties1 failed\nHRESULT = " + to_string(result));
 		}
 
 		wcout << stateObject->GetProgramName().c_str() << endl;
@@ -49,7 +49,7 @@ namespace sqrp
 		CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
 		result = pDevice_->GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommittedResource for backingmemory : " + to_string(result));
+			throw runtime_error("[WorkGraph::WorkGraph] CreateCommittedResource for backing memory failed\nHRESULT = " + to_string(result));
 		}
 		backingMemory_->SetName((name_ + L"_WorkGraph_BackingMemory").c_str());
 		backingMemoryAddressRange_.SizeInBytes = memReqs_.MaxSizeInBytes;

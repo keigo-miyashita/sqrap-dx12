@@ -77,7 +77,7 @@ namespace sqrp
 
 		auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateGraphicsPipelineState : " + to_string(result));
+			throw runtime_error("[GraphicsPipeline::GraphicsPipeline] CreateGraphicsPipelineState failed\nHRESULT = " + to_string(result));
 		}
 		pipeline_->SetName(name_.c_str());
 	}
@@ -122,7 +122,7 @@ namespace sqrp
 
 		auto result = pDevice_->GetStableDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateMeshPipelineState : " + to_string(result));
+			throw runtime_error("[MeshPipeline::MeshPipeline] CreatePipelineState failed\nHRESULT = " + to_string(result));
 		}
 		pipeline_->SetName(name_.c_str());
 	}
@@ -142,7 +142,7 @@ namespace sqrp
 
 		HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateComputePipelineState : " + to_string(result));
+			throw runtime_error("[ComputePipeline::ComputePipeline] CreateComputePipelineState failed\nHRESULT = " + to_string(result));
 		}
 		pipeline_->SetName(name_.c_str());
 	}
@@ -404,13 +404,13 @@ namespace sqrp
 		if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
 			HRESULT result = pDevice_->GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
-				throw runtime_error("Failed to CreateStateObject : " + to_string(result));
+				throw runtime_error("[StateObject::StateObject] CreateStateObject for raytracing failed\nHRESULT = " + to_string(result));
 			}
 		}
 		else if (soDesc.stateObjectType_ == StateObjectType::WorkGraph || soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
 			HRESULT result = pDevice_->GetLatestDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
-				throw runtime_error("Failed to CreateStateObject : " + to_string(result));
+				throw runtime_error("[StateObject::StateObject] CreateStateObject for work graph failed\nHRESULT = " + to_string(result));
 			}
 		}
 	}
@@ -428,7 +428,7 @@ namespace sqrp
 			return get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_).workGraphProgramName_;
 		}
 		else {
-			throw runtime_error("Cannot get program name for raytracing pipeline !");
+			throw runtime_error("[StateObject::GetProgramName] cannot get program name for raytracing pipeline");
 		}
 	}
 

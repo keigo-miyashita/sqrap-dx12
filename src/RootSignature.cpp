@@ -65,12 +65,12 @@ namespace sqrp
 			if (errBlob) {
 				OutputDebugStringA((char*)errBlob->GetBufferPointer());
 			}
-			throw runtime_error("Failed to D3D12SerializeRootSignature : " + to_string(result));
+			throw runtime_error("[RootSignature::RootSignature] D3D12SerializeRootSignature failed\nHRESULT = " + to_string(result));
 		}
 
 		result = pDevice_->GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateRootSignature : " + to_string(result));
+			throw runtime_error("[RootSignature::RootSignature] CreateRootSignature failed\nHRESULT = " + to_string(result));
 		}
 
 		rootSig_->SetName(name.c_str());

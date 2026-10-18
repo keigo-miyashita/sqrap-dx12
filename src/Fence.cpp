@@ -13,13 +13,13 @@ namespace sqrp
 	{
 		HRESULT result = pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateFence : " + to_string(result));
+			throw runtime_error("[Fence::Fence] CreateFence failed\nHRESULT = " + to_string(result));
 		}
 		fence_->SetName(name_.c_str());
 
 		hEvent_ = CreateEvent(nullptr, false, false, nullptr);
 		if (hEvent_ == nullptr) {
-			throw runtime_error("Failed to CreateEvent for fence");
+			throw runtime_error("[Fence::Fence] CreateEvent failed");
 		}
 	}
 
@@ -42,12 +42,12 @@ namespace sqrp
 				cmdQueue = pDevice_->GetComputeCommandQueue().Get();
 				break;
 			default:
-				throw runtime_error("Fence::WaitCommand : Invalid QueueType");
+				throw runtime_error("[Fence::WaitCommand] invalid QueueType");
 		}
 		cmdQueue->ExecuteCommandLists(1, cmdLists);
 		HRESULT result = cmdQueue->Signal(fence_.Get(), ++fenceVal_);
 		if (FAILED(result)) {
-			throw runtime_error("Fence::Wait Command : failed to signal " + to_string(result));
+			throw runtime_error("[Fence::WaitCommand] Signal failed\nHRESULT = " + to_string(result));
 		}
 
 		if (fence_->GetCompletedValue() < fenceVal_) {
@@ -72,11 +72,11 @@ namespace sqrp
 			cmdQueue = pDevice_->GetComputeCommandQueue().Get();
 			break;
 		default:
-			throw runtime_error("Fence::WaitCommand : Invalid QueueType");
+			throw runtime_error("[Fence::Signal] invalid QueueType");
 		}
 		HRESULT result = cmdQueue->Signal(fence_.Get(), ++fenceVal_);
 		if (FAILED(result)) {
-			throw runtime_error("Fence::Signal : failed to signal : " + to_string(result));
+			throw runtime_error("[Fence::Signal] Signal failed\nHRESULT = " + to_string(result));
 		}
 		return true;
 	}

@@ -57,7 +57,7 @@ namespace sqrp
 		heapDesc.NumDescriptors = numDescriptor_;
 		HRESULT result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(descHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateDescriptorHeap : " + to_string(result));
+			throw runtime_error("[DescriptorManager::DescriptorManager] CreateDescriptorHeap failed\nHRESULT = " + to_string(result));
 		}
 		descHeap_->SetName((name_ + L"DescriptorHeap").c_str());
 

@@ -37,11 +37,11 @@ namespace sqrp
 			catch (const exception& e)
 			{
 				// Don't throw exception from thread, because it will terminate the program
-				cerr << "ThreadPool::ProcessTask() exception: " << e.what() << endl;
+				cerr << "[ThreadPool::ProcessTask] task threw an exception\n" << e.what() << endl;
 			}
 			catch (...)
 			{
-				cerr << "ThreadPool::ProcessTask() unknown exception" << endl;
+				cerr << "[ThreadPool::ProcessTask] task threw an unknown exception" << endl;
 			}
 			{
 				unique_lock<mutex> lk(tpMutex_);

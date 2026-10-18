@@ -21,13 +21,13 @@ namespace sqrp
 	{
 		HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommandAllocator : " + to_string(result));
+			throw runtime_error("[Command::CreateCommandList] CreateCommandAllocator failed\nHRESULT = " + to_string(result));
 		}
 		wstring cmdAllocName = L"CommandAllocator";
 		commandAllocator_->SetName((cmdAllocName + name_).c_str());
 		result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommandList : " + to_string(result));
+			throw runtime_error("[Command::CreateCommandList] CreateCommandList failed\nHRESULT = " + to_string(result));
 		}
 		wstring cmdListName = L"CommandList";
 		commandList_->SetName((cmdListName + name_).c_str());
@@ -37,7 +37,7 @@ namespace sqrp
 	{
 		HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(stableCommandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to QueryInterface for StableCommandList : " + to_string(result));
+			throw runtime_error("[Command::InitializeStableCommandList] QueryInterface for StableCommandList failed\nHRESULT = " + to_string(result));
 		}
 		stableCommandList_->SetName((L"StableCommandList" + name_).c_str());
 	}
@@ -46,7 +46,7 @@ namespace sqrp
 	{
 		HRESULT result = commandList_->QueryInterface(IID_PPV_ARGS(latestCommandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to QueryInterface for LatestCommandList : " + to_string(result));
+			throw runtime_error("[Command::InitializeLatestCommandList] QueryInterface for LatestCommandList failed\nHRESULT = " + to_string(result));
 		}
 		latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
 	}

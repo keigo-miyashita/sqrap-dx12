@@ -177,7 +177,7 @@ namespace sqrp
 		windowClass_.hInstance = GetModuleHandle(0);
 
 		if (!RegisterClassEx(&windowClass_)) {
-			cerr << "Error on RegisterClassEx : " << GetLastError() << endl;
+			cerr << "[Application::CreateGameWindow] RegisterClassEx failed\nGetLastError = " << GetLastError() << endl;
 		}
 
 		// Window size
@@ -198,7 +198,7 @@ namespace sqrp
 			nullptr);
 
 		if (hwnd_ == nullptr) {
-			cerr << "Cannot create HWND" << endl;
+			cerr << "[Application::CreateGameWindow] CreateWindow failed" << endl;
 		}
 
 		SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));

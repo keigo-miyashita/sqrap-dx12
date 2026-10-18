@@ -20,21 +20,21 @@ namespace sqrp
 	void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
 	{
 		if (rscType_ == ResourceType::Texture) {
-			throw runtime_error("Cannot create CBV for texture !");
+			throw runtime_error("[Resource::CreateCBV] cannot create CBV for texture");
 		}
 	}
 
 	void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
 	{
 		if (rscType_ == ResourceType::AS) {
-			throw runtime_error("Cannot create CBV for AS !");
+			throw runtime_error("[Resource::CreateUAV] cannot create UAV for AS");
 		}
 	}
 
 	void Resource::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
 	{
 		if (rscType_ == ResourceType::Texture) {
-			throw runtime_error("Cannot create UAVCounter for texture !");
+			throw runtime_error("[Resource::CreateUAVCounter] cannot create UAVCounter for texture");
 		}
 	}
 
@@ -79,7 +79,7 @@ namespace sqrp
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to create buffer : " + to_string(result));
+			throw runtime_error("[Buffer::CreateBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Buffer").c_str());
 	}
@@ -94,7 +94,7 @@ namespace sqrp
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignForUAVCounter(strideSize_ * numElement_) + sizeof(UINT), rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to create buffer : " + to_string(result));
+			throw runtime_error("[Buffer::CreateCounterBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Counter_Buffer").c_str());
 	}
@@ -116,7 +116,7 @@ namespace sqrp
 		// 呼び出し側の契約違反。CreateCommittedResource に渡す前に自分で検出する
 		// (サイズ0のまま渡すと E_INVALIDARG になり、環境エラーと区別がつかなくなる)
 		if (strideSize == 0 || numElement == 0) {
-			throw runtime_error("Buffer : strideSize and numElement must be greater than 0");
+			throw runtime_error("[Buffer::Buffer] strideSize and numElement must be greater than 0");
 		}
 		if (type == BufferType::Counter) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
@@ -159,7 +159,7 @@ namespace sqrp
 		void* pData = nullptr;
 		HRESULT result = resource_->Map(subresource, range, &pData);
 		if (FAILED(result)) {
-			cerr << "Failed to map buffer" << endl;
+			cerr << "[Buffer::Map] Map failed" << endl;
 			return nullptr;
 		}
 		return pData;
@@ -183,18 +183,18 @@ namespace sqrp
 			this->Unmap();
 		}
 		else {
-			cerr << "Failed to upload buffer" << endl;
+			cerr << "[Buffer::Upload] upload failed because Map failed" << endl;
 		}
 	}
 
 	void Buffer::Write(const void* src, UINT size)
 	{
 		if (size > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
-			throw std::runtime_error("Buffer::Write : size of src is larger than buffer size");
+			throw std::runtime_error("[Buffer::Write] size of src is larger than buffer size");
 		}
 		void* rawPtr = Map();
 		if (!rawPtr) {
-			throw std::runtime_error("Buffer::Write : Map failed");
+			throw std::runtime_error("[Buffer::Write] Map failed");
 		}
 		memcpy(rawPtr, src, size);
 		Unmap();
@@ -314,7 +314,7 @@ namespace sqrp
 		rscDesc.Flags = rscFlag_;
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to create buffer : " + to_string(result));
+			throw runtime_error("[Texture::Texture] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Texture").c_str());
 	}
@@ -324,7 +324,7 @@ namespace sqrp
 		void* pData = nullptr;
 		HRESULT result = resource_->Map(0, nullptr, &pData);
 		if (FAILED(result)) {
-			cerr << "Failed to map buffer" << endl;
+			cerr << "[Texture::Map] Map failed" << endl;
 			return nullptr;
 		}
 		return pData;
@@ -453,7 +453,7 @@ namespace sqrp
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(size_, rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommittedResource for AS : " + to_string(result));
+			throw runtime_error("[AS::AS] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_AS").c_str());
 	}
@@ -490,7 +490,7 @@ namespace sqrp
 		HDRImage img;
 		float* raw = stbi_loadf(path.c_str(), &img.width, &img.height, &img.channels, 4);
 		if (!raw) {
-			throw runtime_error("Failed to load HDR: " + path);
+			throw runtime_error("[LoadHDR] stbi_loadf failed for " + path);
 		}
 		img.channels = 4;
 		img.data.assign(raw, raw + img.width * img.height * img.channels);

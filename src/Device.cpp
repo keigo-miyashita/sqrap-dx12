@@ -20,7 +20,7 @@ namespace {
 		auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugLayer));
 		if (FAILED(result))
 		{
-			throw runtime_error("Failed to D3D12GetDebugInterface" + to_string(result));
+			throw runtime_error("[EnableDebugLayer] D3D12GetDebugInterface failed\nHRESULT = " + to_string(result));
 		}
 		debugLayer->EnableDebugLayer();
 		debugLayer.Reset();
@@ -43,7 +43,7 @@ namespace sqrp
 	{
 		auto result = D3D12EnableExperimentalFeatures(features.size(), features.data(), nullptr, nullptr);
 		if (FAILED(result)) {
-			throw runtime_error("Failed to D3D12EnableExperimentalFeatures" + to_string(result));
+			throw runtime_error("[Device::EnableFeatures] D3D12EnableExperimentalFeatures failed\nHRESULT = " + to_string(result));
 		}
 	}
 
@@ -53,7 +53,7 @@ namespace sqrp
 		flagsDXGI |= DXGI_CREATE_FACTORY_DEBUG;
 		auto result = CreateDXGIFactory2(flagsDXGI, IID_PPV_ARGS(dxgiFactory_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateDXGIFactory2" + to_string(result));
+			throw runtime_error("[Device::CreateDXDevice] CreateDXGIFactory2 failed\nHRESULT = " + to_string(result));
 		}
 		D3D_FEATURE_LEVEL levels[] = {
 			D3D_FEATURE_LEVEL_12_1,
@@ -88,7 +88,7 @@ namespace sqrp
 			}
 		}
 		if (!isCreatedDevice) {
-			throw runtime_error("Failed to D3D12CreateDevice" + to_string(result));
+			throw runtime_error("[Device::CreateDXDevice] D3D12CreateDevice failed\nHRESULT = " + to_string(result));
 		}
 	}
 
@@ -96,7 +96,7 @@ namespace sqrp
 	{
 		HRESULT result = device_->QueryInterface(IID_PPV_ARGS(stableDevice_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to QueryInterface for Stabledevice" + to_string(result));
+			throw runtime_error("[Device::InitializeStableDevice] QueryInterface for StableDevice failed\nHRESULT = " + to_string(result));
 		}
 	}
 
@@ -105,7 +105,7 @@ namespace sqrp
 		if (CheckWorkGraphSupport()) {
 			HRESULT result = device_->QueryInterface(IID_PPV_ARGS(latestDevice_.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
-				throw runtime_error("Failed to QueryInterface for LatestDevice" + to_string(result));
+				throw runtime_error("[Device::InitializeLatestDevice] QueryInterface for LatestDevice failed\nHRESULT = " + to_string(result));
 			}
 		}
 	}
@@ -117,16 +117,16 @@ namespace sqrp
 		D3D12_FEATURE_DATA_D3D12_OPTIONS21 Options;
 		HRESULT result = device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &Options, sizeof(Options));
 		if (FAILED(result)) {
-			cerr << "Failed to check feature support" + to_string(result) << endl;
+			cerr << "[Device::CheckWorkGraphSupport] CheckFeatureSupport failed\nHRESULT = " + to_string(result) << endl;
 			return hasSupportWorkGraph;
 		}
 		if (Options.WorkGraphsTier == D3D12_WORK_GRAPHS_TIER_NOT_SUPPORTED) {
-			cerr << "Device does not support for work graph" << endl;
+			cerr << "[Device::CheckWorkGraphSupport] device does not support work graphs" << endl;
 			return hasSupportWorkGraph;
 		}
 		hasSupportWorkGraph = true;
 		if (Options.WorkGraphsTier < D3D12_WORK_GRAPHS_TIER_1_1) {
-			cerr << "Device does not support for mesh node of work graph" << endl;
+			cerr << "[Device::CheckWorkGraphSupport] device does not support mesh nodes of work graphs" << endl;
 			return hasSupportMeshNode;
 		}
 		hasSupportMeshNode = true;
@@ -138,7 +138,7 @@ namespace sqrp
 	{
 		auto result = device_->QueryInterface(debugDevice.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
-			throw runtime_error("Failed to QueryInterface for DebugDevice" + to_string(result));
+			throw runtime_error("[Device::CreateDebugDevice] QueryInterface for DebugDevice failed\nHRESULT = " + to_string(result));
 		}
 	}
 
@@ -152,7 +152,7 @@ namespace sqrp
 		HRESULT result;
 		result = device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(graphicsCommandQueue_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommandQueue : " + to_string(result));
+			throw runtime_error("[Device::CreateCommandQueue] CreateCommandQueue for graphics queue failed\nHRESULT = " + to_string(result));
 		}
 		graphicsCommandQueue_->SetName(L"GraphicsCommandQueue");
 
@@ -162,7 +162,7 @@ namespace sqrp
 		cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		result = device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(computeCommandQueue_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommandQueue : " + to_string(result));
+			throw runtime_error("[Device::CreateCommandQueue] CreateCommandQueue for compute queue failed\nHRESULT = " + to_string(result));
 		}
 		computeCommandQueue_->SetName(L"ComputeCommandQueue");
 	}
@@ -220,7 +220,7 @@ namespace sqrp
 			return;
 		}
 		else {
-			cerr << "Failed to get memory info" << endl;
+			cerr << "[Device::ShowUsedVramSize] QueryVideoMemoryInfo failed" << endl;
 		}
 	}
 

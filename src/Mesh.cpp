@@ -39,7 +39,7 @@ namespace sqrp
 
 		bool success = loader.LoadASCIIFromFile(&model, &err, &warn, modelPath.c_str());
 		if (!success) {
-			cerr << "failed to load gltf\n";
+			cerr << "[Mesh::LoadModel] LoadASCIIFromFile failed\n";
 			assert(0);
 			return false;
 		}
@@ -248,7 +248,7 @@ namespace sqrp
 
 		bool success = loader.LoadASCIIFromFile(&model, &err, &warn, modelPath.c_str());
 		if (!success) {
-			cerr << "failed to load gltf\n";
+			cerr << "[GLTFMesh::LoadModel] LoadASCIIFromFile failed\n";
 			assert(0);
 			return false;
 		}
@@ -413,7 +413,7 @@ namespace sqrp
 
 		bool success = loader.LoadASCIIFromFile(&model, &err, &warn, modelPath.c_str());
 		if (!success) {
-			cerr << "failed to load gltf\n";
+			cerr << "[ASMesh::LoadModelForAS] LoadASCIIFromFile failed\n";
 			assert(0);
 			return false;
 		}

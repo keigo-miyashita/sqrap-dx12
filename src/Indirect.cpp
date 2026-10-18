@@ -87,7 +87,7 @@ namespace sqrp
 			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, nullptr, IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 		}
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateCommandSignature : " + to_string(result));
+			throw runtime_error("[Indirect::Indirect] CreateCommandSignature failed\nHRESULT = " + to_string(result));
 		}
 		else {
 			cmdSig_->SetName((name_ + L"_CommandSignature").c_str());
