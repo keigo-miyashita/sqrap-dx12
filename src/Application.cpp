@@ -167,13 +167,13 @@ namespace sqrp
 		}
 	}
 
-	void Application::CreateGameWindow(string windowName)
+	void Application::CreateGameWindow()
 	{
 		hInstance_ = GetModuleHandle(nullptr);
 		// Create Window class
 		windowClass_.cbSize = sizeof(WNDCLASSEX);
 		windowClass_.lpfnWndProc = (WNDPROC)WindowProcedure;
-		windowClass_.lpszClassName = _T(windowName.c_str());
+		windowClass_.lpszClassName = _T(windowName_.c_str());
 		windowClass_.hInstance = GetModuleHandle(0);
 
 		if (!RegisterClassEx(&windowClass_)) {
@@ -186,7 +186,7 @@ namespace sqrp
 		// Create window object
 		hwnd_ = CreateWindow(
 			windowClass_.lpszClassName,
-			_T(windowName.c_str()),
+			_T(windowName_.c_str()),
 			WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,
@@ -231,7 +231,7 @@ namespace sqrp
 		if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
 			return false;
 		}
-		CreateGameWindow(windowName_);
+		CreateGameWindow();
 
 		OnStart();
 

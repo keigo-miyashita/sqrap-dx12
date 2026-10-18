@@ -65,7 +65,7 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		// Windowの初期化関数
-		void CreateGameWindow(std::string windowName);
+		void CreateGameWindow();
 
 	protected:
 		std::string windowName_ = "Application";
