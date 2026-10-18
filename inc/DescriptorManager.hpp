@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "pch.hpp"
 
@@ -39,7 +39,7 @@ namespace sqrp
 
 		const Device* pDevice_ = nullptr;
 		std::wstring name_;
-		// CBV_SRV_UAB�܂���Sampler��1���i�L���[�Ɂj�Z�b�g�ł���
+		// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
 		HeapType heapType_;
 		ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
 		UINT viewOffset_ = 0;
@@ -55,16 +55,16 @@ namespace sqrp
 		UINT baseRegSampler_ = 0;
 		UINT numSampler_ = 0;
 
-		void CreateCBV(ResourceHandle resource);
-		void CreateSRV(ResourceHandle resource);
-		void CreateUAV(ResourceHandle resource, UINT mipSlice = 0);
-		void CreateUAVCounter(ResourceHandle resource);
+		void CreateCBV(const ResourceHandle& resource);
+		void CreateSRV(const ResourceHandle& resource);
+		void CreateUAV(const ResourceHandle& resource, UINT mipSlice = 0);
+		void CreateUAVCounter(const ResourceHandle& resource);
 		void CreateSampler(const D3D12_SAMPLER_DESC& desc);
 
 	public:
 		DescriptorManager(const Device& pDevice, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
 		~DescriptorManager() = default;
-		ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() const;
+		const ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() const;
 		HeapType GetHeapType() const;
 		UINT GetNumDescRanges() const;
 		const CD3DX12_DESCRIPTOR_RANGE1* GetPDescRanges() const;

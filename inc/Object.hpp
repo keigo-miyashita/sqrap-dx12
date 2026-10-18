@@ -24,7 +24,7 @@ namespace sqrp
 
 	public:
 		Object(
-			MeshHandle mesh,
+			const MeshHandle& mesh,
 			DirectX::XMFLOAT4 position = {0.0f, 0.0f, 0.0f, 1.0f},
 			DirectX::XMFLOAT4 quotRotation = {0.0f, 0.0f, 0.0f, 0.0f},
 			float scale = 1.0f

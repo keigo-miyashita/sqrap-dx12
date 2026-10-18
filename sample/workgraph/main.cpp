@@ -1,4 +1,4 @@
-#include <pch.hpp>
+ï»¿#include <pch.hpp>
 #include <sqrap.hpp>
 
 #include "WorkGraphApp.hpp"
@@ -19,7 +19,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		app.Run();
 	}
 	catch (const std::exception& e) {
-		std::cerr << "—áŠO‚ª”­¶‚µ‚Ü‚µ‚½: " << e.what() << std::endl;
+		std::cerr << "ä¾‹å¤–ãŒç™ºç”Ÿã—ã¾ã—ãŸ: " << e.what() << std::endl;
 	}
 
 	return 0;

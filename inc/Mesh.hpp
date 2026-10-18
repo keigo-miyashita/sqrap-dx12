@@ -37,7 +37,6 @@ namespace sqrp
 		const Device* pDevice_ = nullptr;
 		std::wstring name_ = L"";
 		bool isWritable_ = false;
-		CommandHandle command_;
 		std::vector<Vertex> vertices_;
 		BufferHandle vertexBuffer_;
 		D3D12_VERTEX_BUFFER_VIEW vbView_ = {};
@@ -45,11 +44,11 @@ namespace sqrp
 		BufferHandle indexBuffer_;
 		D3D12_INDEX_BUFFER_VIEW ibView_ = {};
 
-		virtual void CreateVertexBuffer();
-		void CreateIndexBuffer();
+		virtual void CreateVertexBuffer(const CommandHandle& command);
+		void CreateIndexBuffer(const CommandHandle& command);
 
 	public:
-		MeshBase(const Device& device, CommandHandle command, std::wstring name = L"");
+		MeshBase(const Device& device, const CommandHandle& command, std::wstring name = L"");
 		MeshBase() = default;
 		virtual ~MeshBase() = default;
 
@@ -73,10 +72,10 @@ namespace sqrp
 		static bool LoadModel(std::string modelPath, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices);
 
 	public:
-		Mesh(const Device& device, CommandHandle command, std::string modelPath);
-		Mesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+		Mesh(const Device& device, const CommandHandle& command, std::string modelPath);
+		Mesh(const Device& device, std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 		// For writable mesh
-		Mesh(const Device& device, std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum);
+		Mesh(const Device& device, std::wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum);
 		~Mesh() = default;
 	};
 
@@ -110,7 +109,7 @@ namespace sqrp
 		bool LoadModel(std::string modelPath);
 
 	public:
-		GLTFMesh(const Device& device, CommandHandle command, std::string modelPath);
+		GLTFMesh(const Device& device, const CommandHandle& command, std::string modelPath);
 		~GLTFMesh() = default;
 
 		using MeshBase::GetNumIndices;   // keep total-count overload visible
@@ -133,7 +132,6 @@ namespace sqrp
 
 		const Device* pDevice_ = nullptr;
 		std::wstring name_ = L"";
-		CommandHandle command_;
 		std::vector<ASVertex> ASVertices_;
 		BufferHandle vertexBuffer_;
 		D3D12_VERTEX_BUFFER_VIEW vbView_;
@@ -142,12 +140,12 @@ namespace sqrp
 		D3D12_INDEX_BUFFER_VIEW ibView_;
 
 		static bool LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices);
-		void CreateVertexBuffer();
-		void CreateIndexBuffer();
+		void CreateVertexBuffer(const CommandHandle& command);
+		void CreateIndexBuffer(const CommandHandle& command);
 
 	public:
-		ASMesh(const Device& device, CommandHandle command, std::string modelPath);
-		ASMesh(const Device& device, std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
+		ASMesh(const Device& device, const CommandHandle& command, std::string modelPath);
+		ASMesh(const Device& device, std::wstring name, const CommandHandle& command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
 		~ASMesh() = default;
 		BufferHandle GetVertexBuffer() const;
 		D3D12_VERTEX_BUFFER_VIEW GetVBView() const;

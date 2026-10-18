@@ -1,6 +1,6 @@
 #include "Resource.hpp"
 
-#include "Descriptormanager.hpp"
+#include "DescriptorManager.hpp"
 #include "Device.hpp"
 
 #include <stb_image.h>
@@ -58,7 +58,7 @@ namespace sqrp
 		return initialState_;
 	}
 
-	ComPtr<ID3D12Resource> Resource::GetResource() const
+	const ComPtr<ID3D12Resource>& Resource::GetResource() const
 	{
 		return resource_;
 	}
@@ -73,7 +73,7 @@ namespace sqrp
 		initialState_ = rscState;
 	}*/
 
-	bool Buffer::CreateBuffer()
+	void Buffer::CreateBuffer()
 	{
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
@@ -82,10 +82,9 @@ namespace sqrp
 			throw runtime_error("Failed to create buffer : " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Buffer").c_str());
-		return true;
 	}
 
-	bool Buffer::CreateCounterBuffer()
+	void Buffer::CreateCounterBuffer()
 	{
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
@@ -98,7 +97,6 @@ namespace sqrp
 			throw runtime_error("Failed to create buffer : " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Counter_Buffer").c_str());
-		return true;
 	}
 
 	UINT Buffer::AlignForUAVCounter(UINT size)
@@ -115,6 +113,11 @@ namespace sqrp
 	Buffer::Buffer(const Device& device, wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag)
 		: Resource(device, ResourceType::Buffer, name), type_(type), strideSize_(strideSize), numElement_(numElement)
 	{
+		// 呼び出し側の契約違反。CreateCommittedResource に渡す前に自分で検出する
+		// (サイズ0のまま渡すと E_INVALIDARG になり、環境エラーと区別がつかなくなる)
+		if (strideSize == 0 || numElement == 0) {
+			throw runtime_error("Buffer : strideSize and numElement must be greater than 0");
+		}
 		if (type == BufferType::Counter) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 			rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
@@ -186,7 +189,13 @@ namespace sqrp
 
 	void Buffer::Write(const void* src, UINT size)
 	{
+		if (size > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
+			throw std::runtime_error("Buffer::Write : size of src is larger than buffer size");
+		}
 		void* rawPtr = Map();
+		if (!rawPtr) {
+			throw std::runtime_error("Buffer::Write : Map failed");
+		}
 		memcpy(rawPtr, src, size);
 		Unmap();
 	}

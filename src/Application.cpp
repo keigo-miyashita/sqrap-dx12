@@ -1,4 +1,4 @@
-#include "Application.hpp"
+﻿#include "Application.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -161,7 +161,7 @@ namespace sqrp
 			}
 
 			if (appPtr) {
-				appPtr->Input(msg, wparam, lparam);
+				appPtr->ProcessInput(msg, wparam, lparam);
 			}
 			return DefWindowProc(hwnd, msg, wparam, lparam);
 		}
@@ -217,7 +217,7 @@ namespace sqrp
 		windowHeight_ = windowHeight;
 	}
 
-	bool Application::Input(UINT msg, WPARAM wparam, LPARAM lparam)
+	bool Application::ProcessInput(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		Input::GetRawState(msg, wparam, lparam);
 
@@ -226,8 +226,8 @@ namespace sqrp
 
 	bool Application::Init()
 	{
-		// Com�|�C���^���g������
-		// �������̓}���`�X���b�h�ւ̑Ή�
+		// Comポインタを使う準備
+		// 第二引数はマルチスレッドへの対応
 		if (FAILED(CoInitializeEx(0, COINIT_MULTITHREADED))) {
 			return false;
 		}

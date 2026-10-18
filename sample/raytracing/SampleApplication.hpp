@@ -30,11 +30,11 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 	//SampleScene sampleScene_;
 	sqrp::Device device_;
-	sqrp::DXC dxc_;
+	sqrp::Dxc dxc_;
 	sqrp::CommandHandle command_;
 	sqrp::SwapChainHandle swapChain_;
 	// GUI
-	sqrp::GUIHandle GUI_;
+	sqrp::GuiHandle gui_;
 
 	// Mesh
 	sqrp::ASMeshHandle suzanneASMesh_;
@@ -71,7 +71,7 @@ private:
 	sqrp::StateObjectHandle rayTracingStates_;
 
 	// RayTracing
-	sqrp::RayTracingHandle rayTracing_;
+	sqrp::RaytracingHandle rayTracing_;
 
 	sqrp::ConstantsHandle ColorConstants_;
 	Color diffuseColor_;

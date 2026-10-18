@@ -1,4 +1,4 @@
-#include "Rootsignature.hpp"
+#include "RootSignature.hpp"
 
 #include "Device.hpp"
 
@@ -76,7 +76,7 @@ namespace sqrp
 		rootSig_->SetName(name.c_str());
 	}
 
-	ComPtr<ID3D12RootSignature> RootSignature::GetRootSignature() const
+	const ComPtr<ID3D12RootSignature>& RootSignature::GetRootSignature() const
 	{
 		return rootSig_;
 	}
@@ -96,7 +96,7 @@ namespace sqrp
 		return rootParams_;
 	}
 
-	ResourceSet::ResourceSet(RootSignatureHandle rootSignature, const vector<ResourceSetDesc>& resourceSetDescs)
+	ResourceSet::ResourceSet(const RootSignatureHandle& rootSignature, const vector<ResourceSetDesc>& resourceSetDescs)
 		: rootSignature_(rootSignature), resourceSetDescs_(resourceSetDescs)
 	{
 	}

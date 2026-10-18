@@ -7,7 +7,7 @@ namespace sqrp
 	class Command;
 	class Device;
 
-	class GUI
+	class Gui
 	{
 	private:
 		template<typename T>
@@ -20,15 +20,17 @@ namespace sqrp
 		// slots 1..kMaxUserTextures: user textures (scene view etc.)
 		static constexpr UINT kMaxUserTextures = 8;
 
-		void InitializeGUI(const HWND& hwnd);
+		void InitializeGui(const HWND& hwnd);
 
 	public:
-		GUI(const Device& device, const HWND& hwnd);
-		~GUI();
+		Gui(const Device& device, const HWND& hwnd);
+		~Gui();
+		Gui(const Gui&) = delete;
+		Gui& operator=(const Gui&) = delete;
 		void BeginCommand();
 		void EndCommand();
 		void Draw(Command& command);
-		ComPtr<ID3D12DescriptorHeap> GetImguiDescHeap() const;
+		const ComPtr<ID3D12DescriptorHeap>& GetImGuiDescHeap() const;
 
 		// Register (or update) a user texture at the given slot (1-based).
 		// Returns the D3D12_GPU_DESCRIPTOR_HANDLE to pass as ImTextureID.

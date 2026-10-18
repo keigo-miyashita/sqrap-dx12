@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <condition_variable>
 #include <cstring>
 #include <cmath>
 #include <filesystem>
@@ -25,11 +26,16 @@
 #include <initializer_list>
 #include <iostream>
 #include <map>
+#include <mutex>
 #include <memory>
+#include <queue>
 #include <ranges>
 #include <span>
 #include <string>
+#include <syncstream>
+#include <thread>
 #include <unordered_map>
+#include <utility>
 #include <optional>
 #include <variant>
 #include <vector>

@@ -41,14 +41,14 @@ namespace sqrp
 			const Device& device,
 			std::wstring name,
 			std::initializer_list<IndirectDesc> indirectDescs,
-			RootSignatureHandle rootSignature,
+			const RootSignatureHandle& rootSignature,
 			UINT byteStride,
 			UINT maxCommandCount = 0,
-			BufferHandle argumentBuffer = nullptr,
-			BufferHandle counterBuffer = nullptr
+			const BufferHandle& argumentBuffer = nullptr,
+			const BufferHandle& counterBuffer = nullptr
 		);
 		~Indirect() = default;
-		ComPtr<ID3D12CommandSignature> GetCommandSignature() const;
+		const ComPtr<ID3D12CommandSignature>& GetCommandSignature() const;
 		UINT GetMaxCommandCount() const;
 		BufferHandle GetArgumentBuffer() const;
 		BufferHandle GetCounterBuffer() const;

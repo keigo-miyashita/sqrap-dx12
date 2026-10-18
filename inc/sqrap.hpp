@@ -4,7 +4,7 @@
 #include <Application.hpp>
 #include <Camera.hpp>
 #include <Command.hpp>
-#include <Descriptormanager.hpp>
+#include <DescriptorManager.hpp>
 #include <Device.hpp>
 #include <Dxc.hpp>
 #include <Fence.hpp>
@@ -15,9 +15,9 @@
 #include <Pipeline.hpp>
 #include <Raytracing.hpp>
 #include <Resource.hpp>
-#include <Rootsignature.hpp>
+#include <RootSignature.hpp>
 #include <Shader.hpp>
-#include <Swapchain.hpp>
-#include <Workgraph.hpp>
+#include <SwapChain.hpp>
+#include <WorkGraph.hpp>
 
 #include <Alias.hpp>

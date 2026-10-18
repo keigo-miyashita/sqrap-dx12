@@ -3,27 +3,27 @@
 #include "pch.hpp"
 
 #include "AS.hpp"
-#include "Descriptormanager.hpp"
+#include "DescriptorManager.hpp"
 #include "Indirect.hpp"
 #include "Mesh.hpp"
 #include "Pipeline.hpp"
 #include "Raytracing.hpp"
 #include "Resource.hpp"
-#include "Rootsignature.hpp"
-#include "Workgraph.hpp"
+#include "RootSignature.hpp"
+#include "WorkGraph.hpp"
 
 #include "Alias.hpp"
 
-using StableDevice = ID3D12Device13;
-using LatestDevice = ID3D12Device14;
-
-void DebugOutputFormatString(const char* format, ...);
-
 namespace sqrp
 {
+	using StableDevice = ID3D12Device13;
+	using LatestDevice = ID3D12Device14;
+
+	void DebugOutputFormatString(const char* format, ...);
+
 	class Command;
 	class Fence;
-	class GUI;
+	class Gui;
 	class Shader;
 	class SwapChain;
 
@@ -61,37 +61,37 @@ namespace sqrp
 		void Init(std::wstring gpuVendorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 		void ShowUsedVramSize();
 		ASHandle				CreateAS(std::wstring name, UINT size) const;
-		ASMeshHandle			CreateASMesh(CommandHandle command, std::string modelPath) const;
-		ASMeshHandle			CreateASMesh(std::wstring name, CommandHandle command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
-		BLASHandle				CreateBLAS(std::wstring name, CommandHandle command, ASMeshHandle mesh) const;
+		ASMeshHandle			CreateASMesh(const CommandHandle& command, std::string modelPath) const;
+		ASMeshHandle			CreateASMesh(std::wstring name, const CommandHandle& command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
+		BLASHandle				CreateBLAS(std::wstring name, const CommandHandle& command, const ASMeshHandle& mesh) const;
 		BufferHandle			CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE) const;
 		CommandHandle			CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT) const;
 		ComputePipelineHandle	CreateComputePipeline(std::wstring name, const ComputeDesc& desc) const;
 		DescriptorManagerHandle	CreateDescriptorManager(std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE) const;
 		FenceHandle				CreateFence(std::wstring name = L"") const;
 		GraphicsPipelineHandle	CreateGraphicsPipeline(std::wstring name, const GraphicsDesc& desc) const;
-		GUIHandle				CreateGUI(const HWND& hwnd) const;
-		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount = 0, BufferHandle argumentBuffer = nullptr, BufferHandle counterBuffer = nullptr) const;
-		MeshHandle				CreateMesh(CommandHandle command, std::string modelPath) const;
-		GLTFMeshHandle			CreateGLTFMesh(CommandHandle command, std::string modelPath) const;
-		MeshHandle				CreateMesh(std::wstring name, CommandHandle command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
-		MeshHandle				CreateMesh(std::wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum) const;
+		GuiHandle				CreateGui(const HWND& hwnd) const;
+		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, const RootSignatureHandle& rootSignature, UINT byteStride, UINT maxCommandCount = 0, const BufferHandle& argumentBuffer = nullptr, const BufferHandle& counterBuffer = nullptr) const;
+		MeshHandle				CreateMesh(const CommandHandle& command, std::string modelPath) const;
+		GLTFMeshHandle			CreateGLTFMesh(const CommandHandle& command, std::string modelPath) const;
+		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
+		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum) const;
 		MeshPipelineHandle		CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const;
-		RayTracingHandle		CreateRaytracing(std::wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth) const;
+		RaytracingHandle		CreateRaytracing(std::wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const;
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;
 		StateObjectHandle		CreateStateObject(std::wstring name, const StateObjectDesc soDesc) const;
-		SwapChainHandle			CreateSwapChain(std::wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize) const;
+		SwapChainHandle			CreateSwapChain(std::wstring name, const CommandHandle& command, const HWND& hwnd, SIZE winSize) const;
 		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1) const;
-		TLASHandle				CreateTLAS(std::wstring name, CommandHandle command, const std::vector<TLASDesc>& tlasDescs) const;
-		WorkGraphHandle			CreateWorkGraph(std::wstring name, StateObjectHandle stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
+		TLASHandle				CreateTLAS(std::wstring name, const CommandHandle& command, const std::vector<TLASDesc>& tlasDescs) const;
+		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
 
-		void ExecuteCommandList(CommandHandle command, QueueType queueType = QueueType::Graphics);
+		void ExecuteCommandList(const CommandHandle& command, QueueType queueType = QueueType::Graphics);
 
-		ComPtr<IDXGIFactory7> GetDXGIFactory() const;
-		ComPtr<ID3D12Device> GetDevice() const;
-		ComPtr<StableDevice> GetStableDevice() const;
-		ComPtr<LatestDevice> GetLatestDevice() const;
-		ComPtr<ID3D12CommandQueue> GetGraphicsCommandQueue() const;
-		ComPtr<ID3D12CommandQueue> GetComputeCommandQueue() const;
+		const ComPtr<IDXGIFactory7>& GetDXGIFactory() const;
+		const ComPtr<ID3D12Device>& GetDevice() const;
+		const ComPtr<StableDevice>& GetStableDevice() const;
+		const ComPtr<LatestDevice>& GetLatestDevice() const;
+		const ComPtr<ID3D12CommandQueue>& GetGraphicsCommandQueue() const;
+		const ComPtr<ID3D12CommandQueue>& GetComputeCommandQueue() const;
 	};
 }

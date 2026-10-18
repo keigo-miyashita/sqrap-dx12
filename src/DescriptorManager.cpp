@@ -1,4 +1,4 @@
-#include "Descriptormanager.hpp"
+#include "DescriptorManager.hpp"
 #include "Device.hpp"
 #include "Resource.hpp"
 
@@ -8,25 +8,25 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	void DescriptorManager::CreateCBV(ResourceHandle resource)
+	void DescriptorManager::CreateCBV(const ResourceHandle& resource)
 	{
 		resource->CreateCBV(*this, viewOffset_);
 		viewOffset_++;
 	}
 
-	void DescriptorManager::CreateSRV(ResourceHandle resource)
+	void DescriptorManager::CreateSRV(const ResourceHandle& resource)
 	{
 		resource->CreateSRV(*this, viewOffset_);
 		viewOffset_++;
 	}
 
-	void DescriptorManager::CreateUAV(ResourceHandle resource, UINT mipSlice)
+	void DescriptorManager::CreateUAV(const ResourceHandle& resource, UINT mipSlice)
 	{
 		resource->CreateUAV(*this, viewOffset_, mipSlice);
 		viewOffset_++;
 	}
 
-	void DescriptorManager::CreateUAVCounter(ResourceHandle resource)
+	void DescriptorManager::CreateUAVCounter(const ResourceHandle& resource)
 	{
 		resource->CreateUAVCounter(*this, viewOffset_);
 		viewOffset_++;
@@ -129,7 +129,7 @@ namespace sqrp
 		}
 	}
 
-	ComPtr<ID3D12DescriptorHeap> DescriptorManager::GetDescriptorHeap() const
+	const ComPtr<ID3D12DescriptorHeap>& DescriptorManager::GetDescriptorHeap() const
 	{
 		return descHeap_;
 	}

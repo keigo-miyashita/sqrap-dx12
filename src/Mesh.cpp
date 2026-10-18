@@ -96,7 +96,7 @@ namespace sqrp
 		return true;
 	}
 
-	void MeshBase::CreateVertexBuffer()
+	void MeshBase::CreateVertexBuffer(const CommandHandle& command)
 	{
 		shared_ptr<Buffer> vertexUploadBuffer;
 		vertexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), vertices_.size());
@@ -110,14 +110,14 @@ namespace sqrp
 		BufferType type = isWritable_ ? BufferType::Unordered : BufferType::Default;
 		vertexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Vertex", type, sizeof(Vertex), vertices_.size());
 
-		command_->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
-		command_->WaitCommand();
+		command->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
+		command->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = vertices_.size() * sizeof(Vertex);
 		vbView_.StrideInBytes = sizeof(Vertex);
 	}
 
-	void MeshBase::CreateIndexBuffer()
+	void MeshBase::CreateIndexBuffer(const CommandHandle& command)
 	{
 		shared_ptr<Buffer> indexUploadBuffer;
 		indexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices_.size());
@@ -131,19 +131,19 @@ namespace sqrp
 		BufferType type = isWritable_ ? BufferType::Unordered : BufferType::Default;
 		indexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Index", type, sizeof(uint32_t), indices_.size());
 
-		command_->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
-		command_->WaitCommand();
+		command->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
+		command->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
 	}
 
-	MeshBase::MeshBase(const Device& device, CommandHandle command, wstring name)
-		: pDevice_(&device), command_(command), name_(name)
+	MeshBase::MeshBase(const Device& device, const CommandHandle& command, wstring name)
+		: pDevice_(&device), name_(name)
 	{
 	}
 
-	Mesh::Mesh(const Device& device, CommandHandle command, string modelPath)
+	Mesh::Mesh(const Device& device, const CommandHandle& command, string modelPath)
 		: MeshBase(device, command)
 	{
 		filesystem::path fullPath = modelPath;
@@ -151,27 +151,27 @@ namespace sqrp
 		name_ = StringToWString(name);
 
 		LoadModel(modelPath, vertices_, indices_);
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		CreateVertexBuffer(command);
+		CreateIndexBuffer(command);
 	}
 
-	Mesh::Mesh(const Device& device, wstring name, CommandHandle command, const vector<Vertex>& vertices, const vector<uint32_t>& indices)
+	Mesh::Mesh(const Device& device, wstring name, const CommandHandle& command, const vector<Vertex>& vertices, const vector<uint32_t>& indices)
 		: MeshBase(device, command, name)
 	{
 		vertices_ = vertices;
 		indices_ = indices;
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		CreateVertexBuffer(command);
+		CreateIndexBuffer(command);
 	}
 
-	Mesh::Mesh(const Device& device, wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum)
+	Mesh::Mesh(const Device& device, wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum)
 		: MeshBase(device, command, name)
 	{
 		isWritable_ = true;
 		vertices_.resize(verticesNum);
 		indices_.resize(indicesNum);
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		CreateVertexBuffer(command);
+		CreateIndexBuffer(command);
 	}
 
 	void MeshBase::UpdateVBView(UINT numVertices)
@@ -228,7 +228,7 @@ namespace sqrp
 	// GLTFMesh
 	// ===================================================================
 
-	GLTFMesh::GLTFMesh(const Device& device, CommandHandle command, string modelPath)
+	GLTFMesh::GLTFMesh(const Device& device, const CommandHandle& command, string modelPath)
 		: MeshBase(device, command)
 	{
 		filesystem::path fullPath = modelPath;
@@ -236,8 +236,8 @@ namespace sqrp
 		name_ = StringToWString(name);
 
 		LoadModel(modelPath);
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		CreateVertexBuffer(command);
+		CreateIndexBuffer(command);
 	}
 
 	bool GLTFMesh::LoadModel(string modelPath)
@@ -449,7 +449,7 @@ namespace sqrp
 		return true;
 	}
 
-	void ASMesh::CreateVertexBuffer()
+	void ASMesh::CreateVertexBuffer(const CommandHandle& command)
 	{
 		shared_ptr<Buffer> vertexUploadBuffer;
 		vertexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Vertex", BufferType::Upload, sizeof(ASVertex), ASVertices_.size());
@@ -462,14 +462,14 @@ namespace sqrp
 
 		vertexBuffer_ = pDevice_->CreateBuffer(L"_Vertex", BufferType::Default, sizeof(ASVertex), ASVertices_.size());
 
-		command_->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
-		command_->WaitCommand();
+		command->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
+		command->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = ASVertices_.size() * sizeof(ASVertex);
 		vbView_.StrideInBytes = sizeof(ASVertex);
 	}
 
-	void ASMesh::CreateIndexBuffer()
+	void ASMesh::CreateIndexBuffer(const CommandHandle& command)
 	{
 		shared_ptr<Buffer> indexUploadBuffer;
 		indexUploadBuffer = pDevice_->CreateBuffer(L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices_.size());
@@ -482,29 +482,29 @@ namespace sqrp
 
 		indexBuffer_ = pDevice_->CreateBuffer(L"_Index", BufferType::Default, sizeof(uint32_t), indices_.size());
 
-		command_->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
-		command_->WaitCommand();
+		command->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
+		command->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = indices_.size() * sizeof(uint32_t);
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
 	}
 
-	ASMesh::ASMesh(const Device& device, CommandHandle command, string modelPath)
-		: pDevice_(&device), command_(command)
+	ASMesh::ASMesh(const Device& device, const CommandHandle& command, string modelPath)
+		: pDevice_(&device)
 	{
 		filesystem::path fullPath = modelPath;
 		string name = fullPath.stem().string();
 		name_ = StringToWString(name);
 		LoadModelForAS(modelPath, ASVertices_, indices_);
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		CreateVertexBuffer(command);
+		CreateIndexBuffer(command);
 	}
 
-	ASMesh::ASMesh(const Device& device, wstring name, CommandHandle command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices)
-		: pDevice_(&device), command_(command), ASVertices_(ASVertices), indices_(indices), name_(name)
+	ASMesh::ASMesh(const Device& device, wstring name, const CommandHandle& command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices)
+		: pDevice_(&device), ASVertices_(ASVertices), indices_(indices), name_(name)
 	{
-		CreateVertexBuffer();
-		CreateIndexBuffer();
+		CreateVertexBuffer(command);
+		CreateIndexBuffer(command);
 	}
 
 	BufferHandle ASMesh::GetVertexBuffer() const

@@ -21,7 +21,7 @@ namespace sqrp
 		const Device* pDevice_ = nullptr;
 		ComPtr<ID3D12Resource> resource_ = nullptr;
 		std::wstring name_;
-		ResourceType rscType_;
+		ResourceType rscType_ = ResourceType::Buffer;
 		D3D12_HEAP_TYPE heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
 		D3D12_RESOURCE_STATES initialState_ = D3D12_RESOURCE_STATE_COMMON;
@@ -29,14 +29,14 @@ namespace sqrp
 	public:
 		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
 		Resource() = default;
-		~Resource() = default;
+		virtual ~Resource() = default;
 
 		virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
 		virtual void CreateSRV(DescriptorManager& descManager, UINT viewOffset) = 0;
 		virtual void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0);
 		virtual void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset);
 
-		ComPtr<ID3D12Resource> GetResource() const;
+		const ComPtr<ID3D12Resource>& GetResource() const;
 		D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
 		ResourceType GetResourceType() const;
 		D3D12_HEAP_TYPE GetHeapType() const;
@@ -62,8 +62,8 @@ namespace sqrp
 		UINT numElement_ = 0;
 		UINT offsetCounter_ = 0;
 
-		bool CreateBuffer();
-		bool CreateCounterBuffer();
+		void CreateBuffer();
+		void CreateCounterBuffer();
 
 	public:
 		static UINT AlignForUAVCounter(UINT size);
@@ -79,17 +79,28 @@ namespace sqrp
 		template<typename T>
 		void Write(const T& data)
 		{
+			if (sizeof(T) > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
+				throw std::runtime_error("Buffer::Write : size of src is larger than buffer size");
+			}
 			void* rawPtr = Map();
+			if (!rawPtr) {
+				throw std::runtime_error("Buffer::Write : Map failed");
+			}
 			*static_cast<T*>(rawPtr) = data;
 
 			Unmap();
 		}
 		template<typename T>
-		void Write(const std::vector<T>& dest)
+		void Write(const std::vector<T>& src)
 		{
+			if (src.size() * sizeof(T) > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
+				throw std::runtime_error("Buffer::Write : size of src is larger than buffer size");
+			}
 			void* rawPtr = Map();
-			T* castedPtr = static_cast<T*>(rawPtr);
-			memcpy(castedPtr, dest.data(), sizeof(T) * dest.size());
+			if (!rawPtr) {
+				throw std::runtime_error("Buffer::Write : Map failed");
+			}
+			memcpy(rawPtr, src.data(), sizeof(T) * src.size());
 
 			Unmap();
 		}
@@ -97,8 +108,13 @@ namespace sqrp
 		template<typename T, std::size_t N>
 		void Read(std::array<T, N>& dest)
 		{
+			if (sizeof(T) * N > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
+				throw std::runtime_error("Buffer::Read : size of dest is larger than buffer size");
+			}
 			void* rawPtr = Map();
-
+			if (!rawPtr) {
+				throw std::runtime_error("Buffer::Read : Map failed");
+			}
 			std::memcpy(dest.data(), rawPtr, dest.size() * sizeof(T));
 
 			Unmap();
@@ -106,8 +122,13 @@ namespace sqrp
 		template<typename T>
 		void Read(std::vector<T>& dest)
 		{
+			if (dest.size() * sizeof(T) > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
+				throw std::runtime_error("Buffer::Read : size of dest is larger than buffer size");
+			}
 			void* rawPtr = Map();
-
+			if (!rawPtr) {
+				throw std::runtime_error("Buffer::Read : Map failed");
+			}
 			std::memcpy(dest.data(), rawPtr, dest.size() * sizeof(T));
 
 			Unmap();
@@ -139,14 +160,14 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		TextureType type_;
-		TextureDim texDim_;
+		TextureType type_ = TextureType::Default;
+		TextureDim texDim_ = TextureDim::Tex2D;
 		UINT strideSize_ = 0;
 		UINT width_ = 1;
 		UINT height_ = 1;
 		UINT depth_ = 1;
 		UINT mipLevels_ = 1;
-		DXGI_FORMAT format_;
+		DXGI_FORMAT format_ = DXGI_FORMAT_UNKNOWN;
 
 	public:
 		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1);

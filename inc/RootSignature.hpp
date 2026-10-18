@@ -1,8 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include "pch.hpp"
 
-#include "Descriptormanager.hpp"
+#include "DescriptorManager.hpp"
 #include "Resource.hpp"
 
 #include "Alias.hpp"
@@ -18,11 +18,11 @@ namespace sqrp
 
 	struct DirectRootParamDesc
 	{
-		// Constant��Descriptor�𒼐ړo�^����Ƃ�����1��
+		// ConstantやDescriptorを直接登録するとき下の1つ
 		UINT numReg_ = 0;
-		// 32BitsConstant�p
-		// 1��32Bits = 4Bytes
-		// ��jfloat4 -> 16 Bytes -> numConstant_ = 4
+		// 32BitsConstant用
+		// 1つ32Bits = 4Bytes
+		// 例）float4 -> 16 Bytes -> numConstant_ = 4
 		UINT numConstant_ = 0;
 		void* constantPtr_ = nullptr;
 	};
@@ -51,7 +51,7 @@ namespace sqrp
 	public:
 		RootSignature(const Device& device, std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams);
 		~RootSignature() = default;
-		ComPtr<ID3D12RootSignature> GetRootSignature() const;
+		const ComPtr<ID3D12RootSignature>& GetRootSignature() const;
 		UINT GetSize() const;
 		const std::vector<CD3DX12_ROOT_PARAMETER1>& GetRootParameters() const;
 		const std::vector<RootParameter>& GetRootParametersVec() const;
@@ -72,7 +72,7 @@ namespace sqrp
 		std::vector<ResourceSetDesc> resourceSetDescs_;
 
 	public:
-		ResourceSet(RootSignatureHandle rootSignature, const std::vector<ResourceSetDesc>& resourceSetDescs);
+		ResourceSet(const RootSignatureHandle& rootSignature, const std::vector<ResourceSetDesc>& resourceSetDescs);
 		~ResourceSet() = default;
 
 		RootSignatureHandle GetRootSignature() const;

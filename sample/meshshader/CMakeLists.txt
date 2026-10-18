@@ -1,4 +1,4 @@
-add_executable(${PROJECT_NAME}-sample-meshshader)
+ï»¿add_executable(${PROJECT_NAME}-sample-meshshader)
 target_compile_features(${PROJECT_NAME}-sample-meshshader PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME}-sample-meshshader PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
 target_sources(${PROJECT_NAME}-sample-meshshader PRIVATE main.cpp "MeshShaderApp.cpp")
@@ -26,7 +26,7 @@ add_custom_command(TARGET ${PROJECT_NAME}-sample-meshshader POST_BUILD
   "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-meshshader>")
 
 if(MSVC)
-    # ƒŠƒŠ[ƒXƒrƒ‹ƒh‚Ìê‡‚Í WinMain ‚ğg‚¤
+    # ãƒªãƒªãƒ¼ã‚¹ãƒ“ãƒ«ãƒ‰ã®å ´åˆã¯ WinMain ã‚’ä½¿ã†
     set_target_properties(${PROJECT_NAME}-sample-meshshader PROPERTIES
         LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS"
     )

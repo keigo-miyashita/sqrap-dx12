@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "pch.hpp"
 
@@ -11,7 +11,7 @@ namespace sqrp
 	class RootSignature;
 	class Shader;
 
-	inline std::vector<D3D12_INPUT_ELEMENT_DESC> DEFAULT_INPUT_LAYOUT =
+	inline const std::vector<D3D12_INPUT_ELEMENT_DESC> DEFAULT_INPUT_LAYOUT =
 	{
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
@@ -40,9 +40,9 @@ namespace sqrp
 
 		GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts = DEFAULT_INPUT_LAYOUT);
 
-		GraphicsDesc& SetRootSignature(RootSignatureHandle rootSignature);
-		GraphicsDesc& SetVS(ShaderHandle VS);
-		GraphicsDesc& SetPS(ShaderHandle PS);
+		GraphicsDesc& SetRootSignature(const RootSignatureHandle& rootSignature);
+		GraphicsDesc& SetVS(const ShaderHandle& VS);
+		GraphicsDesc& SetPS(const ShaderHandle& PS);
 		GraphicsDesc& SetPrimitiveType(D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType);
 	};
 
@@ -53,16 +53,13 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		const GraphicsDesc& desc_;
 		std::wstring name_;
 		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
-
-		void CreateGraphicsPipelineState();
 
 	public:
 		GraphicsPipeline(const Device& device, std::wstring name, const GraphicsDesc& desc);
 		~GraphicsPipeline() = default;
-		ComPtr<ID3D12PipelineState> GetPipelineState() const;
+		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
 	struct MeshDesc
@@ -90,14 +87,13 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		const MeshDesc& desc_;
 		std::wstring name_;
 		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
 	public:
 		MeshPipeline(const Device& device, std::wstring name, const MeshDesc& desc);
 		~MeshPipeline() = default;
-		ComPtr<ID3D12PipelineState> GetPipelineState() const;
+		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
 	struct ComputeDesc
@@ -114,16 +110,13 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		const ComputeDesc& desc_;
 		std::wstring name_;
 		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
-
-		void CreateComputePipelineState();
 
 	public:
 		ComputePipeline(const Device& device, std::wstring name, const ComputeDesc& desc);
 		~ComputePipeline() = default;
-		ComPtr<ID3D12PipelineState> GetPipelineState() const;
+		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
 	enum class StateObjectType
@@ -176,7 +169,7 @@ namespace sqrp
 		};
 
 		// StateObject Setting for ray tracing
-		struct RayTracingDesc
+		struct RaytracingDesc
 		{
 			RootSignatureHandle globalRootSig_;
 			std::vector<ShaderExportDesc> rayGens_;
@@ -216,7 +209,7 @@ namespace sqrp
 		};
 
 		StateObjectType stateObjectType_;
-		std::variant<RayTracingDesc, WorkGraphDesc> typeDesc_;
+		std::variant<RaytracingDesc, WorkGraphDesc> typeDesc_;
 	};
 
 	class StateObject
@@ -239,12 +232,12 @@ namespace sqrp
 	public:
 		StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc);
 		~StateObject() = default;
-		ComPtr<ID3D12StateObject> GetStateObject() const;
-		std::wstring GetProgramName() const;
+		const ComPtr<ID3D12StateObject>& GetStateObject() const;
+		const std::wstring& GetProgramName() const;
 		StateObjectType GetStateObjectType() const;
-		StateObjectDesc GetStateObjectDesc() const;
-		std::vector<std::wstring> GetRayGens() const;
-		std::vector<std::wstring> GetMisses() const;
-		std::vector<std::wstring> GetHitGroups() const;
+		const StateObjectDesc& GetStateObjectDesc() const;
+		const std::vector<std::wstring>& GetRayGens() const;
+		const std::vector<std::wstring>& GetMisses() const;
+		const std::vector<std::wstring>& GetHitGroups() const;
 	};
 }

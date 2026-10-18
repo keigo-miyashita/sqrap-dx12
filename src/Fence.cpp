@@ -88,7 +88,7 @@ namespace sqrp
 		return !(completedVal < fenceVal_);
 	}
 
-	ComPtr<ID3D12Fence> Fence::GetFence() const
+	const ComPtr<ID3D12Fence>& Fence::GetFence() const
 	{
 		return fence_;
 	}

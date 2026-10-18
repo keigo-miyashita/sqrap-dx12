@@ -6,7 +6,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Object::Object(MeshHandle mesh,
+	Object::Object(const MeshHandle& mesh,
 		XMFLOAT4 position,
 		XMFLOAT4 quotRotation,
 		float scale)

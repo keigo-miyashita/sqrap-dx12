@@ -1,4 +1,4 @@
-#include "Swapchain.hpp"
+#include "SwapChain.hpp"
 
 #include "Command.hpp"
 #include "Device.hpp"
@@ -120,7 +120,7 @@ namespace sqrp
 		pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	SwapChain::SwapChain(const Device& device, wstring name, shared_ptr<Command> command, const HWND& hwnd, SIZE winSize)
+	SwapChain::SwapChain(const Device& device, wstring name, const CommandHandle& command, const HWND& hwnd, SIZE winSize)
 		: pDevice_(&device), pCommand_(command), name_(name)
 	{
 
@@ -167,7 +167,7 @@ namespace sqrp
 		swapChain_->Present(1, 0);
 	}
 
-	ComPtr<IDXGISwapChain4> SwapChain::GetSwapChain() const
+	const ComPtr<IDXGISwapChain4>& SwapChain::GetSwapChain() const
 	{
 		return swapChain_;
 	}
@@ -178,7 +178,7 @@ namespace sqrp
 		return backBuffers_[bbIndex];
 	}
 
-	ComPtr<ID3D12DescriptorHeap> SwapChain::GetRtvHeap() const
+	const ComPtr<ID3D12DescriptorHeap>& SwapChain::GetRtvHeap() const
 	{
 		return rtvHeap_;
 	}
@@ -193,12 +193,12 @@ namespace sqrp
 		return scissorsRect_;
 	}
 
-	ComPtr<ID3D12Resource> SwapChain::GetDepthStencilBuffer() const
+	const ComPtr<ID3D12Resource>& SwapChain::GetDepthStencilBuffer() const
 	{
 		return depthStencilBuffer_;
 	}
 
-	ComPtr<ID3D12DescriptorHeap> SwapChain::GetDsvHeap() const
+	const ComPtr<ID3D12DescriptorHeap>& SwapChain::GetDsvHeap() const
 	{
 		return dsvHeap_;
 	}

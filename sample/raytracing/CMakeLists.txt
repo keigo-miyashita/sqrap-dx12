@@ -1,4 +1,4 @@
-add_executable(${PROJECT_NAME}-sample-raytracing)
+ï»¿add_executable(${PROJECT_NAME}-sample-raytracing)
 target_compile_features(${PROJECT_NAME}-sample-raytracing PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME}-sample-raytracing PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
 target_sources(${PROJECT_NAME}-sample-raytracing PRIVATE main.cpp "SampleApplication.cpp" )
@@ -26,7 +26,7 @@ add_custom_command(TARGET ${PROJECT_NAME}-sample-raytracing POST_BUILD
   "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-raytracing>")
 
 if(MSVC)
-    # ƒŠƒŠ[ƒXƒrƒ‹ƒh‚Ìê‡‚Í WinMain ‚ğg‚¤
+    # ãƒªãƒªãƒ¼ã‚¹ãƒ“ãƒ«ãƒ‰ã®å ´åˆã¯ WinMain ã‚’ä½¿ã†
     set_target_properties(${PROJECT_NAME}-sample-raytracing PROPERTIES
         LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS"
     )

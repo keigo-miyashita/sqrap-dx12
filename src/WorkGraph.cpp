@@ -1,4 +1,4 @@
-#include "Workgraph.hpp"
+﻿#include "WorkGraph.hpp"
 
 #include "Device.hpp"
 #include "Resource.hpp"
@@ -23,7 +23,7 @@ namespace sqrp
 		return size;
 	}
 
-	WorkGraph::WorkGraph(const Device& device, wstring name, StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs)
+	WorkGraph::WorkGraph(const Device& device, wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords, UINT maxNodeInputs)
 		: pDevice_(&device), name_(name)
 	{
 		ComPtr<ID3D12StateObjectProperties1> soProp = nullptr;
@@ -58,7 +58,7 @@ namespace sqrp
 		numNodes_ = workGraphProp_->GetNumNodes(workGraphIndex_);
 
 		// NOTE : 
-		// local root argument��g�������ꍇ�C�����ő���
+		// local root argumentを使いたい場合，ここで操作
 		//
 		auto stateObjectDesc = stateObject->GetStateObjectDesc();
 		if (holds_alternative<StateObjectDesc::WorkGraphDesc>(stateObjectDesc.typeDesc_)) {
@@ -118,7 +118,7 @@ namespace sqrp
 		pgDesc_.WorkGraph.Flags = D3D12_SET_WORK_GRAPH_FLAG_INITIALIZE;
 		pgDesc_.WorkGraph.ProgramIdentifier = workGraphProgramID_;
 		// NOTE : 
-		// local root argument��g���ꍇ�����œo�^
+		// local root argumentを使う場合ここで登録
 		//pgDesc_.WorkGraph.NodeLocalRootArgumentsTable = 
 	}
 
@@ -127,7 +127,7 @@ namespace sqrp
 		return backingMemoryAddressRange_;
 	}
 
-	ComPtr<ID3D12Resource> WorkGraph::GetBackingMemory() const
+	const ComPtr<ID3D12Resource>& WorkGraph::GetBackingMemory() const
 	{
 		return backingMemory_;
 	}

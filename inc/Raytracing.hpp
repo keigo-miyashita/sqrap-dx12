@@ -11,7 +11,7 @@ namespace sqrp
 	class Shader;
 	class StateObject;
 
-	class RayTracing
+	class Raytracing
 	{
 	private:
 		template<typename T>
@@ -30,8 +30,8 @@ namespace sqrp
 		static UINT AlignForSBTRecord(UINT size);
 		static UINT AlignForSBT(UINT size);
 		static UINT CopyMem(void* dest, const void* data, UINT size);
-		RayTracing(const Device& device, std::wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth);
-		~RayTracing() = default;
+		Raytracing(const Device& device, std::wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth);
+		~Raytracing() = default;
 
 		D3D12_DISPATCH_RAYS_DESC GetDispatchRayDesc() const;
 	};

@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 3.20)
+ï»¿cmake_minimum_required(VERSION 3.20)
 
 project(sqrap-dx12 CXX)
 
-# •Ï”‚Éƒtƒ@ƒCƒ‹‚ğŠi”[
+# å¤‰æ•°ã«ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ ¼ç´
 file(GLOB_RECURSE WRAPPER_SOURCES "src/*.cpp")
 file(GLOB_RECURSE WRAPPER_HEADERS "inc/*.hpp")
 
-# hpp, cppƒtƒ@ƒCƒ‹‚Ì‚Ü‚Üˆµ‚¤‚½‚ß‚Ìƒ^[ƒQƒbƒgİ’è
-add_library(${PROJECT_NAME} ${WRAPPER_SOURCES})
+# hpp, cppãƒ•ã‚¡ã‚¤ãƒ«ã®ã¾ã¾æ‰±ã†ãŸã‚ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆè¨­å®š
+add_library(${PROJECT_NAME} ${WRAPPER_SOURCES} "src/Compiler.cpp" "src/ThreadPool.cpp")
 
-# •K—v‚ÈƒpƒbƒP[ƒW‚ª‘¶İ‚·‚é‚±‚Æ‚ğŠm”F
+# å¿…è¦ãªãƒ‘ãƒƒã‚±ãƒ¼ã‚¸ãŒå­˜åœ¨ã™ã‚‹ã“ã¨ã‚’ç¢ºèª
 find_package(directx12-agility CONFIG REQUIRED)
 find_package(directx-dxc CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
@@ -34,13 +34,15 @@ find_path(DIRECTX_INCLUDE_DIRS "directx")
 find_path(TINYGLTF_INCLUDE_DIRS "tiny_gltf.h")
 find_path(IMGUI_INCLUDE_DIRS "imgui.h")
 
-# target_include_directories‚ğPUBLIC‚É‚·‚é‚±‚Æ‚Åƒ‰ƒCƒuƒ‰ƒŠ‚ğg‚¤‘¤‚É‘‚­•K—v‚ª‚È‚­‚È‚é
-# ƒwƒbƒ_[ƒtƒ@ƒCƒ‹‚Ì‚ ‚éƒfƒBƒŒƒNƒgƒŠ‚ğƒCƒ“ƒNƒ‹[ƒh
+# target_include_directoriesã‚’PUBLICã«ã™ã‚‹ã“ã¨ã§ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã‚’ä½¿ã†å´ã«æ›¸ãå¿…è¦ãŒãªããªã‚‹
+# ãƒ˜ãƒƒãƒ€ãƒ¼ãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚ã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’ã‚¤ãƒ³ã‚¯ãƒ«ãƒ¼ãƒ‰
 target_include_directories(${PROJECT_NAME} PUBLIC "${PROJECT_SOURCE_DIR}/inc")
-# NOTE : directx-headers‚Ì.h‚ğinclude‚·‚é‚½‚ß‚Éİ’è
+# NOTE : directx-headersã®.hã‚’includeã™ã‚‹ãŸã‚ã«è¨­å®š
 target_include_directories(${PROJECT_NAME} PUBLIC "${DIRECTX_INCLUDE_DIRS}/directx")
 target_include_directories(${PROJECT_NAME} PUBLIC ${IMGUI_INCLUDE_DIRS}/include)
 target_include_directories(${PROJECT_NAME} PUBLIC ${TINYGLTF_INCLUDE_DIRS})
+
+target_precompile_headers(${PROJECT_NAME} PUBLIC inc/pch.hpp)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_20)
 target_compile_options(${PROJECT_NAME} PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
@@ -51,17 +53,17 @@ if (NOT DEFINED ENABLE_VERSION_ASSIGNMENT)
     set(D3D12_SDK_PATH "\".\\\\${D3D12_DLL_DIR}\\\\\"")
 endif()
 
-# ƒvƒŠƒvƒƒZƒbƒT’è‹`‚Æ‚µ‚Ä“n‚·
+# ãƒ—ãƒªãƒ—ãƒ­ã‚»ãƒƒã‚µå®šç¾©ã¨ã—ã¦æ¸¡ã™
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     D3D12_SDK_VERSION_MACRO=${D3D12_SDK_VERSION}
     D3D12_SDK_PATH_MACRO=${D3D12_SDK_PATH}
 )
 
-# NOTE : ‡˜‚É’ˆÓ
-# ŠO•”ƒ‰ƒCƒuƒ‰ƒŠ‚ÌƒCƒ“ƒXƒg[ƒ‹‚ªI‚í‚Á‚Ä
-# ƒfƒBƒŒƒNƒgƒŠ‚Ö‚ÌƒpƒX‚ª•Ï”‚ÉŠi”[‚³‚ê‚Ä‚©‚ç
-# add_subdirectory‚·‚é
-# ‚±‚ê‚É‚æ‚Á‚Ä‰º‚ÌŠK‘w‚É³‚µ‚¢’l‚ğ‚à‚Á‚½•Ï”‚ªƒRƒs[‚³‚ê‚é
+# NOTE : é †åºã«æ³¨æ„
+# å¤–éƒ¨ãƒ©ã‚¤ãƒ–ãƒ©ãƒªã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ãŒçµ‚ã‚ã£ã¦
+# ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¸ã®ãƒ‘ã‚¹ãŒå¤‰æ•°ã«æ ¼ç´ã•ã‚Œã¦ã‹ã‚‰
+# add_subdirectoryã™ã‚‹
+# ã“ã‚Œã«ã‚ˆã£ã¦ä¸‹ã®éšå±¤ã«æ­£ã—ã„å€¤ã‚’ã‚‚ã£ãŸå¤‰æ•°ãŒã‚³ãƒ”ãƒ¼ã•ã‚Œã‚‹
 add_subdirectory(sample/meshshader)
 add_subdirectory(sample/raster)
 add_subdirectory(sample/raytracing)

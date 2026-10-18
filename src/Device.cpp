@@ -4,7 +4,7 @@
 #include "Fence.hpp"
 #include "Gui.hpp"
 #include "Shader.hpp"
-#include "Swapchain.hpp"
+#include "SwapChain.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -12,16 +12,6 @@ using namespace DirectX;
 
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = D3D12_SDK_VERSION_MACRO; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = D3D12_SDK_PATH_MACRO; }
-
-void DebugOutputFormatString(const char* format, ...)
-{
-#ifdef _DEBUG
-	va_list valist;
-	va_start(valist, format);
-	printf(format, valist);
-	va_end(valist);
-#endif
-}
 
 namespace {
 	void EnableDebugLayer()
@@ -35,6 +25,16 @@ namespace {
 
 namespace sqrp
 {
+	void DebugOutputFormatString(const char* format, ...)
+	{
+#ifdef _DEBUG
+		va_list valist;
+		va_start(valist, format);
+		vprintf(format, valist);
+		va_end(valist);
+#endif
+	}
+
 	void Device::EnableFeatures(vector<UUID>& features) const
 	{
 		auto result = D3D12EnableExperimentalFeatures(features.size(), features.data(), nullptr, nullptr);
@@ -225,17 +225,17 @@ namespace sqrp
 		return make_shared<AS>(*this, name, size);
 	}
 
-	ASMeshHandle Device::CreateASMesh(CommandHandle command, string modelPath) const
+	ASMeshHandle Device::CreateASMesh(const CommandHandle& command, string modelPath) const
 	{
 		return make_shared<ASMesh>(*this, command, modelPath);
 	}
 
-	ASMeshHandle Device::CreateASMesh(wstring name, CommandHandle command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices) const
+	ASMeshHandle Device::CreateASMesh(wstring name, const CommandHandle& command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices) const
 	{
 		return make_shared<ASMesh>(*this, name, command, ASVertices, indices);
 	}
 
-	BLASHandle Device::CreateBLAS(wstring name, CommandHandle command, ASMeshHandle mesh) const
+	BLASHandle Device::CreateBLAS(wstring name, const CommandHandle& command, const ASMeshHandle& mesh) const
 	{
 		return make_shared<BLAS>(*this, name, command, mesh);
 	}
@@ -270,32 +270,32 @@ namespace sqrp
 		return make_shared<GraphicsPipeline>(*this, name, desc);
 	}
 
-	GUIHandle Device::CreateGUI(const HWND& hwnd) const
+	GuiHandle Device::CreateGui(const HWND& hwnd) const
 	{
-		return make_shared<GUI>(*this, hwnd);
+		return make_shared<Gui>(*this, hwnd);
 	}
 
-	IndirectHandle Device::CreateIndirect(wstring name, initializer_list<IndirectDesc> indirectDescs, RootSignatureHandle rootSignature, UINT byteStride, UINT maxCommandCount, BufferHandle argumentBuffer, BufferHandle counterBuffer) const
+	IndirectHandle Device::CreateIndirect(wstring name, initializer_list<IndirectDesc> indirectDescs, const RootSignatureHandle& rootSignature, UINT byteStride, UINT maxCommandCount, const BufferHandle& argumentBuffer, const BufferHandle& counterBuffer) const
 	{
 		return make_shared<Indirect>(*this, name, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer);
 	}
 
-	MeshHandle Device::CreateMesh(CommandHandle command, string modelPath) const
+	MeshHandle Device::CreateMesh(const CommandHandle& command, string modelPath) const
 	{
 		return make_shared<Mesh>(*this, command, modelPath);
 	}
 
-	GLTFMeshHandle Device::CreateGLTFMesh(CommandHandle command, string modelPath) const
+	GLTFMeshHandle Device::CreateGLTFMesh(const CommandHandle& command, string modelPath) const
 	{
 		return make_shared<GLTFMesh>(*this, command, modelPath);
 	}
 
-	MeshHandle Device::CreateMesh(wstring name, CommandHandle command, const vector<Vertex>& vertices, const vector<uint32_t>& indices) const
+	MeshHandle Device::CreateMesh(wstring name, const CommandHandle& command, const vector<Vertex>& vertices, const vector<uint32_t>& indices) const
 	{
 		return make_shared<Mesh>(*this, name, command, vertices, indices);
 	}
 
-	MeshHandle Device::CreateMesh(wstring name, CommandHandle command, UINT verticesNum, UINT indicesNum) const
+	MeshHandle Device::CreateMesh(wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum) const
 	{
 		return make_shared<Mesh>(*this, name, command, verticesNum, indicesNum);
 	}
@@ -305,9 +305,9 @@ namespace sqrp
 		return make_shared<MeshPipeline>(*this, name, desc);
 	}
 
-	RayTracingHandle Device::CreateRaytracing(wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth) const
+	RaytracingHandle Device::CreateRaytracing(wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const
 	{
-		return make_shared<RayTracing>(*this, name, stateObject, width, height, depth);
+		return make_shared<Raytracing>(*this, name, stateObject, width, height, depth);
 	}
 
 	RootSignatureHandle Device::CreateRootSignature(wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams) const
@@ -320,7 +320,7 @@ namespace sqrp
 		return make_shared<StateObject>(*this, name, soDesc);
 	}
 
-	SwapChainHandle Device::CreateSwapChain(wstring name, CommandHandle command, const HWND& hwnd, SIZE winSize) const
+	SwapChainHandle Device::CreateSwapChain(wstring name, const CommandHandle& command, const HWND& hwnd, SIZE winSize) const
 	{
 		return make_shared<SwapChain>(*this, name, command, hwnd, winSize);
 	}
@@ -330,17 +330,17 @@ namespace sqrp
 		return make_shared<Texture>(*this, name, texDim, type, strideSize, format, width, height, depth, mipLevels);
 	}
 
-	TLASHandle Device::CreateTLAS(wstring name, CommandHandle command, const vector<TLASDesc>& tlasDescs) const
+	TLASHandle Device::CreateTLAS(wstring name, const CommandHandle& command, const vector<TLASDesc>& tlasDescs) const
 	{
 		return make_shared<TLAS>(*this, name, command, tlasDescs);
 	}
 
-	WorkGraphHandle Device::CreateWorkGraph(wstring name, StateObjectHandle stateObject, UINT maxInputRecords, UINT maxNodeInputs) const
+	WorkGraphHandle Device::CreateWorkGraph(wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords, UINT maxNodeInputs) const
 	{
 		return make_shared<WorkGraph>(*this, name, stateObject, maxInputRecords, maxNodeInputs);
 	}
 
-	void Device::ExecuteCommandList(CommandHandle command, QueueType queueType)
+	void Device::ExecuteCommandList(const CommandHandle& command, QueueType queueType)
 	{
 		ID3D12CommandList* cmdLists[] = { command->GetCommandList().Get() };
 		if (queueType == QueueType::Graphics) {
@@ -351,32 +351,32 @@ namespace sqrp
 		}
 	}
 
-	ComPtr<IDXGIFactory7> Device::GetDXGIFactory() const
+	const ComPtr<IDXGIFactory7>& Device::GetDXGIFactory() const
 	{
 		return dxgiFactory_;
 	}
 
-	ComPtr<ID3D12Device> Device::GetDevice() const
+	const ComPtr<ID3D12Device>& Device::GetDevice() const
 	{
 		return device_;
 	}
 
-	ComPtr<StableDevice> Device::GetStableDevice() const
+	const ComPtr<StableDevice>& Device::GetStableDevice() const
 	{
 		return stableDevice_;
 	}
 
-	ComPtr<LatestDevice> Device::GetLatestDevice() const
+	const ComPtr<LatestDevice>& Device::GetLatestDevice() const
 	{
 		return latestDevice_;
 	}
 
-	ComPtr<ID3D12CommandQueue> Device::GetGraphicsCommandQueue() const
+	const ComPtr<ID3D12CommandQueue>& Device::GetGraphicsCommandQueue() const
 	{
 		return graphicsCommandQueue_;
 	}
 
-	ComPtr<ID3D12CommandQueue> Device::GetComputeCommandQueue() const
+	const ComPtr<ID3D12CommandQueue>& Device::GetComputeCommandQueue() const
 	{
 		return computeCommandQueue_;
 	}

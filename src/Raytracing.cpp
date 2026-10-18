@@ -20,26 +20,26 @@ namespace sqrp
 		return bufferSize;
 	}
 
-	UINT RayTracing::AlignForSBTRecord(UINT size)
+	UINT Raytracing::AlignForSBTRecord(UINT size)
 	{
 		const UINT alignment = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
 		return (size + (alignment - 1)) & ~(alignment - 1);
 	}
 
-	UINT RayTracing::AlignForSBT(UINT size)
+	UINT Raytracing::AlignForSBT(UINT size)
 	{
 		const UINT alignment = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
 		return (size + (alignment - 1)) & ~(alignment - 1);
 	}
 
-	UINT RayTracing::CopyMem(void* dest, const void* data, UINT size)
+	UINT Raytracing::CopyMem(void* dest, const void* data, UINT size)
 	{
 		memcpy(dest, data, size);
 
 		return size;
 	}
 
-	RayTracing::RayTracing(const Device& device, wstring name, StateObjectHandle stateObject, UINT width, UINT height, UINT depth)
+	Raytracing::Raytracing(const Device& device, wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth)
 		: pDevice_(&device), name_(name)
 	{
 		stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp_.ReleaseAndGetAddressOf()));
@@ -48,8 +48,8 @@ namespace sqrp
 		vector<void*> missIDs;
 		vector<void*> hitGroupIDs;
 
-		if (holds_alternative<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_)) {
-			StateObjectDesc::RayTracingDesc rtDesc = get<StateObjectDesc::RayTracingDesc>(stateObject->GetStateObjectDesc().typeDesc_);
+		if (holds_alternative<StateObjectDesc::RaytracingDesc>(stateObject->GetStateObjectDesc().typeDesc_)) {
+			StateObjectDesc::RaytracingDesc rtDesc = get<StateObjectDesc::RaytracingDesc>(stateObject->GetStateObjectDesc().typeDesc_);
 
 			// All record aligned max record size
 			UINT maxRayGenSize = 0;
@@ -217,7 +217,7 @@ namespace sqrp
 		}
 	}
 
-	D3D12_DISPATCH_RAYS_DESC RayTracing::GetDispatchRayDesc() const
+	D3D12_DISPATCH_RAYS_DESC Raytracing::GetDispatchRayDesc() const
 	{
 		return raysDesc_;
 	}

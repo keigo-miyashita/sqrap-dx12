@@ -9,7 +9,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	void GUI::InitializeGUI(const HWND& hwnd)
+	void Gui::InitializeGui(const HWND& hwnd)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -18,7 +18,7 @@ namespace sqrp
 		heapDesc.NumDescriptors = 1 + kMaxUserTextures; // slot 0: font, slots 1+: user textures
 		auto result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(imguiDescHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("Failed to CreateDescriptorHeap for GUI : " + to_string(result));
+			throw runtime_error("Failed to CreateDescriptorHeap for Gui : " + to_string(result));
 		}
 
 		if (ImGui::CreateContext() == nullptr) {
@@ -38,20 +38,20 @@ namespace sqrp
 		}
 	}
 
-	GUI::GUI(const Device& device, const HWND& hwnd)
+	Gui::Gui(const Device& device, const HWND& hwnd)
 		: pDevice_(&device)
 	{
-		InitializeGUI(hwnd);
+		InitializeGui(hwnd);
 	}
 
-	GUI::~GUI()
+	Gui::~Gui()
 	{
 		ImGui_ImplDX12_Shutdown();
 		ImGui_ImplWin32_Shutdown();
 		ImGui::DestroyContext();
 	}
 
-	void GUI::BeginCommand()
+	void Gui::BeginCommand()
 	{
 		ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
@@ -61,29 +61,29 @@ namespace sqrp
 		ImGui::SetWindowSize(ImVec2(400, 500), ImGuiCond_::ImGuiCond_FirstUseEver);
 	}
 
-	void GUI::EndCommand()
+	void Gui::EndCommand()
 	{
 		ImGui::End();
 
 		ImGui::Render();
 	}
 
-	void GUI::Draw(Command& command)
+	void Gui::Draw(Command& command)
 	{
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), command.GetCommandList().Get());
 	}
 
-	ComPtr<ID3D12DescriptorHeap> GUI::GetImguiDescHeap() const
+	const ComPtr<ID3D12DescriptorHeap>& Gui::GetImGuiDescHeap() const
 	{
 		return imguiDescHeap_;
 	}
 
-	D3D12_GPU_DESCRIPTOR_HANDLE GUI::RegisterTextureSRV(UINT slot,
+	D3D12_GPU_DESCRIPTOR_HANDLE Gui::RegisterTextureSRV(UINT slot,
 	                                                     ID3D12Resource* resource,
 	                                                     DXGI_FORMAT format)
 	{
 		if (slot == 0 || slot > kMaxUserTextures)
-			throw runtime_error("GUI::RegisterTextureSRV: slot must be 1.." + to_string(kMaxUserTextures));
+			throw runtime_error("Gui::RegisterTextureSRV: slot must be 1.." + to_string(kMaxUserTextures));
 
 		UINT inc = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(
 		               D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

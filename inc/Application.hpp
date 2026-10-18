@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "pch.hpp"
 
@@ -64,7 +64,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		// Window�̏������֐�
+		// Windowの初期化関数
 		void CreateGameWindow(std::string windowName);
 
 	protected:
@@ -79,7 +79,7 @@ namespace sqrp
 		Application();
 		Application(std::string windowName, unsigned int windowWidth = 1280, unsigned int windowHeight = 720);
 		~Application() = default;
-		bool Input(UINT msg, WPARAM wparam, LPARAM lparam);
+		bool ProcessInput(UINT msg, WPARAM wparam, LPARAM lparam);
 		bool Init();
 		void Run();
 		virtual bool OnStart();

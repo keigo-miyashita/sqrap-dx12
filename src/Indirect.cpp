@@ -1,7 +1,7 @@
 #include "Indirect.hpp"
 
 #include "Device.hpp"
-#include "Rootsignature.hpp"
+#include "RootSignature.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -12,11 +12,11 @@ namespace sqrp
 	Indirect::Indirect(const Device& device,
 		wstring name,
 		initializer_list<IndirectDesc> indirectDescs,
-		RootSignatureHandle rootSignature,
+		const RootSignatureHandle& rootSignature,
 		UINT byteStride,
 		UINT maxCommandCount,
-		BufferHandle argumentBuffer,
-		BufferHandle counterBuffer
+		const BufferHandle& argumentBuffer,
+		const BufferHandle& counterBuffer
 	) : pDevice_(&device), maxCommandCount_(maxCommandCount), argumentBuffer_(argumentBuffer), counterBuffer_(counterBuffer), name_(name)
 	{
 		for (auto indirectDesc : indirectDescs) {
@@ -94,7 +94,7 @@ namespace sqrp
 		}
 	}
 
-	ComPtr<ID3D12CommandSignature> Indirect::GetCommandSignature() const
+	const ComPtr<ID3D12CommandSignature>& Indirect::GetCommandSignature() const
 	{
 		return cmdSig_;
 	}

@@ -1,4 +1,4 @@
-#include "MeshShaderApp.hpp"
+﻿#include "MeshShaderApp.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -16,7 +16,7 @@ bool MeshShaderApp::OnStart()
 
 	dxc_.Init();
 
-	GUI_ = device_.CreateGUI(GetWindowHWND());
+	gui_ = device_.CreateGui(GetWindowHWND());
 
 	command_ = device_.CreateCommand(L"General");
 
@@ -103,13 +103,13 @@ void MeshShaderApp::OnUpdate()
 
 	// GUI
 	{
-		GUI_->BeginCommand();
+		gui_->BeginCommand();
 		// Add GUI 
 		ImGui::Text("Color");
 		ImGui::SameLine();
 		ImGui::ColorEdit4("##SurfaceColor", (float*)&diffuseColor_);
-		GUI_->EndCommand();
-		command_->DrawGUI(GUI_);
+		gui_->EndCommand();
+		command_->DrawGui(gui_);
 	}
 
 	command_->EndRender(swapChain_);

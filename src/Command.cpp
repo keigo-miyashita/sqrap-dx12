@@ -1,6 +1,6 @@
-#include "Command.hpp"
+﻿#include "Command.hpp"
 
-#include "Descriptormanager.hpp"
+#include "DescriptorManager.hpp"
 #include "Device.hpp"
 #include "Fence.hpp"
 #include "Indirect.hpp"
@@ -8,8 +8,8 @@
 #include "Mesh.hpp"
 #include "Pipeline.hpp"
 #include "Resource.hpp"
-#include "Rootsignature.hpp"
-#include "Swapchain.hpp"
+#include "RootSignature.hpp"
+#include "SwapChain.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -63,7 +63,7 @@ namespace sqrp
 		fence_ = pDevice_->CreateFence(name);
 	}
 
-	void Command::BeginRender(SwapChainHandle swapchain)
+	void Command::BeginRender(const SwapChainHandle& swapChain)
 	{
 		if (fence_->GetFenceVal() > 0) {
 			fence_->WaitSignal();
@@ -72,15 +72,15 @@ namespace sqrp
 			commandList_->Reset(commandAllocator_.Get(), nullptr);
 		}
 
-		auto bbIdx = swapchain->GetSwapChain()->GetCurrentBackBufferIndex();
+		auto bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
 
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		commandList_->ResourceBarrier(1, &barrier);
 
-		auto rtvHandle = swapchain->GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
+		auto rtvHandle = swapChain->GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
 		rtvHandle.ptr += bbIdx * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		auto dsvHandle = swapchain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
+		auto dsvHandle = swapChain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
 		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 		// Clear depth buffer
@@ -91,15 +91,15 @@ namespace sqrp
 		commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 		// Set viewport and scissors
-		auto viewPort = swapchain->GetViewPort();
-		auto scissorRect = swapchain->GetRect();
+		auto viewPort = swapChain->GetViewPort();
+		auto scissorRect = swapChain->GetRect();
 		commandList_->RSSetViewports(1, &(viewPort));
 		commandList_->RSSetScissorRects(1, &(scissorRect));
 	}
 
-	void Command::EndRender(SwapChainHandle swapchain)
+	void Command::EndRender(const SwapChainHandle& swapChain)
 	{
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapchain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		commandList_->ResourceBarrier(1, &barrier);
 
 		Close();
@@ -109,7 +109,7 @@ namespace sqrp
 
 		fence_->Signal(QueueType::Graphics);
 
-		swapchain->GetSwapChain()->Present(1, 0);
+		swapChain->GetSwapChain()->Present(1, 0);
 
 		// 次フレームのUpdate()/Compute()記録のためにリストを再オープン
 		fence_->WaitSignal();
@@ -117,7 +117,7 @@ namespace sqrp
 		commandList_->Reset(commandAllocator_.Get(), nullptr);
 	}
 
-	void Command::AddDrawIndexed(MeshBaseHandle mesh, UINT numInstances)
+	void Command::AddDrawIndexed(const MeshBaseHandle& mesh, UINT numInstances)
 	{
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
@@ -125,7 +125,7 @@ namespace sqrp
 		commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), 1, 0, 0, 0);
 	}
 
-	void Command::AddDrawIndexedLine(MeshHandle mesh, UINT numInstances)
+	void Command::AddDrawIndexedLine(const MeshHandle& mesh, UINT numInstances)
 	{
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
@@ -143,7 +143,7 @@ namespace sqrp
 		commandList_->ResourceBarrier(barriers.size(), barriers.data());
 	}
 
-	void Command::CopyBuffer(ResourceHandle srcResource, D3D12_RESOURCE_STATES srcCurrentState, ResourceHandle destResource, D3D12_RESOURCE_STATES destCurrentState)
+	void Command::CopyBuffer(const ResourceHandle& srcResource, D3D12_RESOURCE_STATES srcCurrentState, const ResourceHandle& destResource, D3D12_RESOURCE_STATES destCurrentState)
 	{
 		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
@@ -174,7 +174,7 @@ namespace sqrp
 		}
 	}
 
-	void Command::CopyBufferRegion(BufferHandle srcBuffer, UINT srcOffset, D3D12_RESOURCE_STATES srcCurrentState, BufferHandle destBuffer, UINT destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT numBytes)
+	void Command::CopyBufferRegion(const BufferHandle& srcBuffer, UINT srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT numBytes)
 	{
 		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
@@ -210,13 +210,13 @@ namespace sqrp
 		commandList_->Dispatch(threadX, threadY, threadZ);
 	}
 
-	void Command::DispatchRays(RayTracingHandle rayTracing)
+	void Command::DispatchRays(const RaytracingHandle& rayTracing)
 	{
 		D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing->GetDispatchRayDesc();
 		stableCommandList_->DispatchRays(&dispatchRaysDesc);
 	}
 
-	void Command::DrawIndirect(MeshHandle mesh, IndirectHandle indirect, BufferHandle buffer, UINT maxCommandNum)
+	void Command::DrawIndirect(const MeshHandle& mesh, const IndirectHandle& indirect, const BufferHandle& buffer, UINT maxCommandNum)
 	{
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
@@ -224,13 +224,13 @@ namespace sqrp
 		commandList_->ExecuteIndirect(indirect->GetCommandSignature().Get(), maxCommandNum, buffer->GetResource().Get(), 0, nullptr, 0);
 	}
 
-	void Command::DrawGUI(GUIHandle GUI)
+	void Command::DrawGui(const GuiHandle& gui)
 	{
-		commandList_->SetDescriptorHeaps(1, GUI->GetImguiDescHeap().GetAddressOf());
-		GUI->Draw(*this);
+		commandList_->SetDescriptorHeaps(1, gui->GetImGuiDescHeap().GetAddressOf());
+		gui->Draw(*this);
 	}
 
-	void Command::ExecuteIndirect(IndirectHandle indirect)
+	void Command::ExecuteIndirect(const IndirectHandle& indirect)
 	{
 		if (indirect->GetCounterBuffer() != nullptr) {
 			commandList_->ExecuteIndirect(
@@ -265,13 +265,13 @@ namespace sqrp
 		commandList_->Close();
 	}
 
-	void Command::SetMesh(MeshBaseHandle mesh)
+	void Command::SetMesh(const MeshBaseHandle& mesh)
 	{
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
 	}
 
-	void Command::SetComputeResource(RootSignatureHandle computeRootSig)
+	void Command::SetComputeResource(const RootSignatureHandle& computeRootSig)
 	{
 		SetComputeRootSig(computeRootSig);
 
@@ -316,27 +316,27 @@ namespace sqrp
 		}
 	}
 
-	void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
+	void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, const ConstantsHandle& constant)
 	{
 		commandList_->SetComputeRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 	}
 
-	void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
+	void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManagerHandle& descManager)
 	{
 		commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	}
 
-	void Command::SetComputeRootSig(RootSignatureHandle computeRootSig)
+	void Command::SetComputeRootSig(const RootSignatureHandle& computeRootSig)
 	{
 		commandList_->SetComputeRootSignature(computeRootSig->GetRootSignature().Get());
 	}
 
-	void Command::SetDescriptorHeap(DescriptorManagerHandle descManager)
+	void Command::SetDescriptorHeap(const DescriptorManagerHandle& descManager)
 	{
 		commandList_->SetDescriptorHeaps(1, descManager->GetDescriptorHeap().GetAddressOf());
 	}
 
-	void Command::SetGraphicsResource(RootSignatureHandle graphicsRootSig)
+	void Command::SetGraphicsResource(const RootSignatureHandle& graphicsRootSig)
 	{
 		SetGraphicsRootSig(graphicsRootSig);
 
@@ -381,42 +381,42 @@ namespace sqrp
 		}
 	}
 
-	void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, ConstantsHandle constant)
+	void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, const ConstantsHandle& constant)
 	{
 		commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
 	}
 
-	void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, DescriptorManagerHandle descManager)
+	void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManagerHandle& descManager)
 	{
 		commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 	}
 
-	void Command::SetGraphicsRootSig(RootSignatureHandle graphicsRootSig)
+	void Command::SetGraphicsRootSig(const RootSignatureHandle& graphicsRootSig)
 	{
 		commandList_->SetGraphicsRootSignature(graphicsRootSig->GetRootSignature().Get());
 	}
 
-	void Command::SetRayTracingResource(RootSignatureHandle rayTracingRootSig)
+	void Command::SetRaytracingResource(const RootSignatureHandle& rayTracingRootSig)
 	{
 		SetComputeResource(rayTracingRootSig);
 	}
 
-	void Command::SetPipeline(GraphicsPipelineHandle graphicsPipeline)
+	void Command::SetPipeline(const GraphicsPipelineHandle& graphicsPipeline)
 	{
 		commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
 	}
 
-	void Command::SetPipeline(ComputePipelineHandle computePipeline)
+	void Command::SetPipeline(const ComputePipelineHandle& computePipeline)
 	{
 		commandList_->SetPipelineState(computePipeline->GetPipelineState().Get());
 	}
 
-	void Command::SetPipeline(MeshPipelineHandle meshPipeline)
+	void Command::SetPipeline(const MeshPipelineHandle& meshPipeline)
 	{
 		commandList_->SetPipelineState(meshPipeline->GetPipelineState().Get());
 	}
 
-	void Command::SetRayTracingState(StateObjectHandle stateObject)
+	void Command::SetRaytracingState(const StateObjectHandle& stateObject)
 	{
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
 	}
@@ -426,7 +426,7 @@ namespace sqrp
 		return fence_->WaitCommand(*this, queueType);
 	}
 
-	void Command::InitDataToBuffer(BufferHandle buffer, void* pData, UINT strideSize, UINT numElement)
+	void Command::InitDataToBuffer(const BufferHandle& buffer, void* pData, UINT strideSize, UINT numElement)
 	{
 		BufferHandle uploadBuffer = pDevice_->CreateBuffer(L"Upload", BufferType::Upload, strideSize, numElement);
 
@@ -437,7 +437,7 @@ namespace sqrp
 		this->WaitCommand();
 	}
 
-	void Command::InitDataToTexture(TextureHandle texture, void* pData, UINT strideSize, UINT width, UINT height)
+	void Command::InitDataToTexture(const TextureHandle& texture, void* pData, UINT strideSize, UINT width, UINT height)
 	{
 		auto desc = texture->GetResource()->GetDesc();
 		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
@@ -486,22 +486,22 @@ namespace sqrp
 		return commandType_;
 	}
 
-	ComPtr<ID3D12CommandAllocator> Command::GetCommandAllocator() const
+	const ComPtr<ID3D12CommandAllocator>& Command::GetCommandAllocator() const
 	{
 		return commandAllocator_;
 	}
 
-	ComPtr<ID3D12GraphicsCommandList> Command::GetCommandList() const
+	const ComPtr<ID3D12GraphicsCommandList>& Command::GetCommandList() const
 	{
 		return commandList_;
 	}
 
-	ComPtr<StableCommandList> Command::GetStableCommandList() const
+	const ComPtr<StableCommandList>& Command::GetStableCommandList() const
 	{
 		return stableCommandList_;
 	}
 
-	ComPtr<LatestCommandList> Command::GetLatestCommandList() const
+	const ComPtr<LatestCommandList>& Command::GetLatestCommandList() const
 	{
 		return latestCommandList_;
 	}

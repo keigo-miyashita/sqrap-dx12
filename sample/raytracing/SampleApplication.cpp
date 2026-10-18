@@ -1,4 +1,4 @@
-#include "SampleApplication.hpp"
+﻿#include "SampleApplication.hpp"
 
 using namespace Microsoft::WRL;
 using namespace std;
@@ -16,7 +16,7 @@ bool SampleApplication::OnStart()
 
 	dxc_.Init();
 
-	GUI_ = device_.CreateGUI(GetWindowHWND());
+	gui_ = device_.CreateGui(GetWindowHWND());
 
 	command_ = device_.CreateCommand(L"General");
 
@@ -63,9 +63,9 @@ bool SampleApplication::OnStart()
 
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"raytracing.hlsl";
-	rayGen_ = dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"rayGeneration");
-	closestHit_ = dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"closestHit");
-	miss_ = dxc_.CreateShader(ShaderType::RayTracing, shaderPath, L"miss");
+	rayGen_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"rayGeneration");
+	closestHit_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"closestHit");
+	miss_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"miss");
 
 	// Descriptor Manager
 	suzanneDescManager_ = device_.CreateDescriptorManager(
@@ -108,7 +108,7 @@ bool SampleApplication::OnStart()
 		L"rayTracing",
 		{
 			StateObjectType::Raytracing,
-			StateObjectDesc::RayTracingDesc
+			StateObjectDesc::RaytracingDesc
 			{
 				suzanneRootSignature_,
 				{
@@ -146,21 +146,21 @@ void SampleApplication::OnUpdate()
 	camera_.Update();
 	cameraBuffer_->Write(RayTracigCameraMatrix{ camera_.GetView(), camera_.GetProj(), camera_.GetInvViewProj(), camera_.GetInvView(), camera_.GetPos() });	
 
-	command_->SetRayTracingResource(suzanneRootSignature_);
-	command_->SetRayTracingState(rayTracingStates_);
+	command_->SetRaytracingResource(suzanneRootSignature_);
+	command_->SetRaytracingState(rayTracingStates_);
 	command_->DispatchRays(rayTracing_);
 
 	command_->CopyBuffer(outputTexture_, outputTexture_->GetInitialState(), (swapChain_->GetCurrentBackBuffer()), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	// GUI
 	{
-		GUI_->BeginCommand();
+		gui_->BeginCommand();
 		// Add GUI 
 		ImGui::Text("Color");
 		ImGui::SameLine();
 		ImGui::ColorEdit4("##SurfaceColor", (float*)&diffuseColor_);
-		GUI_->EndCommand();
-		command_->DrawGUI(GUI_);
+		gui_->EndCommand();
+		command_->DrawGui(gui_);
 	}
 
 	command_->EndRender(swapChain_);

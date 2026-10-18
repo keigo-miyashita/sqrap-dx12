@@ -1,5 +1,7 @@
 #pragma once
 
+#include "pch.hpp"
+
 namespace sqrp
 {
 	class AS;
@@ -12,13 +14,13 @@ namespace sqrp
 	class DescriptorManager;
 	class Fence;
 	class GraphicsPipeline;
-	class GUI;
+	class Gui;
 	class Indirect;
 	class MeshBase;
 	class Mesh;
 	class GLTFMesh;
 	class MeshPipeline;
-	class RayTracing;
+	class Raytracing;
 	class Resource;
 	class ResourceSet;
 	class RootSignature;
@@ -39,13 +41,13 @@ namespace sqrp
 	using DescriptorManagerHandle = std::shared_ptr<DescriptorManager>;
 	using FenceHandle = std::shared_ptr<Fence>;
 	using GraphicsPipelineHandle = std::shared_ptr<GraphicsPipeline>;
-	using GUIHandle = std::shared_ptr<GUI>;
+	using GuiHandle = std::shared_ptr<Gui>;
 	using IndirectHandle = std::shared_ptr<Indirect>;
 	using MeshBaseHandle = std::shared_ptr<MeshBase>;
 	using MeshHandle = std::shared_ptr<Mesh>;
 	using GLTFMeshHandle = std::shared_ptr<GLTFMesh>;
 	using MeshPipelineHandle = std::shared_ptr<MeshPipeline>;
-	using RayTracingHandle = std::shared_ptr<RayTracing>;
+	using RaytracingHandle = std::shared_ptr<Raytracing>;
 	using ResourceHandle = std::shared_ptr<Resource>;
 	using ResourceSetHandle = std::shared_ptr<ResourceSet>;
 	using RootSignatureHandle = std::shared_ptr<RootSignature>;

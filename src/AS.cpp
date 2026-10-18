@@ -11,7 +11,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	void BLAS::CreateBLAS(ASMeshHandle mesh)
+	void BLAS::CreateBLAS(const ASMeshHandle& mesh, const CommandHandle& command)
 	{
 		D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 		geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -46,18 +46,18 @@ namespace sqrp
 		buildASDesc.ScratchAccelerationStructureData = scratchBuffer_->GetResource()->GetGPUVirtualAddress();
 
 		auto transBarrier = CD3DX12_RESOURCE_BARRIER::Transition(scratchBuffer_->GetResource().Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-		command_->GetStableCommandList()->ResourceBarrier(1, &transBarrier);
-		command_->GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
+		command->GetStableCommandList()->ResourceBarrier(1, &transBarrier);
+		command->GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
 
 		auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_->GetResource().Get());
-		command_->GetStableCommandList()->ResourceBarrier(1, &barrier);
-		command_->WaitCommand();
+		command->GetStableCommandList()->ResourceBarrier(1, &barrier);
+		command->WaitCommand();
 	}
 
-	BLAS::BLAS(const Device& device, wstring name, CommandHandle command, ASMeshHandle mesh)
-		: pDevice_(&device), command_(command), name_(name)
+	BLAS::BLAS(const Device& device, wstring name, const CommandHandle& command, const ASMeshHandle& mesh)
+		: pDevice_(&device), name_(name)
 	{
-		CreateBLAS(mesh);
+		CreateBLAS(mesh, command);
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASAddress()
@@ -65,7 +65,7 @@ namespace sqrp
 		return ASBuffer_->GetResource()->GetGPUVirtualAddress();
 	}
 
-	void TLAS::CreateTLAS()
+	void TLAS::CreateTLAS(const CommandHandle& command)
 	{
 		vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDesc;
 		instanceDesc.resize(tlasDescs_.size());
@@ -94,8 +94,8 @@ namespace sqrp
 		cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
 		instanceDescBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 
-		command_->CopyBuffer(uploadBuffer, uploadBuffer->GetInitialState(), instanceDescBuffer_, instanceDescBuffer_->GetInitialState());
-		command_->WaitCommand();
+		command->CopyBuffer(uploadBuffer, uploadBuffer->GetInitialState(), instanceDescBuffer_, instanceDescBuffer_->GetInitialState());
+		command->WaitCommand();
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = {};
 		buildInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
@@ -118,17 +118,17 @@ namespace sqrp
 		buildASDesc.DestAccelerationStructureData = ASBuffer_->GetResource()->GetGPUVirtualAddress();
 		buildASDesc.ScratchAccelerationStructureData = scratchBuffer_->GetResource()->GetGPUVirtualAddress();
 
-		command_->GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
+		command->GetStableCommandList()->BuildRaytracingAccelerationStructure(&buildASDesc, 0, nullptr);
 
 		auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(ASBuffer_->GetResource().Get());
-		command_->GetStableCommandList()->ResourceBarrier(1, &barrier);
-		command_->WaitCommand();
+		command->GetStableCommandList()->ResourceBarrier(1, &barrier);
+		command->WaitCommand();
 	}
 
-	TLAS::TLAS(const Device& device, wstring name, CommandHandle command, const vector<TLASDesc>& tlasDescs)
-		: pDevice_(&device), command_(command), tlasDescs_(tlasDescs), name_(name)
+	TLAS::TLAS(const Device& device, wstring name, const CommandHandle& command, const vector<TLASDesc>& tlasDescs)
+		: pDevice_(&device), tlasDescs_(tlasDescs), name_(name)
 	{
-		CreateTLAS();
+		CreateTLAS(command);
 	}
 
 	shared_ptr<AS> TLAS::GetASBuffer() const

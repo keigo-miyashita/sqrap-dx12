@@ -7,28 +7,14 @@ namespace sqrp
 	class Shader;
 
 	enum class ShaderType {
-		Vertex, Pixel, Geometry, Domain, Hull, Amplification, Mesh, Compute, RayTracing, WorkGraph, Library
+		Vertex, Pixel, Geometry, Domain, Hull, Amplification, Mesh, Compute, Raytracing, WorkGraph, Library
 	};
 
 	inline int ToInt(ShaderType type) {
 		return static_cast<int>(type);
 	}
 
-	static std::wstring ShaderModel[] = {
-		L"vs_6_6",
-		L"ps_6_6",
-		L"gs_6_6",
-		L"ds_6_6",
-		L"hs_6_6",
-		L"as_6_6",
-		L"ms_6_6",
-		L"cs_6_8",
-		L"lib_6_3",
-		L"lib_6_9",
-		L"lib_6_9"
-	};
-
-	class DXC
+	class Dxc
 	{
 	private:
 		template<typename T>
@@ -41,14 +27,14 @@ namespace sqrp
 		void InitializeDxc();
 
 	public:
-		DXC() = default;
-		~DXC() = default;
+		Dxc() = default;
+		~Dxc() = default;
 		void Init();
-		void CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"") const;
-		std::shared_ptr<Shader> CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<const wchar_t*> additionalOption = {}, const std::wstring& includePath = L"") const;
-		ComPtr<IDxcCompiler> GetCompiler() const;
-		ComPtr<IDxcLibrary> GetLibrary() const;
-		ComPtr<IDxcUtils> GetUtils() const;
+		void CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<std::wstring> additionalOption = {}, const std::wstring& includePath = L"") const;
+		std::shared_ptr<Shader> CreateShader(ShaderType shaderType, const std::wstring& fileName, const std::wstring& entry, std::vector<std::wstring> additionalOption = {}, const std::wstring& includePath = L"") const;
+		const ComPtr<IDxcCompiler>& GetCompiler() const;
+		const ComPtr<IDxcLibrary>& GetLibrary() const;
+		const ComPtr<IDxcUtils>& GetUtils() const;
 		ComPtr<IDxcIncludeHandler> GetIncHandler();
 		ComPtr<IDxcBlob> GetIncBlob();
 	};

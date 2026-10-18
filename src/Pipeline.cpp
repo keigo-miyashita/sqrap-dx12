@@ -1,7 +1,7 @@
-#include "Pipeline.hpp"
+﻿#include "Pipeline.hpp"
 
 #include "Device.hpp"
-#include "Rootsignature.hpp"
+#include "RootSignature.hpp"
 #include "Shader.hpp"
 
 using namespace Microsoft::WRL;
@@ -15,19 +15,19 @@ namespace sqrp
 
 	}
 
-	GraphicsDesc& GraphicsDesc::SetRootSignature(RootSignatureHandle rootSignature)
+	GraphicsDesc& GraphicsDesc::SetRootSignature(const RootSignatureHandle& rootSignature)
 	{
 		rootSignature_ = rootSignature;
 		return *this;
 	}
 
-	GraphicsDesc& GraphicsDesc::SetVS(ShaderHandle VS)
+	GraphicsDesc& GraphicsDesc::SetVS(const ShaderHandle& VS)
 	{
 		VS_ = VS;
 		return *this;
 	}
 
-	GraphicsDesc& GraphicsDesc::SetPS(ShaderHandle PS)
+	GraphicsDesc& GraphicsDesc::SetPS(const ShaderHandle& PS)
 	{
 		PS_ = PS;
 		return *this;
@@ -39,40 +39,41 @@ namespace sqrp
 		return *this;
 	}
 
-	void GraphicsPipeline::CreateGraphicsPipelineState()
+	GraphicsPipeline::GraphicsPipeline(const Device& device, wstring name, const GraphicsDesc& desc)
+		: pDevice_(&device), name_(name)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPSDesc = {};
 
-		graphicsPSDesc.InputLayout.pInputElementDescs = desc_.inputLayouts_.data();
-		graphicsPSDesc.InputLayout.NumElements = desc_.inputLayouts_.size();
-		graphicsPSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
-		if (desc_.VS_) {
-			graphicsPSDesc.VS = CD3DX12_SHADER_BYTECODE(desc_.VS_->GetBlob()->GetBufferPointer(), desc_.VS_->GetBlob()->GetBufferSize());
+		graphicsPSDesc.InputLayout.pInputElementDescs = desc.inputLayouts_.data();
+		graphicsPSDesc.InputLayout.NumElements = desc.inputLayouts_.size();
+		graphicsPSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
+		if (desc.VS_) {
+			graphicsPSDesc.VS = CD3DX12_SHADER_BYTECODE(desc.VS_->GetBlob()->GetBufferPointer(), desc.VS_->GetBlob()->GetBufferSize());
 		}
-		if (desc_.PS_) {
-			graphicsPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc_.PS_->GetBlob()->GetBufferPointer(), desc_.PS_->GetBlob()->GetBufferSize());
+		if (desc.PS_) {
+			graphicsPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc.PS_->GetBlob()->GetBufferPointer(), desc.PS_->GetBlob()->GetBufferSize());
 		}
-		if (desc_.DS_) {
-			graphicsPSDesc.DS = CD3DX12_SHADER_BYTECODE(desc_.DS_->GetBlob()->GetBufferPointer(), desc_.DS_->GetBlob()->GetBufferSize());
+		if (desc.DS_) {
+			graphicsPSDesc.DS = CD3DX12_SHADER_BYTECODE(desc.DS_->GetBlob()->GetBufferPointer(), desc.DS_->GetBlob()->GetBufferSize());
 		}
-		if (desc_.HS_) {
-			graphicsPSDesc.HS = CD3DX12_SHADER_BYTECODE(desc_.HS_->GetBlob()->GetBufferPointer(), desc_.HS_->GetBlob()->GetBufferSize());
+		if (desc.HS_) {
+			graphicsPSDesc.HS = CD3DX12_SHADER_BYTECODE(desc.HS_->GetBlob()->GetBufferPointer(), desc.HS_->GetBlob()->GetBufferSize());
 		}
-		if (desc_.GS_) {
-			graphicsPSDesc.GS = CD3DX12_SHADER_BYTECODE(desc_.GS_->GetBlob()->GetBufferPointer(), desc_.GS_->GetBlob()->GetBufferSize());
+		if (desc.GS_) {
+			graphicsPSDesc.GS = CD3DX12_SHADER_BYTECODE(desc.GS_->GetBlob()->GetBufferPointer(), desc.GS_->GetBlob()->GetBufferSize());
 		}
-		graphicsPSDesc.BlendState = desc_.blendState_;
-		graphicsPSDesc.SampleMask = desc_.sampleMask_;
-		graphicsPSDesc.RasterizerState = desc_.rasterizerDesc_;
-		graphicsPSDesc.DepthStencilState = desc_.depthStencilDesc_;
-		graphicsPSDesc.DSVFormat = desc_.dsvFormat_;
-		graphicsPSDesc.IBStripCutValue = desc_.IBStripCutValue_;
-		graphicsPSDesc.PrimitiveTopologyType = desc_.primitiveType_;
-		graphicsPSDesc.NumRenderTargets = desc_.RTVFormats_.size();
-		for (int i = 0; i < desc_.RTVFormats_.size(); i++) {
-			graphicsPSDesc.RTVFormats[i] = desc_.RTVFormats_[i];
+		graphicsPSDesc.BlendState = desc.blendState_;
+		graphicsPSDesc.SampleMask = desc.sampleMask_;
+		graphicsPSDesc.RasterizerState = desc.rasterizerDesc_;
+		graphicsPSDesc.DepthStencilState = desc.depthStencilDesc_;
+		graphicsPSDesc.DSVFormat = desc.dsvFormat_;
+		graphicsPSDesc.IBStripCutValue = desc.IBStripCutValue_;
+		graphicsPSDesc.PrimitiveTopologyType = desc.primitiveType_;
+		graphicsPSDesc.NumRenderTargets = desc.RTVFormats_.size();
+		for (int i = 0; i < desc.RTVFormats_.size(); i++) {
+			graphicsPSDesc.RTVFormats[i] = desc.RTVFormats_[i];
 		}
-		graphicsPSDesc.SampleDesc = desc_.sampleDesc_;
+		graphicsPSDesc.SampleDesc = desc.sampleDesc_;
 
 		auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
@@ -81,43 +82,37 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	GraphicsPipeline::GraphicsPipeline(const Device& device, wstring name, const GraphicsDesc& desc)
-		: pDevice_(&device), desc_(desc), name_(name)
-	{
-		CreateGraphicsPipelineState();
-	}
-
-	ComPtr<ID3D12PipelineState> GraphicsPipeline::GetPipelineState() const
+	const ComPtr<ID3D12PipelineState>& GraphicsPipeline::GetPipelineState() const
 	{
 		return pipeline_;
 	}
 
 	MeshPipeline::MeshPipeline(const Device& device, wstring name, const MeshDesc& desc)
-		: pDevice_(&device), desc_(desc), name_(name)
+		: pDevice_(&device), name_(name)
 	{
 		D3DX12_MESH_SHADER_PIPELINE_STATE_DESC meshPSDesc = {};
 
-		meshPSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
-		if (desc_.AS_) {
-			meshPSDesc.AS = CD3DX12_SHADER_BYTECODE(desc_.AS_->GetBlob()->GetBufferPointer(), desc_.AS_->GetBlob()->GetBufferSize());
+		meshPSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
+		if (desc.AS_) {
+			meshPSDesc.AS = CD3DX12_SHADER_BYTECODE(desc.AS_->GetBlob()->GetBufferPointer(), desc.AS_->GetBlob()->GetBufferSize());
 		}
-		if (desc_.MS_) {
-			meshPSDesc.MS = CD3DX12_SHADER_BYTECODE(desc_.MS_->GetBlob()->GetBufferPointer(), desc_.MS_->GetBlob()->GetBufferSize());
+		if (desc.MS_) {
+			meshPSDesc.MS = CD3DX12_SHADER_BYTECODE(desc.MS_->GetBlob()->GetBufferPointer(), desc.MS_->GetBlob()->GetBufferSize());
 		}
-		if (desc_.PS_) {
-			meshPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc_.PS_->GetBlob()->GetBufferPointer(), desc_.PS_->GetBlob()->GetBufferSize());
+		if (desc.PS_) {
+			meshPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc.PS_->GetBlob()->GetBufferPointer(), desc.PS_->GetBlob()->GetBufferSize());
 		}
-		meshPSDesc.BlendState = desc_.blendState_;
-		meshPSDesc.SampleMask = desc_.sampleMask_;
-		meshPSDesc.RasterizerState = desc_.rasterizerDesc_;
-		meshPSDesc.DepthStencilState = desc_.depthStencilDesc_;
-		meshPSDesc.DSVFormat = desc_.dsvFormat_;
-		meshPSDesc.PrimitiveTopologyType = desc_.primitiveType_;
-		meshPSDesc.NumRenderTargets = desc_.RTVFormats_.size();
-		for (int i = 0; i < desc_.RTVFormats_.size(); i++) {
-			meshPSDesc.RTVFormats[i] = desc_.RTVFormats_[i];
+		meshPSDesc.BlendState = desc.blendState_;
+		meshPSDesc.SampleMask = desc.sampleMask_;
+		meshPSDesc.RasterizerState = desc.rasterizerDesc_;
+		meshPSDesc.DepthStencilState = desc.depthStencilDesc_;
+		meshPSDesc.DSVFormat = desc.dsvFormat_;
+		meshPSDesc.PrimitiveTopologyType = desc.primitiveType_;
+		meshPSDesc.NumRenderTargets = desc.RTVFormats_.size();
+		for (int i = 0; i < desc.RTVFormats_.size(); i++) {
+			meshPSDesc.RTVFormats[i] = desc.RTVFormats_[i];
 		}
-		meshPSDesc.SampleDesc = desc_.sampleDesc_;
+		meshPSDesc.SampleDesc = desc.sampleDesc_;
 
 		CD3DX12_PIPELINE_MESH_STATE_STREAM meshStateStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(meshPSDesc);
 
@@ -132,17 +127,18 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	ComPtr<ID3D12PipelineState> MeshPipeline::GetPipelineState() const
+	const ComPtr<ID3D12PipelineState>& MeshPipeline::GetPipelineState() const
 	{
 		return pipeline_;
 	}
 
-	void ComputePipeline::CreateComputePipelineState()
+	ComputePipeline::ComputePipeline(const Device& device, wstring name, const ComputeDesc& desc)
+		: pDevice_(&device), name_(name)
 	{
 		D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
-		computePSDesc.pRootSignature = desc_.rootSignature_->GetRootSignature().Get();
-		computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc_.CS_->GetBlob()->GetBufferPointer(), desc_.CS_->GetBlob()->GetBufferSize());
-		computePSDesc.NodeMask = desc_.nodeMask_;
+		computePSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
+		computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc.CS_->GetBlob()->GetBufferPointer(), desc.CS_->GetBlob()->GetBufferSize());
+		computePSDesc.NodeMask = desc.nodeMask_;
 
 		HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
@@ -151,13 +147,7 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	ComputePipeline::ComputePipeline(const Device& device, wstring name, const ComputeDesc& desc)
-		: pDevice_(&device), desc_(desc), name_(name)
-	{
-		CreateComputePipelineState();
-	}
-
-	ComPtr<ID3D12PipelineState> ComputePipeline::GetPipelineState() const
+	const ComPtr<ID3D12PipelineState>& ComputePipeline::GetPipelineState() const
 	{
 		return pipeline_;
 	}
@@ -168,8 +158,8 @@ namespace sqrp
 		if (soDesc.stateObjectType_ == StateObjectType::Raytracing) {
 			stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 			auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
-			if (holds_alternative<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_)) {
-				StateObjectDesc::RayTracingDesc rtDesc = get<StateObjectDesc::RayTracingDesc>(soDesc_.typeDesc_);
+			if (holds_alternative<StateObjectDesc::RaytracingDesc>(soDesc_.typeDesc_)) {
+				StateObjectDesc::RaytracingDesc rtDesc = get<StateObjectDesc::RaytracingDesc>(soDesc_.typeDesc_);
 
 				if (rtDesc.globalRootSig_) {
 					auto pGlobalRootSig = stateObjectDesc_.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
@@ -180,8 +170,8 @@ namespace sqrp
 					auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 					CD3DX12_SHADER_BYTECODE bcLib(raygen.shader_->GetBlob()->GetBufferPointer(), raygen.shader_->GetBlob()->GetBufferSize());
 					pLib->SetDXILLibrary(&bcLib);
-					// NOTE : �G���g������w�肵�ăR���p�C�����Ă���͂�����SetDXILLibrary�������ƃt�@�C����̃G�N�X�|�[�g���S���o�^����Ă��܂�
-					// ���񖾎����Ȃ��Ɠo�^���d�����Ă��܂�
+					// NOTE : エントリ名を指定してコンパイルしているはずだがSetDXILLibraryだけだとファイル内のエクスポートが全部登録されてしまう
+					// 毎回明示しないと登録が重複してしまう
 					pLib->DefineExport(raygen.shader_->GetEntryName().c_str());
 					rayGens.push_back(raygen.shader_->GetEntryName().c_str());
 
@@ -263,7 +253,7 @@ namespace sqrp
 			stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_EXECUTABLE);
 			auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
 			if (soDesc.stateObjectType_ == StateObjectType::WorkGraphMesh) {
-				// Graphics node��g���Ƃ��͉��̃R�����g�A�E�g��O��.
+				// Graphics nodeを使うときは下のコメントアウトを外す.
 				pSoConfig->SetFlags(D3D12_STATE_OBJECT_FLAG_WORK_GRAPHS_USE_GRAPHICS_STATE_FOR_GLOBAL_ROOT_SIGNATURE);
 			}
 
@@ -425,16 +415,17 @@ namespace sqrp
 		}
 	}
 
-	ComPtr<ID3D12StateObject> StateObject::GetStateObject() const
+	const ComPtr<ID3D12StateObject>& StateObject::GetStateObject() const
 	{
 		return stateObject_;
 	}
 
-	wstring StateObject::GetProgramName() const
+	const wstring& StateObject::GetProgramName() const
 	{
 		if (holds_alternative<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_)) {
-			StateObjectDesc::WorkGraphDesc wgDesc = get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_);
-			return wgDesc.workGraphProgramName_;
+			// **値で受けてはいけない。** ローカルのメンバへの参照を返すことになり、
+			// 関数を抜けた時点でダングリングする(warning C4172)
+			return get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_).workGraphProgramName_;
 		}
 		else {
 			throw runtime_error("Cannot get program name for raytracing pipeline !");
@@ -446,22 +437,22 @@ namespace sqrp
 		return soDesc_.stateObjectType_;
 	}
 
-	StateObjectDesc StateObject::GetStateObjectDesc() const
+	const StateObjectDesc& StateObject::GetStateObjectDesc() const
 	{
 		return soDesc_;
 	}
 
-	vector<wstring> StateObject::GetRayGens() const
+	const vector<wstring>& StateObject::GetRayGens() const
 	{
 		return rayGens;
 	}
 
-	vector<wstring> StateObject::GetMisses() const
+	const vector<wstring>& StateObject::GetMisses() const
 	{
 		return misses;
 	}
 
-	vector<wstring> StateObject::GetHitGroups() const
+	const vector<wstring>& StateObject::GetHitGroups() const
 	{
 		return hitGroups;
 	}

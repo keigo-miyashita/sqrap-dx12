@@ -21,12 +21,12 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 	sqrp::Device device_;
-	sqrp::DXC dxc_;
+	sqrp::Dxc dxc_;
 	sqrp::CommandHandle command_;
 	sqrp::SwapChainHandle swapChain_;
 	sqrp::MeshHandle sphere_;
 	// GUI
-	sqrp::GUIHandle GUI_;
+	sqrp::GuiHandle gui_;
 
 	// Scene Items
 	sqrp::Camera camera_;

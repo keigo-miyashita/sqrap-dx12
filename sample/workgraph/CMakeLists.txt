@@ -1,4 +1,4 @@
-add_executable(${PROJECT_NAME}-sample-workgraph)
+ï»¿add_executable(${PROJECT_NAME}-sample-workgraph)
 target_compile_features(${PROJECT_NAME}-sample-workgraph PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME}-sample-workgraph PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus /utf-8>)
 target_sources(${PROJECT_NAME}-sample-workgraph PRIVATE main.cpp "WorkGraphApp.cpp")
@@ -26,7 +26,7 @@ add_custom_command(TARGET ${PROJECT_NAME}-sample-workgraph POST_BUILD
   "$<TARGET_FILE_DIR:${PROJECT_NAME}-sample-workgraph>")
 
 if(MSVC)
-    # ƒŠƒŠ[ƒXƒrƒ‹ƒh‚Ìê‡‚Í WinMain ‚ğg‚¤
+    # ãƒªãƒªãƒ¼ã‚¹ãƒ“ãƒ«ãƒ‰ã®å ´åˆã¯ WinMain ã‚’ä½¿ã†
     set_target_properties(${PROJECT_NAME}-sample-workgraph PROPERTIES
         LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS"
     )
