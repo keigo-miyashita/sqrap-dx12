@@ -35,10 +35,16 @@ namespace sqrp
 		pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 		cout << "BLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
-		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_BLAS_scratch", BufferType::Unordered, (UINT)prebuildInfo.ScratchDataSizeInBytes, 1);
+		// CreateBuffer take strideSize and numElements as UINT, so we need to avoid overflow.
+		// Specifying strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT (256),
+		// scratchSize can support 256 (stride size) x UINT64_MAX (elements num) = about 1TB
+		UINT64 scratchSize = prebuildInfo.ScratchDataSizeInBytes;
+		UINT strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
+		UINT numElements = static_cast<UINT>((scratchSize + strideSize - 1) / strideSize);
+		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_BLAS_scratch", BufferType::Unordered, strideSize, numElements);
 
 		cout << "BLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-		ASBuffer_ = pDevice_->CreateAS(name_ + L"_BLAS", (UINT)prebuildInfo.ResultDataMaxSizeInBytes);
+		ASBuffer_ = pDevice_->CreateAS(name_ + L"_BLAS", prebuildInfo.ResultDataMaxSizeInBytes);
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 		buildASDesc.Inputs = buildInputs;
@@ -108,7 +114,13 @@ namespace sqrp
 		pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 		cout << "TLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
-		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_scratch", BufferType::Unordered, prebuildInfo.ScratchDataSizeInBytes, 1);
+		// CreateBuffer take strideSize and numElements as UINT, so we need to avoid overflow.
+		// Specifying strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT (256),
+		// scratchSize can support 256 (stride size) x UINT64_MAX (elements num) = about 1TB
+		UINT64 scratchSize = prebuildInfo.ScratchDataSizeInBytes;
+		UINT strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
+		UINT numElements = static_cast<UINT>((scratchSize + strideSize - 1) / strideSize);
+		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_scratch", BufferType::Unordered, strideSize, numElements);
 
 		cout << "TLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
 		ASBuffer_ = pDevice_->CreateAS(name_ + L"_TLAS", prebuildInfo.ResultDataMaxSizeInBytes);

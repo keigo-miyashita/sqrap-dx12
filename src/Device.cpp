@@ -228,7 +228,7 @@ namespace sqrp
 		}
 	}
 
-	shared_ptr<AS> Device::CreateAS(wstring name, UINT size) const
+	shared_ptr<AS> Device::CreateAS(wstring name, UINT64 size) const
 	{
 		return make_shared<AS>(*this, name, size);
 	}

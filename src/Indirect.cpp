@@ -113,7 +113,7 @@ namespace sqrp
 		return counterBuffer_;
 	}
 
-	UINT Indirect::GetCounterBufferOffset() const
+	UINT64 Indirect::GetCounterBufferOffset() const
 	{
 		return counterBuffer_->GetOffsetCounter();
 	}

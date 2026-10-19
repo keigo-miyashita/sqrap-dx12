@@ -174,7 +174,7 @@ namespace sqrp
 		}
 	}
 
-	void Command::CopyBufferRegion(const BufferHandle& srcBuffer, UINT srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT numBytes)
+	void Command::CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT64 destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT64 numBytes)
 	{
 		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
 		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {

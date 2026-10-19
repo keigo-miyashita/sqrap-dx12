@@ -60,13 +60,13 @@ namespace sqrp
 		BufferType type_;
 		UINT strideSize_ = 0;
 		UINT numElement_ = 0;
-		UINT offsetCounter_ = 0;
+		UINT64 offsetCounter_ = 0;
 
 		void CreateBuffer();
 		void CreateCounterBuffer();
 
 	public:
-		static UINT AlignForUAVCounter(UINT size);
+		static UINT64 AlignForUAVCounter(UINT64 size);
 		static UINT AlignForConstantBuffer(UINT size);
 
 		Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE);
@@ -141,7 +141,7 @@ namespace sqrp
 
 		UINT GetStrideSize() const;
 		UINT GetNumElement() const;
-		UINT GetOffsetCounter() const;
+		UINT64 GetOffsetCounter() const;
 	};
 
 	enum class TextureType
@@ -196,10 +196,10 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		UINT size_;
+		UINT64 size_;
 
 	public:
-		AS(const Device& device, std::wstring name, UINT size);
+		AS(const Device& device, std::wstring name, UINT64 size);
 		~AS() = default;
 
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;

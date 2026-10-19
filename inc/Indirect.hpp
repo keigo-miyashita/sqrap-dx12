@@ -52,6 +52,6 @@ namespace sqrp
 		UINT GetMaxCommandCount() const;
 		BufferHandle GetArgumentBuffer() const;
 		BufferHandle GetCounterBuffer() const;
-		UINT GetCounterBufferOffset() const;
+		UINT64 GetCounterBufferOffset() const;
 	};
 }

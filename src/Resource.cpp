@@ -76,7 +76,7 @@ namespace sqrp
 	void Buffer::CreateBuffer()
 	{
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
-		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(strideSize_ * numElement_, rscFlag_);
+		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(strideSize_) * numElement_, rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Buffer::CreateBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
@@ -89,9 +89,10 @@ namespace sqrp
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		initialState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		offsetCounter_ = AlignForUAVCounter(strideSize_ * numElement_);
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
-		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(AlignForUAVCounter(strideSize_ * numElement_) + sizeof(UINT), rscFlag_);
+		const UINT64 dataSize = static_cast<UINT64>(strideSize_) * numElement_;
+		offsetCounter_ = AlignForUAVCounter(dataSize);
+		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(offsetCounter_ + sizeof(UINT), rscFlag_);
 		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Buffer::CreateCounterBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
@@ -99,9 +100,9 @@ namespace sqrp
 		resource_->SetName((name_ + L"_Counter_Buffer").c_str());
 	}
 
-	UINT Buffer::AlignForUAVCounter(UINT size)
+	UINT64 Buffer::AlignForUAVCounter(UINT64 size)
 	{
-		const UINT alignment = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
+		const UINT64 alignment = D3D12_UAV_COUNTER_PLACEMENT_ALIGNMENT;
 		return (size + (alignment - 1)) & ~(alignment - 1);
 	}
 
@@ -179,7 +180,7 @@ namespace sqrp
 	{
 		void* rawPtr = this->Map();
 		if (rawPtr) {
-			memcpy(rawPtr, pData, strideSize * numElement);
+			memcpy(rawPtr, pData, static_cast<size_t>(strideSize) * numElement);
 			this->Unmap();
 		}
 		else {
@@ -264,7 +265,7 @@ namespace sqrp
 		return numElement_;
 	}
 
-	UINT Buffer::GetOffsetCounter() const
+	UINT64 Buffer::GetOffsetCounter() const
 	{
 		return offsetCounter_;
 	}
@@ -442,7 +443,7 @@ namespace sqrp
 		resource_ = resource;
 	}
 
-	AS::AS(const Device& device, wstring name, UINT size)
+	AS::AS(const Device& device, wstring name, UINT64 size)
 		: Resource(device, ResourceType::AS, name), size_(size)
 	{
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;

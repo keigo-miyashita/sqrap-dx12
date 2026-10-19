@@ -56,7 +56,7 @@ namespace sqrp
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
 		void Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers);
 		void CopyBuffer(const ResourceHandle& srcResource, D3D12_RESOURCE_STATES srcCurrentState, const ResourceHandle& destResource, D3D12_RESOURCE_STATES destCurrentState);
-		void CopyBufferRegion(const BufferHandle& srcBuffer, UINT srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT numBytes);
+		void CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT64 destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT64 numBytes);
 		void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
 		void DispatchRays(const RaytracingHandle& raytracing);
 		void DrawIndirect(const MeshHandle& mesh, const IndirectHandle& indirect, const BufferHandle& buffer, UINT maxCommandNum);

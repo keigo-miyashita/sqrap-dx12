@@ -60,7 +60,7 @@ namespace sqrp
 		void Init(std::wstring gpuVendorName);
 		void Init(std::wstring gpuVendorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 		void ShowUsedVramSize();
-		ASHandle				CreateAS(std::wstring name, UINT size) const;
+		ASHandle				CreateAS(std::wstring name, UINT64 size) const;
 		ASMeshHandle			CreateASMesh(const CommandHandle& command, std::string modelPath) const;
 		ASMeshHandle			CreateASMesh(std::wstring name, const CommandHandle& command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
 		BLASHandle				CreateBLAS(std::wstring name, const CommandHandle& command, const ASMeshHandle& mesh) const;
