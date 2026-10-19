@@ -99,7 +99,7 @@ namespace sqrp
 							else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
 								auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
 								// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-								pThisLocalSig += CopyMem(pThisLocalSig, constants.get(), sizeof(float) * constants->GetNumConstants());
+								pThisLocalSig += CopyMem(pThisLocalSig, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
 							}
 						}
 					}

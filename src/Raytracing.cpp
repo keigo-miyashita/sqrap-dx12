@@ -126,7 +126,7 @@ namespace sqrp
 						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
 							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
 							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							pThisRayGen += CopyMem(pThisRayGen, constants.get(), sizeof(float) * constants->GetNumConstants());
+							pThisRayGen += CopyMem(pThisRayGen, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
 						}
 					}
 					idRayGen++;
@@ -158,7 +158,7 @@ namespace sqrp
 						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
 							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
 							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							pThisMiss += CopyMem(pThisMiss, constants.get(), sizeof(float) * constants->GetNumConstants());
+							pThisMiss += CopyMem(pThisMiss, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
 						}
 					}
 					idMiss++;
