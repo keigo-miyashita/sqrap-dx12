@@ -489,13 +489,13 @@ namespace sqrp
 	HDRImage LoadHDR(const string& path)
 	{
 		HDRImage img;
-		float* raw = stbi_loadf(path.c_str(), &img.width, &img.height, &img.channels, 4);
+		unique_ptr<float, decltype(&stbi_image_free)> raw(stbi_loadf(path.c_str(), &img.width, &img.height, &img.channels, 4), &stbi_image_free);
 		if (!raw) {
 			throw runtime_error("[LoadHDR] stbi_loadf failed for " + path);
 		}
 		img.channels = 4;
-		img.data.assign(raw, raw + img.width * img.height * img.channels);
-		stbi_image_free(raw);
+		const size_t dataSize = static_cast<size_t>(img.width) * img.height * img.channels;
+		img.data.assign(raw.get(), raw.get() + dataSize);
 		return img;
 	}
 }
