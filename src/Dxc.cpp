@@ -103,7 +103,13 @@ namespace sqrp
 		for (const auto& opt : options) {
 			optionsPtrs.push_back(opt.c_str());
 		}
-		if (!entry.empty()) {
+		if (shaderType == ShaderType::Raytracing || shaderType == ShaderType::WorkGraph || shaderType == ShaderType::Library) {
+			if (!entry.empty()) {
+				cout << "[Dxc::CompileShader] entry is ignored for Raytracing ,WorkGraph and Library shaders. Specify entry as export of state object." << endl;
+			}
+			result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[ToInt(shaderType)].c_str(), optionsPtrs.data(), optionsPtrs.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
+		}
+		else if (!entry.empty()) {
 			result = compiler_->Compile(source.Get(), fileName.c_str(), entry.c_str(), ShaderModel[ToInt(shaderType)].c_str(), optionsPtrs.data(), optionsPtrs.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
 		}
 		else {
@@ -111,21 +117,28 @@ namespace sqrp
 		}
 		ComPtr<IDxcBlobEncoding> err;
 		if (FAILED(result)) {
-			dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
-			if (err) {
-				DebugOutputFormatString((char*)err->GetBufferPointer());
+			string errorMsg = "[Dxc::CompileShader] Compile failed\nHRESULT = " + to_string(result);
+			if (dxcResult)
+			{
+				dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
+				if (err && err->GetBufferSize() > 0) {
+					errorMsg += "\n" + string((char*)err->GetBufferPointer());
+				}
 			}
-			throw runtime_error("[Dxc::CompileShader] Compile failed\nHRESULT = " + to_string(result));
+			throw runtime_error(errorMsg);
 		}
 
 		HRESULT tmpResult;
 		dxcResult->GetStatus(&tmpResult);
 		if (FAILED(tmpResult)) {
-			dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
-			if (err) {
-				DebugOutputFormatString((char*)err->GetBufferPointer());
+			string errorMsg = "[Dxc::CompileShader] GetStatus failed\nHRESULT = " + to_string(tmpResult);
+			if (dxcResult) {
+				dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
+				if (err && err->GetBufferSize() > 0) {
+					errorMsg += "\n" + string((char*)err->GetBufferPointer());
+				}
 			}
-			throw runtime_error("[Dxc::CompileShader] GetResult failed\nHRESULT = " + to_string(result));
+			throw runtime_error(errorMsg);
 		}
 		dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
 	}
