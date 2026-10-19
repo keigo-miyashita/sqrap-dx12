@@ -78,7 +78,9 @@ namespace sqrp
 	public:
 		Application();
 		Application(std::string windowName, unsigned int windowWidth = 1280, unsigned int windowHeight = 720);
-		~Application() = default;
+		virtual ~Application();
+		Application(const Application&) = delete;
+		Application& operator=(const Application&) = delete;
 		bool ProcessInput(UINT msg, WPARAM wparam, LPARAM lparam);
 		bool Init();
 		void Run();

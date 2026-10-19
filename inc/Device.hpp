@@ -51,6 +51,7 @@ namespace sqrp
 		void InitializeStableDevice();
 		void InitializeLatestDevice();
 		bool CheckWorkGraphSupport();
+		bool CheckWorkGraphMeshNodeSupport();
 		void CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice);
 		void CreateCommandQueue();
 

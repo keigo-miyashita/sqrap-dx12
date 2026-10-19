@@ -37,7 +37,7 @@ namespace sqrp
 		cout << "BLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 		// CreateBuffer take strideSize and numElements as UINT, so we need to avoid overflow.
 		// Specifying strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT (256),
-		// scratchSize can support 256 (stride size) x UINT64_MAX (elements num) = about 1TB
+		// scratchSize can support 256 (stride size) x UINT_MAX (elements num) = about 1TB
 		UINT64 scratchSize = prebuildInfo.ScratchDataSizeInBytes;
 		UINT strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
 		UINT numElements = static_cast<UINT>((scratchSize + strideSize - 1) / strideSize);
@@ -116,7 +116,7 @@ namespace sqrp
 		cout << "TLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 		// CreateBuffer take strideSize and numElements as UINT, so we need to avoid overflow.
 		// Specifying strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT (256),
-		// scratchSize can support 256 (stride size) x UINT64_MAX (elements num) = about 1TB
+		// scratchSize can support 256 (stride size) x UINT_MAX (elements num) = about 1TB
 		UINT64 scratchSize = prebuildInfo.ScratchDataSizeInBytes;
 		UINT strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
 		UINT numElements = static_cast<UINT>((scratchSize + strideSize - 1) / strideSize);

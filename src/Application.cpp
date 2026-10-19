@@ -144,13 +144,14 @@ namespace sqrp
 	}
 
 	namespace {
-
-		Application* appPtr = nullptr;
-
 		LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			int x, y, wheelDelta;
 			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
+			if (msg == WM_NCCREATE) {
+				auto* cs = reinterpret_cast<CREATESTRUCT*>(lparam);
+				SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(cs->lpCreateParams));
+			}
 			Application* app = reinterpret_cast<Application*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 			ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam);
 
@@ -158,10 +159,13 @@ namespace sqrp
 			case WM_DESTROY:
 				PostQuitMessage(0);
 				return 0;
+			case WM_NCDESTROY:
+				SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
+				break;
 			}
 
-			if (appPtr) {
-				appPtr->ProcessInput(msg, wparam, lparam);
+			if (app) {
+				app->ProcessInput(msg, wparam, lparam);
 			}
 			return DefWindowProc(hwnd, msg, wparam, lparam);
 		}
@@ -195,26 +199,29 @@ namespace sqrp
 			nullptr,
 			nullptr,
 			windowClass_.hInstance,
-			nullptr);
+			this);
 
 		if (hwnd_ == nullptr) {
 			cerr << "[Application::CreateGameWindow] CreateWindow failed" << endl;
 		}
-
-		SetWindowLongPtr(hwnd_, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 	}
 
 	Application::Application()
 	{
-		appPtr = this;
 	}
 
 	Application::Application(string windowName, unsigned int windowWidth, unsigned int windowHeight)
 	{
-		appPtr = this;
 		windowName_ = windowName;
 		windowWidth_ = windowWidth;
 		windowHeight_ = windowHeight;
+	}
+
+	Application::~Application()
+	{
+		if (hwnd_) {
+			SetWindowLongPtr(hwnd_, GWLP_USERDATA, 0);   // 以降このウィンドウへのメッセージは app を呼ばない
+		}
 	}
 
 	bool Application::ProcessInput(UINT msg, WPARAM wparam, LPARAM lparam)

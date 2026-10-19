@@ -108,12 +108,17 @@ namespace sqrp
 				throw runtime_error("[Device::InitializeLatestDevice] QueryInterface for LatestDevice failed\nHRESULT = " + to_string(result));
 			}
 		}
+		if (CheckWorkGraphMeshNodeSupport()) {
+			HRESULT result = device_->QueryInterface(IID_PPV_ARGS(latestDevice_.ReleaseAndGetAddressOf()));
+			if (FAILED(result)) {
+				throw runtime_error("[Device::InitializeLatestDevice] QueryInterface for LatestDevice failed\nHRESULT = " + to_string(result));
+			}
+		}
 	}
 
 	bool Device::CheckWorkGraphSupport()
 	{
 		bool hasSupportWorkGraph = false;
-		bool hasSupportMeshNode = false;
 		D3D12_FEATURE_DATA_D3D12_OPTIONS21 Options;
 		HRESULT result = device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &Options, sizeof(Options));
 		if (FAILED(result)) {
@@ -125,13 +130,19 @@ namespace sqrp
 			return hasSupportWorkGraph;
 		}
 		hasSupportWorkGraph = true;
+		return hasSupportWorkGraph;
+	}
+
+	bool CheckWorkGraphMeshNodeSupport()
+	{
+		bool hasSupportMeshNode = false;
+		D3D12_FEATURE_DATA_D3D12_OPTIONS21 Options;
 		if (Options.WorkGraphsTier < D3D12_WORK_GRAPHS_TIER_1_1) {
 			cerr << "[Device::CheckWorkGraphSupport] device does not support mesh nodes of work graphs" << endl;
 			return hasSupportMeshNode;
 		}
 		hasSupportMeshNode = true;
-		cout << "Device support for work graph" << endl;
-		return hasSupportWorkGraph;
+		return hasSupportMeshNode;
 	}
 
 	void Device::CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice)
@@ -351,12 +362,18 @@ namespace sqrp
 	void Device::ExecuteCommandList(const CommandHandle& command, QueueType queueType)
 	{
 		ID3D12CommandList* cmdLists[] = { command->GetCommandList().Get() };
-		if (queueType == QueueType::Graphics) {
-			graphicsCommandQueue_->ExecuteCommandLists(1, cmdLists);
+		ID3D12CommandQueue* cmdQueue = nullptr;
+		switch (queueType) {
+		case QueueType::Graphics:
+			cmdQueue = graphicsCommandQueue_.Get();
+			break;
+		case QueueType::Compute:
+			cmdQueue = computeCommandQueue_.Get();
+			break;
+		default:
+			throw runtime_error("[Fence::WaitCommand] invalid QueueType");
 		}
-		else if (queueType == QueueType::Compute) {
-			computeCommandQueue_->ExecuteCommandLists(1, cmdLists);
-		}
+		cmdQueue->ExecuteCommandLists(1, cmdLists);
 	}
 
 	const ComPtr<IDXGIFactory7>& Device::GetDXGIFactory() const

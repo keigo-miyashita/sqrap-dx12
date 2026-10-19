@@ -22,7 +22,7 @@ namespace sqrp
 		}
 
 		if (ImGui::CreateContext() == nullptr) {
-			throw runtime_error("[Gui::InitializeGui] ImGui::CreateContext failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[Gui::InitializeGui] ImGui::CreateContext failed");
 		}
 
 		bool binResult = ImGui_ImplWin32_Init(hwnd);
