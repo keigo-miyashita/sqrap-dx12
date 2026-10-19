@@ -67,11 +67,11 @@ namespace sqrp
 			backBuffers_[i] = make_shared<Texture>();
 			ComPtr<ID3D12Resource> resource;
 			result = swapChain_->GetBuffer(i, IID_PPV_ARGS(resource.ReleaseAndGetAddressOf()));
-			backBuffers_[i]->SetResource(resource);
 			//backBuffers_[i]->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 			if (FAILED(result)) {
 				throw runtime_error("[SwapChain::CreateSwapChain] GetBuffer failed\nHRESULT = " + to_string(result));
 			}
+			backBuffers_[i]->SetResource(resource);
 			wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
 			backBuffers_[i]->SetName(nameBackBuffer.c_str());
 			rtvDesc.Format = backBuffers_[i]->GetResource()->GetDesc().Format;
