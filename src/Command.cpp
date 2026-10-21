@@ -19,13 +19,18 @@ namespace sqrp
 {
 	void Command::CreateCommandList()
 	{
-		HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator_.ReleaseAndGetAddressOf()));
-		if (FAILED(result)) {
-			throw runtime_error("[Command::CreateCommandList] CreateCommandAllocator failed\nHRESULT = " + to_string(result));
+		for (UINT i = 0; i < frameCount_; i++)
+		{
+			ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
+			HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator.ReleaseAndGetAddressOf()));
+			if (FAILED(result)) {
+				throw runtime_error("[Command::CreateCommandList] CreateCommandAllocator failed\nHRESULT = " + to_string(result));
+			}
+			wstring cmdAllocName = L"CommandAllocator";
+			commandAllocator->SetName((cmdAllocName + name_ + to_wstring(i)).c_str());
+			commandAllocators_.push_back(commandAllocator);
 		}
-		wstring cmdAllocName = L"CommandAllocator";
-		commandAllocator_->SetName((cmdAllocName + name_).c_str());
-		result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocator_.Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
+		HRESULT result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocators_[0].Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Command::CreateCommandList] CreateCommandList failed\nHRESULT = " + to_string(result));
 		}
@@ -51,25 +56,37 @@ namespace sqrp
 		latestCommandList_->SetName((L"LatestCommandList" + name_).c_str());
 	}
 
-	Command::Command(const Device& device, wstring name, D3D12_COMMAND_LIST_TYPE commandType)
-		: pDevice_(&device), commandType_(commandType), name_(name)
+	Command::Command(const Device& device, wstring name, D3D12_COMMAND_LIST_TYPE commandType, UINT frameCount)
+		: pDevice_(&device), name_(name), commandType_(commandType), frameCount_(frameCount)
 	{
+		switch (commandType_) {
+			case D3D12_COMMAND_LIST_TYPE_DIRECT:
+				queueType_ = QueueType::Graphics;
+				break;
+			case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+				queueType_ = QueueType::Compute;
+				break;
+			default:
+				throw runtime_error("[Command::Command] unsupported command list type");
+		}
+
+		if (frameCount_ == 0) {
+			throw runtime_error("[Command::Command] frameCount must be greater than 0");
+		}
+
 		CreateCommandList();
 
 		InitializeStableCommandList();
 
 		InitializeLatestCommandList();
 
-		fence_ = pDevice_->CreateFence(name);
+		fenceValues_.resize(frameCount_, 0);
 	}
 
 	void Command::BeginRender(const SwapChainHandle& swapChain)
 	{
-		if (fence_->GetFenceVal() > 0) {
-			fence_->WaitSignal();
-			commandList_->Close(); // open状態(WaitCommand後)でも closed状態でも安全にResetできる
-			commandAllocator_->Reset();
-			commandList_->Reset(commandAllocator_.Get(), nullptr);
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::EndRender] EndRender can only be called on a graphics command list");
 		}
 
 		auto bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
@@ -99,22 +116,16 @@ namespace sqrp
 
 	void Command::EndRender(const SwapChainHandle& swapChain)
 	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::EndRender] EndRender can only be called on a graphics command list");
+		}
+
 		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 		commandList_->ResourceBarrier(1, &barrier);
 
-		Close();
-
-		ID3D12CommandList* cmdLists[] = { commandList_.Get() };
-		pDevice_->GetGraphicsCommandQueue()->ExecuteCommandLists(1, cmdLists);
-
-		fence_->Signal(QueueType::Graphics);
+		Submit();
 
 		swapChain->GetSwapChain()->Present(1, 0);
-
-		// 次フレームのUpdate()/Compute()記録のためにリストを再オープン
-		fence_->WaitSignal();
-		commandAllocator_->Reset();
-		commandList_->Reset(commandAllocator_.Get(), nullptr);
 	}
 
 	void Command::AddDrawIndexed(const MeshBaseHandle& mesh, UINT numInstances)
@@ -252,12 +263,6 @@ namespace sqrp
 				0
 			);
 		}
-	}
-
-	void Command::Reset()
-	{
-		commandAllocator_->Reset();
-		commandList_->Reset(commandAllocator_.Get(), nullptr);
 	}
 
 	void Command::Close()
@@ -421,9 +426,31 @@ namespace sqrp
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
 	}
 
-	bool Command::WaitCommand(QueueType queueType)
+	SyncPoint Command::Submit()
 	{
-		return fence_->WaitCommand(*this, queueType);
+		Close();
+
+		ID3D12CommandList* cmdLists[] = { commandList_.Get() };
+		pDevice_->GetCommandQueue(queueType_)->ExecuteCommandLists(1, cmdLists);
+
+		FenceHandle fence = pDevice_->GetFence(queueType_);
+		const UINT64 fenceVal = fence->Signal();
+		fenceValues_[frameIndex_] = fenceVal;
+
+		frameIndex_ = (frameIndex_ + 1) % frameCount_;
+		fence->WaitSignal(fenceValues_[frameIndex_]);
+
+		pDevice_->ReleaseCompleted();
+
+		commandAllocators_[frameIndex_]->Reset();
+		commandList_->Reset(commandAllocators_[frameIndex_].Get(), nullptr);
+
+		return { queueType_, fenceVal };
+	}
+
+	void Command::WaitCommand()
+	{
+		pDevice_->WaitOnCPU(Submit());
 	}
 
 	void Command::InitDataToBuffer(const BufferHandle& buffer, void* pData, UINT strideSize, UINT numElement)
@@ -481,14 +508,9 @@ namespace sqrp
 		WaitCommand();
 	}
 
-	D3D12_COMMAND_LIST_TYPE Command::GetCommandType()
+	const ComPtr<ID3D12CommandAllocator>& Command::GetCurrentCommandAllocator() const
 	{
-		return commandType_;
-	}
-
-	const ComPtr<ID3D12CommandAllocator>& Command::GetCommandAllocator() const
-	{
-		return commandAllocator_;
+		return commandAllocators_[frameIndex_];
 	}
 
 	const ComPtr<ID3D12GraphicsCommandList>& Command::GetCommandList() const
@@ -506,8 +528,18 @@ namespace sqrp
 		return latestCommandList_;
 	}
 
-	Fence& Command::GetFence()
+	QueueType Command::GetQueueType() const
 	{
-		return *fence_;
+		return queueType_;
+	}
+
+	UINT Command::GetFrameIndex() const
+	{
+		return frameIndex_;
+	}
+
+	UINT Command::GetFrameCount() const
+	{
+		return frameCount_;
 	}
 }

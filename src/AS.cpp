@@ -138,7 +138,7 @@ namespace sqrp
 	}
 
 	TLAS::TLAS(const Device& device, wstring name, const CommandHandle& command, const vector<TLASDesc>& tlasDescs)
-		: pDevice_(&device), tlasDescs_(tlasDescs), name_(name)
+		: pDevice_(&device), name_(name), tlasDescs_(tlasDescs)
 	{
 		CreateTLAS(command);
 	}

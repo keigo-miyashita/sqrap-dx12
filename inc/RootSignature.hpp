@@ -50,7 +50,8 @@ namespace sqrp
 
 	public:
 		RootSignature(const Device& device, std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams);
-		~RootSignature() = default;
+		RootSignature(const RootSignature&) = delete;
+		RootSignature& operator=(const RootSignature&) = delete;
 		const ComPtr<ID3D12RootSignature>& GetRootSignature() const;
 		UINT GetSize() const;
 		const std::vector<CD3DX12_ROOT_PARAMETER1>& GetRootParameters() const;
@@ -73,7 +74,8 @@ namespace sqrp
 
 	public:
 		ResourceSet(const RootSignatureHandle& rootSignature, const std::vector<ResourceSetDesc>& resourceSetDescs);
-		~ResourceSet() = default;
+		ResourceSet(const ResourceSet&) = delete;
+		ResourceSet& operator=(const ResourceSet&) = delete;
 
 		RootSignatureHandle GetRootSignature() const;
 		const std::vector<ResourceSetDesc>& GetResourceSetDescs() const;

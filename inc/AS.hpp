@@ -30,7 +30,8 @@ namespace sqrp
 	public:
 
 		BLAS(const Device& device, std::wstring name, const CommandHandle& command, const ASMeshHandle& mesh);
-		~BLAS() = default;
+		BLAS(const BLAS&) = delete;
+		BLAS& operator=(const BLAS&) = delete;
 
 		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 	};
@@ -60,7 +61,8 @@ namespace sqrp
 	public:
 
 		TLAS(const Device& device, std::wstring name, const CommandHandle& command, const std::vector<TLASDesc>& tlasDescs);
-		~TLAS() = default;
+		TLAS(const TLAS&) = delete;
+		TLAS& operator=(const TLAS&) = delete;
 		ASHandle GetASBuffer() const;
 		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
 	};

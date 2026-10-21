@@ -23,20 +23,25 @@ namespace sqrp
 		swapChainDesc1.SampleDesc.Count = 1;
 		swapChainDesc1.SampleDesc.Quality = 0;
 		swapChainDesc1.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc1.BufferCount = 2;
+		swapChainDesc1.BufferCount = bufferCount_;
 		swapChainDesc1.Scaling = DXGI_SCALING_STRETCH;
 		swapChainDesc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 		swapChainDesc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-		HRESULT result = pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pDevice_->GetGraphicsCommandQueue().Get(),
+		ComPtr<IDXGISwapChain1> swapChain1 = nullptr;
+		HRESULT result = pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pDevice_->GetCommandQueue(QueueType::Graphics).Get(),
 			hwnd,
 			&swapChainDesc1,
 			nullptr,
 			nullptr,
-			(IDXGISwapChain1**)swapChain_.ReleaseAndGetAddressOf());
+			swapChain1.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
 			throw runtime_error("[SwapChain::CreateSwapChain] CreateSwapChainForHwnd failed\nHRESULT = " + to_string(result));
+		}
+		result = swapChain1.As(&swapChain_);
+		if (FAILED(result)) {
+			throw runtime_error("[SwapChain::CreateSwapChain] As for IDXGISwapChain4 failed\nHRESULT = " + to_string(result));
 		}
 
 		result = swapChain_->GetDesc1(&swapChainDesc1);
@@ -120,51 +125,13 @@ namespace sqrp
 		pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
-	SwapChain::SwapChain(const Device& device, wstring name, const CommandHandle& command, const HWND& hwnd, SIZE winSize)
-		: pDevice_(&device), pCommand_(command), name_(name)
+	SwapChain::SwapChain(const Device& device, wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount)
+		: pDevice_(&device), name_(name), bufferCount_(bufferCount)
 	{
 
 		CreateSwapChain(hwnd, winSize);
 
 		CreateDepthStencilBuffer(winSize);
-	}
-
-	void SwapChain::BeginRender()
-	{
-		auto bbIdx = swapChain_->GetCurrentBackBufferIndex();
-
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-		pCommand_->GetCommandList()->ResourceBarrier(1, &barrier);
-
-		auto rtvHandle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
-		rtvHandle.ptr += bbIdx * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		auto dsvHandle = dsvHeap_->GetCPUDescriptorHandleForHeapStart();
-		pCommand_->GetCommandList()->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-
-		// Clear depth buffer
-		pCommand_->GetCommandList()->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-		// Clear display
-		float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-		pCommand_->GetCommandList()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-
-		// Set viewport and scissors
-		pCommand_->GetCommandList()->RSSetViewports(1, &viewport_);
-		pCommand_->GetCommandList()->RSSetScissorRects(1, &scissorsRect_);
-	}
-
-	void SwapChain::EndRender()
-	{
-		auto bbIdx = swapChain_->GetCurrentBackBufferIndex();
-
-		// Transit render target to present
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-		pCommand_->GetCommandList()->ResourceBarrier(1, &barrier);
-
-		pCommand_->WaitCommand();
-
-		swapChain_->Present(1, 0);
 	}
 
 	const ComPtr<IDXGISwapChain4>& SwapChain::GetSwapChain() const

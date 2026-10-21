@@ -58,7 +58,8 @@ namespace sqrp
 
 	public:
 		GraphicsPipeline(const Device& device, std::wstring name, const GraphicsDesc& desc);
-		~GraphicsPipeline() = default;
+		GraphicsPipeline(const GraphicsPipeline&) = delete;
+		GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
 		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
@@ -92,7 +93,8 @@ namespace sqrp
 
 	public:
 		MeshPipeline(const Device& device, std::wstring name, const MeshDesc& desc);
-		~MeshPipeline() = default;
+		MeshPipeline(const MeshPipeline&) = delete;
+		MeshPipeline& operator=(const MeshPipeline&) = delete;
 		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
@@ -115,7 +117,8 @@ namespace sqrp
 
 	public:
 		ComputePipeline(const Device& device, std::wstring name, const ComputeDesc& desc);
-		~ComputePipeline() = default;
+		ComputePipeline(const ComputePipeline&) = delete;
+		ComputePipeline& operator=(const ComputePipeline&) = delete;
 		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
@@ -231,7 +234,8 @@ namespace sqrp
 
 	public:
 		StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc);
-		~StateObject() = default;
+		StateObject(const StateObject&) = delete;
+		StateObject& operator=(const StateObject&) = delete;
 		const ComPtr<ID3D12StateObject>& GetStateObject() const;
 		const std::wstring& GetProgramName() const;
 		StateObjectType GetStateObjectType() const;

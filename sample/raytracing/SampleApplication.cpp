@@ -21,7 +21,7 @@ bool SampleApplication::OnStart()
 	command_ = device_.CreateCommand(L"General");
 
 	SIZE size = { GetWindowWidth(), GetWindowHeight() };
-	swapChain_ = device_.CreateSwapChain(L"Main", command_, GetWindowHWND(), size);
+	swapChain_ = device_.CreateSwapChain(L"Main", GetWindowHWND(), size);
 
 	// ASMesh
 	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";

@@ -7,7 +7,7 @@ file(GLOB_RECURSE WRAPPER_SOURCES "src/*.cpp")
 file(GLOB_RECURSE WRAPPER_HEADERS "inc/*.hpp")
 
 # hpp, cppファイルのまま扱うためのターゲット設定
-add_library(${PROJECT_NAME} ${WRAPPER_SOURCES} "src/Compiler.cpp" "src/ThreadPool.cpp")
+add_library(${PROJECT_NAME} ${WRAPPER_SOURCES})
 
 # 必要なパッケージが存在することを確認
 find_package(directx12-agility CONFIG REQUIRED)

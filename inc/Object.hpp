@@ -29,7 +29,6 @@ namespace sqrp
 			DirectX::XMFLOAT4 quotRotation = {0.0f, 0.0f, 0.0f, 0.0f},
 			float scale = 1.0f
 		);
-		~Object() = default;
 
 		DirectX::XMMATRIX GetModelMat() const;
 		DirectX::XMMATRIX GetInvTransMat() const;

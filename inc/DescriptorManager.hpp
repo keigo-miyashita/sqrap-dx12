@@ -63,7 +63,8 @@ namespace sqrp
 
 	public:
 		DescriptorManager(const Device& pDevice, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-		~DescriptorManager() = default;
+		DescriptorManager(const DescriptorManager&) = delete;
+		DescriptorManager& operator=(const DescriptorManager&) = delete;
 		const ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() const;
 		HeapType GetHeapType() const;
 		UINT GetNumDescRanges() const;

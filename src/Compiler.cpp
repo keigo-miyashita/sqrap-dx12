@@ -13,8 +13,8 @@ namespace sqrp
 	{
 		workerDxcs_.reserve(numThreads);
 		for (int i = 0; i < numThreads; i++) {
-			workerDxcs_.emplace_back();
-			workerDxcs_[i].Init();
+			workerDxcs_.emplace_back(make_unique<Dxc>());
+			workerDxcs_[i]->Init();
 		}
 		compileTP_ = make_unique<ThreadPool>(numThreads);
 	}
@@ -28,7 +28,7 @@ namespace sqrp
 	{
 		auto task = [this, &shader, shaderType, fileName, entry, additionalOption, includePath]()
 			{
-				shader = workerDxcs_[ThreadPool::CurrentWorkerIndex()].CreateShader(shaderType, fileName, entry, additionalOption, includePath);
+				shader = workerDxcs_[ThreadPool::CurrentWorkerIndex()]->CreateShader(shaderType, fileName, entry, additionalOption, includePath);
 
 			};
 		compileTP_->Push(task);

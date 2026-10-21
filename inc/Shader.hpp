@@ -26,7 +26,8 @@ namespace sqrp
 		// エントリ数が多いと起動が数十秒になる(実測: 35本で約70秒)。
 		// ソースが同じなら結果は毎回同じなのでキャッシュが素直に効く
 		Shader(const Dxc& dxc, ShaderType shaderType, ComPtr<IDxcBlob> blob, const std::wstring& entry);
-		~Shader() = default;
+		Shader(const Shader&) = delete;
+		Shader& operator=(const Shader&) = delete;
 		const ComPtr<IDxcBlob>& GetBlob() const;
 		const std::wstring& GetEntryName() const;
 	};

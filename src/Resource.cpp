@@ -12,7 +12,7 @@ using namespace DirectX;
 namespace sqrp
 {
 	Resource::Resource(const Device& device, ResourceType rscType, wstring name)
-		: pDevice_(&device), rscType_(rscType), name_(name)
+		: pDevice_(&device), name_(name), rscType_(rscType)
 	{
 
 	}
@@ -271,7 +271,7 @@ namespace sqrp
 	}
 
 	Texture::Texture(const Device& device, wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels)
-		: Resource(device, ResourceType::Texture, name), format_(format), texDim_(texDim), type_(type), strideSize_(strideSize), width_(width), height_(height), depth_(depth), mipLevels_(mipLevels)
+		: Resource(device, ResourceType::Texture, name), type_(type), texDim_(texDim), strideSize_(strideSize), width_(width), height_(height), depth_(depth), mipLevels_(mipLevels), format_(format)
 	{
 		if (type_ == TextureType::Default) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;

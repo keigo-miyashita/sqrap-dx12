@@ -49,7 +49,6 @@ namespace sqrp
 
 	public:
 		Camera() = default;
-		~Camera() = default;
 
 		bool Init(
 			float aspectRatio,

@@ -51,6 +51,8 @@ namespace sqrp
 		MeshBase(const Device& device, const CommandHandle& command, std::wstring name = L"");
 		MeshBase() = default;
 		virtual ~MeshBase() = default;
+		MeshBase(const MeshBase&) = delete;
+		MeshBase& operator=(const MeshBase&) = delete;
 
 		void UpdateVBView(UINT numVertices);
 		void UpdateIBView(UINT numIndices);
@@ -76,7 +78,6 @@ namespace sqrp
 		Mesh(const Device& device, std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 		// For writable mesh
 		Mesh(const Device& device, std::wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum);
-		~Mesh() = default;
 	};
 
 	// For detailed glTF mesh (keeps per-node transforms and per-primitive ranges)
@@ -110,7 +111,6 @@ namespace sqrp
 
 	public:
 		GLTFMesh(const Device& device, const CommandHandle& command, std::string modelPath);
-		~GLTFMesh() = default;
 
 		using MeshBase::GetNumIndices;   // keep total-count overload visible
 
@@ -146,7 +146,8 @@ namespace sqrp
 	public:
 		ASMesh(const Device& device, const CommandHandle& command, std::string modelPath);
 		ASMesh(const Device& device, std::wstring name, const CommandHandle& command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices);
-		~ASMesh() = default;
+		ASMesh(const ASMesh&) = delete;
+		ASMesh& operator=(const ASMesh&) = delete;
 		BufferHandle GetVertexBuffer() const;
 		D3D12_VERTEX_BUFFER_VIEW GetVBView() const;
 		const D3D12_VERTEX_BUFFER_VIEW* GetVBViewPtr() const;

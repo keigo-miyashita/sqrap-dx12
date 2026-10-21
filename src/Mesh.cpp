@@ -501,7 +501,7 @@ namespace sqrp
 	}
 
 	ASMesh::ASMesh(const Device& device, wstring name, const CommandHandle& command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices)
-		: pDevice_(&device), ASVertices_(ASVertices), indices_(indices), name_(name)
+		: pDevice_(&device), name_(name), ASVertices_(ASVertices), indices_(indices)
 	{
 		CreateVertexBuffer(command);
 		CreateIndexBuffer(command);

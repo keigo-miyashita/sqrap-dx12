@@ -17,20 +17,22 @@ namespace sqrp
 		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12Fence> fence_ = nullptr;
-		UINT64 fenceVal_ = 0;
+		std::atomic<UINT64> fenceVal_ = 0;
 		HANDLE hEvent_ = nullptr;
+		QueueType queueType_ = QueueType::Graphics;
 
 	public:
-		Fence(const Device& device, std::wstring name = L"");
+		Fence(const Device& device, QueueType queueType, std::wstring name = L"");
 		~Fence();
 		Fence(const Fence&) = delete;
 		Fence& operator=(const Fence&) = delete;
-		bool WaitCommand(Command& command, QueueType queueType = QueueType::Graphics);
-		bool Signal(QueueType queueType = QueueType::Graphics);
+		UINT64 Signal();
 		void WaitSignal(); // Stop CPU until GPU reaches the fence value.
+		void WaitSignal(UINT64 fenceVal); // Stop CPU until GPU reaches the fence value.
 		bool CheckSignal();// Query the fence value (CPU does not stop)
 
 		const ComPtr<ID3D12Fence>& GetFence() const;
 		UINT64 GetFenceVal() const;
+		QueueType GetQueueType() const;
 	};
 }

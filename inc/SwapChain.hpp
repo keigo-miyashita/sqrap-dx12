@@ -18,7 +18,6 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		CommandHandle pCommand_;
 
 		ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 		std::vector<TextureHandle> backBuffers_;
@@ -29,15 +28,15 @@ namespace sqrp
 		D3D12_VIEWPORT viewport_ = {};
 		D3D12_RECT scissorsRect_ = {};
 		std::wstring name_;
+		UINT bufferCount_ = 2;
 		void CreateSwapChain(const HWND& hwnd, SIZE winSize);
 		void CreateDepthStencilBuffer(SIZE winSize);
 
 	public:
-		SwapChain(const Device& device, std::wstring name, const CommandHandle& command, const HWND& hwnd, SIZE winSize);
-		~SwapChain() = default;
+		SwapChain(const Device& device, std::wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount = 2);
+		SwapChain(const SwapChain&) = delete;
+		SwapChain& operator=(const SwapChain&) = delete;
 
-		void BeginRender();
-		void EndRender();
 		const ComPtr<IDXGISwapChain4>& GetSwapChain() const;
 		TextureHandle GetCurrentBackBuffer() const;
 		const ComPtr<ID3D12DescriptorHeap>& GetRtvHeap() const;

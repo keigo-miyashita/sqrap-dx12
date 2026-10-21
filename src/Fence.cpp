@@ -9,7 +9,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Fence::Fence(const Device& device, wstring name) : pDevice_(&device), name_(name)
+	Fence::Fence(const Device& device, QueueType queueType, std::wstring name) : pDevice_(&device), name_(name), queueType_(queueType)
 	{
 		HRESULT result = pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
@@ -28,71 +28,41 @@ namespace sqrp
 		CloseHandle(hEvent_);
 	}
 
-	bool Fence::WaitCommand(Command& command, QueueType queueType)
+	UINT64 Fence::Signal()
 	{
-		command.GetCommandList()->Close();
+		ID3D12CommandQueue* queue = nullptr;
+		queue = pDevice_->GetCommandQueue(queueType_).Get();
 
-		ID3D12CommandList* cmdLists[] = { command.GetCommandList().Get() };
-		ID3D12CommandQueue* cmdQueue = nullptr;
-		switch (queueType) {
-			case QueueType::Graphics:
-				cmdQueue = pDevice_->GetGraphicsCommandQueue().Get();
-				break;
-			case QueueType::Compute:
-				cmdQueue = pDevice_->GetComputeCommandQueue().Get();
-				break;
-			default:
-				throw runtime_error("[Fence::WaitCommand] invalid QueueType");
-		}
-		cmdQueue->ExecuteCommandLists(1, cmdLists);
-		HRESULT result = cmdQueue->Signal(fence_.Get(), ++fenceVal_);
-		if (FAILED(result)) {
-			throw runtime_error("[Fence::WaitCommand] Signal failed\nHRESULT = " + to_string(result));
-		}
-
-		if (fence_->GetCompletedValue() < fenceVal_) {
-			fence_->SetEventOnCompletion(fenceVal_, hEvent_);
-			WaitForSingleObject(hEvent_, INFINITE);
-		}
-
-		command.GetCommandAllocator()->Reset();
-		command.GetCommandList()->Reset(command.GetCommandAllocator().Get(), nullptr);
-
-		return true;
-	}
-
-	bool Fence::Signal(QueueType queueType)
-	{
-		ID3D12CommandQueue* cmdQueue = nullptr;
-		switch (queueType) {
-		case QueueType::Graphics:
-			cmdQueue = pDevice_->GetGraphicsCommandQueue().Get();
-			break;
-		case QueueType::Compute:
-			cmdQueue = pDevice_->GetComputeCommandQueue().Get();
-			break;
-		default:
-			throw runtime_error("[Fence::Signal] invalid QueueType");
-		}
-		HRESULT result = cmdQueue->Signal(fence_.Get(), ++fenceVal_);
+		// fenceVal is atomic, so write and read at the same time
+		// so var = ++fenceVal_
+		const UINT64 val = ++fenceVal_;
+		HRESULT result = queue->Signal(fence_.Get(), val);
 		if (FAILED(result)) {
 			throw runtime_error("[Fence::Signal] Signal failed\nHRESULT = " + to_string(result));
 		}
-		return true;
+		return val;
 	}
+
 	void Fence::WaitSignal()
 	{
-		if (fence_->GetCompletedValue() < fenceVal_) {
-			fence_->SetEventOnCompletion(fenceVal_, hEvent_);
+		const UINT64 targetVal = fenceVal_.load();
+		if (fence_->GetCompletedValue() < targetVal) {
+			fence_->SetEventOnCompletion(targetVal, hEvent_);
+			WaitForSingleObject(hEvent_, INFINITE);
+		}
+	}
+
+	void Fence::WaitSignal(UINT64 fenceVal)
+	{
+		if (fence_->GetCompletedValue() < fenceVal) {
+			fence_->SetEventOnCompletion(fenceVal, hEvent_);
 			WaitForSingleObject(hEvent_, INFINITE);
 		}
 	}
 
 	bool Fence::CheckSignal()
 	{
-		auto completedVal = fence_->GetCompletedValue();
-
-		return !(completedVal < fenceVal_);
+		return !(fence_->GetCompletedValue() < fenceVal_.load());
 	}
 
 	const ComPtr<ID3D12Fence>& Fence::GetFence() const
@@ -102,6 +72,11 @@ namespace sqrp
 
 	UINT64 Fence::GetFenceVal() const
 	{
-		return fenceVal_;
+		return fenceVal_.load();
+	}
+
+	QueueType Fence::GetQueueType() const
+	{
+		return queueType_;
 	}
 }

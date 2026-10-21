@@ -20,7 +20,7 @@ namespace sqrp
 	private:
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
-		std::vector<Dxc> workerDxcs_;
+		std::vector<std::unique_ptr<Dxc>> workerDxcs_;
 		std::unique_ptr<ThreadPool> compileTP_ = nullptr;
 
 	public:

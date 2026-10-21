@@ -17,7 +17,7 @@ namespace sqrp
 		UINT maxCommandCount,
 		const BufferHandle& argumentBuffer,
 		const BufferHandle& counterBuffer
-	) : pDevice_(&device), maxCommandCount_(maxCommandCount), argumentBuffer_(argumentBuffer), counterBuffer_(counterBuffer), name_(name)
+	) : pDevice_(&device), name_(name), maxCommandCount_(maxCommandCount), argumentBuffer_(argumentBuffer), counterBuffer_(counterBuffer)
 	{
 		for (auto indirectDesc : indirectDescs) {
 			D3D12_INDIRECT_ARGUMENT_DESC desc = {};

@@ -9,7 +9,7 @@ using namespace DirectX;
 namespace sqrp
 {
 	RootSignature::RootSignature(const Device& device, wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams)
-		: pDevice_(&device), rootParams_(rootParams), flag_(flag), name_(name)
+		: pDevice_(&device), flag_(flag), rootParams_(rootParams), name_(name)
 	{
 		for (auto rootParam_ : rootParams) {
 			CD3DX12_ROOT_PARAMETER1 rp;

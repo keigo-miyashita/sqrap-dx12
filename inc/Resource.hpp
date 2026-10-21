@@ -30,6 +30,8 @@ namespace sqrp
 		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
 		Resource() = default;
 		virtual ~Resource() = default;
+		Resource(const Resource&) = delete;
+		Resource& operator=(const Resource&) = delete;
 
 		virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
 		virtual void CreateSRV(DescriptorManager& descManager, UINT viewOffset) = 0;
@@ -70,7 +72,6 @@ namespace sqrp
 		static UINT AlignForConstantBuffer(UINT size);
 
 		Buffer(const Device& device, std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE);
-		~Buffer() = default;
 
 		void* Map(UINT subresource = 0, D3D12_RANGE* range = nullptr);
 		void Unmap();
@@ -172,7 +173,6 @@ namespace sqrp
 	public:
 		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1);
 		Texture() = default;
-		~Texture() = default;
 		void* Map();
 		void Unmap();
 		void Reset();
@@ -200,7 +200,6 @@ namespace sqrp
 
 	public:
 		AS(const Device& device, std::wstring name, UINT64 size);
-		~AS() = default;
 
 		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
 	};
@@ -216,7 +215,6 @@ namespace sqrp
 
 	public:
 		Constants(void* constants, UINT numConstants);
-		~Constants() = default;
 
 		void* GetConstants() const;
 		UINT GetNumConstants() const;

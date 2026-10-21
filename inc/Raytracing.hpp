@@ -31,7 +31,8 @@ namespace sqrp
 		static UINT AlignForSBT(UINT size);
 		static UINT CopyMem(void* dest, const void* data, UINT size);
 		Raytracing(const Device& device, std::wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth);
-		~Raytracing() = default;
+		Raytracing(const Raytracing&) = delete;
+		Raytracing& operator=(const Raytracing&) = delete;
 
 		D3D12_DISPATCH_RAYS_DESC GetDispatchRayDesc() const;
 	};

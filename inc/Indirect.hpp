@@ -47,7 +47,8 @@ namespace sqrp
 			const BufferHandle& argumentBuffer = nullptr,
 			const BufferHandle& counterBuffer = nullptr
 		);
-		~Indirect() = default;
+		Indirect(const Indirect&) = delete;
+		Indirect& operator=(const Indirect&) = delete;
 		const ComPtr<ID3D12CommandSignature>& GetCommandSignature() const;
 		UINT GetMaxCommandCount() const;
 		BufferHandle GetArgumentBuffer() const;

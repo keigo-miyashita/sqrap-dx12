@@ -178,6 +178,31 @@ namespace sqrp
 		computeCommandQueue_->SetName(L"ComputeCommandQueue");
 	}
 
+	template<typename T>
+	void Device::DeferredReleaser(T* p) const
+	{
+		const UINT64 graphicsFenceVal = graphicsFence_->GetFenceVal() + 1;
+		const UINT64 computeFenceVal = computeFence_->GetFenceVal() + (hasComputeCommand_ ? 1 : 0);
+		deferredRelease_->Push(graphicsFenceVal, computeFenceVal, p);
+	}
+
+	Device::~Device()
+	{
+		if (graphicsFence_) {
+			graphicsFence_->Signal();
+			graphicsFence_->WaitSignal();
+		}
+
+		if (computeFence_) {
+			computeFence_->Signal();
+			computeFence_->WaitSignal();
+		}
+
+		if (deferredRelease_) {
+			deferredRelease_->ReleaseAll();
+		}
+	}
+
 	void Device::Init(wstring gpuVendorName)
 	{
 #ifdef _DEBUG
@@ -194,6 +219,11 @@ namespace sqrp
 		InitializeLatestDevice();
 
 		CreateCommandQueue();
+
+		graphicsFence_ = CreateFence(QueueType::Graphics, L"GraphicsFence");
+		computeFence_ = CreateFence(QueueType::Compute, L"ComputeFence");
+
+		deferredRelease_ = make_unique<DeferredRelease>();
 	}
 
 	void Device::Init(wstring gpuVendorName, ComPtr<ID3D12DebugDevice>& debugDevice)
@@ -217,6 +247,11 @@ namespace sqrp
 #endif // _DEBUG
 
 		CreateCommandQueue();
+
+		graphicsFence_ = CreateFence(QueueType::Graphics, L"GraphicsFence");
+		computeFence_ = CreateFence(QueueType::Compute, L"ComputeFence");
+
+		deferredRelease_ = make_unique<DeferredRelease>();
 	}
 
 	void Device::ShowUsedVramSize()
@@ -239,54 +274,68 @@ namespace sqrp
 		}
 	}
 
+	// GPU のオブジェクトを持つものは、参照が 0 になってもすぐには消さず、GPU が使い終わるまで deferredRelease_ に預ける。
+	// Fence（Device 自身のフェンスもこれで作る）と Gui（ImGui のグローバルな後始末をする）は対象外
 	shared_ptr<AS> Device::CreateAS(wstring name, UINT64 size) const
 	{
-		return make_shared<AS>(*this, name, size);
+		return shared_ptr<AS>(new AS(*this, name, size),
+			[this](AS* p) { DeferredReleaser(p); });
 	}
 
 	ASMeshHandle Device::CreateASMesh(const CommandHandle& command, string modelPath) const
 	{
-		return make_shared<ASMesh>(*this, command, modelPath);
+		return shared_ptr<ASMesh>(new ASMesh(*this, command, modelPath),
+			[this](ASMesh* p) { DeferredReleaser(p); });
 	}
 
 	ASMeshHandle Device::CreateASMesh(wstring name, const CommandHandle& command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices) const
 	{
-		return make_shared<ASMesh>(*this, name, command, ASVertices, indices);
+		return shared_ptr<ASMesh>(new ASMesh(*this, name, command, ASVertices, indices),
+			[this](ASMesh* p) { DeferredReleaser(p); });
 	}
 
 	BLASHandle Device::CreateBLAS(wstring name, const CommandHandle& command, const ASMeshHandle& mesh) const
 	{
-		return make_shared<BLAS>(*this, name, command, mesh);
+		return shared_ptr<BLAS>(new BLAS(*this, name, command, mesh),
+			[this](BLAS* p) { DeferredReleaser(p); });
 	}
 
 	BufferHandle Device::CreateBuffer(wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag) const
 	{
-		return make_shared<Buffer>(*this, name, type, strideSize, numElement, resourceFlag);
+		return BufferHandle(new Buffer(*this, name, type, strideSize, numElement, resourceFlag),
+			[this](Buffer* p) { DeferredReleaser(p); });
 	}
 
-	CommandHandle Device::CreateCommand(wstring name, D3D12_COMMAND_LIST_TYPE commandType) const
+	CommandHandle Device::CreateCommand(wstring name, D3D12_COMMAND_LIST_TYPE commandType, UINT frameCount) const
 	{
-		return make_shared<Command>(*this, name, commandType);
+		if (commandType == D3D12_COMMAND_LIST_TYPE_COMPUTE) {
+			hasComputeCommand_.store(true);
+		}
+		return shared_ptr<Command>(new Command(*this, name, commandType, frameCount),
+			[this](Command* p) { DeferredReleaser(p); });
 	}
 
 	ComputePipelineHandle Device::CreateComputePipeline(wstring name, const ComputeDesc& desc) const
 	{
-		return make_shared<ComputePipeline>(*this, name, desc);
+		return shared_ptr<ComputePipeline>(new ComputePipeline(*this, name, desc),
+			[this](ComputePipeline* p) { DeferredReleaser(p); });
 	}
 
 	DescriptorManagerHandle Device::CreateDescriptorManager(wstring name, HeapType heapType, initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags) const
 	{
-		return make_shared<DescriptorManager>(*this, name, heapType, descManagerDesc, flags);
+		return shared_ptr<DescriptorManager>(new DescriptorManager(*this, name, heapType, descManagerDesc, flags),
+			[this](DescriptorManager* p) { DeferredReleaser(p); });
 	}
-
-	FenceHandle Device::CreateFence(wstring name) const
+	
+	FenceHandle Device::CreateFence(QueueType queueType, wstring name) const
 	{
-		return make_shared<Fence>(*this, name);
+		return make_shared<Fence>(*this, queueType, name);
 	}
 
 	GraphicsPipelineHandle Device::CreateGraphicsPipeline(wstring name, const GraphicsDesc& desc) const
 	{
-		return make_shared<GraphicsPipeline>(*this, name, desc);
+		return shared_ptr<GraphicsPipeline>(new GraphicsPipeline(*this, name, desc),
+			[this](GraphicsPipeline* p) { DeferredReleaser(p); });
 	}
 
 	GuiHandle Device::CreateGui(const HWND& hwnd) const
@@ -296,84 +345,94 @@ namespace sqrp
 
 	IndirectHandle Device::CreateIndirect(wstring name, initializer_list<IndirectDesc> indirectDescs, const RootSignatureHandle& rootSignature, UINT byteStride, UINT maxCommandCount, const BufferHandle& argumentBuffer, const BufferHandle& counterBuffer) const
 	{
-		return make_shared<Indirect>(*this, name, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer);
+		return shared_ptr<Indirect>(new Indirect(*this, name, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer),
+			[this](Indirect* p) { DeferredReleaser(p); });
 	}
 
 	MeshHandle Device::CreateMesh(const CommandHandle& command, string modelPath) const
 	{
-		return make_shared<Mesh>(*this, command, modelPath);
+		return shared_ptr<Mesh>(new Mesh(*this, command, modelPath),
+			[this](Mesh* p) { DeferredReleaser(p); });
 	}
 
 	GLTFMeshHandle Device::CreateGLTFMesh(const CommandHandle& command, string modelPath) const
 	{
-		return make_shared<GLTFMesh>(*this, command, modelPath);
+		return shared_ptr<GLTFMesh>(new GLTFMesh(*this, command, modelPath),
+			[this](GLTFMesh* p) { DeferredReleaser(p); });
 	}
 
 	MeshHandle Device::CreateMesh(wstring name, const CommandHandle& command, const vector<Vertex>& vertices, const vector<uint32_t>& indices) const
 	{
-		return make_shared<Mesh>(*this, name, command, vertices, indices);
+		return shared_ptr<Mesh>(new Mesh(*this, name, command, vertices, indices),
+			[this](Mesh* p) { DeferredReleaser(p); });
 	}
 
 	MeshHandle Device::CreateMesh(wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum) const
 	{
-		return make_shared<Mesh>(*this, name, command, verticesNum, indicesNum);
+		return shared_ptr<Mesh>(new Mesh(*this, name, command, verticesNum, indicesNum),
+			[this](Mesh* p) { DeferredReleaser(p); });
 	}
 
 	MeshPipelineHandle Device::CreateMeshPipeline(wstring name, const MeshDesc& desc) const
 	{
-		return make_shared<MeshPipeline>(*this, name, desc);
+		return shared_ptr<MeshPipeline>(new MeshPipeline(*this, name, desc),
+			[this](MeshPipeline* p) { DeferredReleaser(p); });
 	}
 
 	RaytracingHandle Device::CreateRaytracing(wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const
 	{
-		return make_shared<Raytracing>(*this, name, stateObject, width, height, depth);
+		return shared_ptr<Raytracing>(new Raytracing(*this, name, stateObject, width, height, depth),
+			[this](Raytracing* p) { DeferredReleaser(p); });
 	}
 
 	RootSignatureHandle Device::CreateRootSignature(wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams) const
 	{
-		return make_shared<RootSignature>(*this, name, flag, rootParams);
+		return shared_ptr<RootSignature>(new RootSignature(*this, name, flag, rootParams),
+			[this](RootSignature* p) { DeferredReleaser(p); });
 	}
 
 	StateObjectHandle Device::CreateStateObject(wstring name, const StateObjectDesc soDesc) const
 	{
-		return make_shared<StateObject>(*this, name, soDesc);
+		return shared_ptr<StateObject>(new StateObject(*this, name, soDesc),
+			[this](StateObject* p) { DeferredReleaser(p); });
 	}
 
-	SwapChainHandle Device::CreateSwapChain(wstring name, const CommandHandle& command, const HWND& hwnd, SIZE winSize) const
+	SwapChainHandle Device::CreateSwapChain(wstring name, const HWND& hwnd, SIZE winSize) const
 	{
-		return make_shared<SwapChain>(*this, name, command, hwnd, winSize);
+		return shared_ptr<SwapChain>(new SwapChain(*this, name, hwnd, winSize),
+			[this](SwapChain* p) { DeferredReleaser(p); });
 	}
 
 	TextureHandle Device::CreateTexture(wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels) const
 	{
-		return make_shared<Texture>(*this, name, texDim, type, strideSize, format, width, height, depth, mipLevels);
+		return shared_ptr<Texture>(new Texture(*this, name, texDim, type, strideSize, format, width, height, depth, mipLevels),
+			[this](Texture* p) { DeferredReleaser(p); });
 	}
 
 	TLASHandle Device::CreateTLAS(wstring name, const CommandHandle& command, const vector<TLASDesc>& tlasDescs) const
 	{
-		return make_shared<TLAS>(*this, name, command, tlasDescs);
+		return shared_ptr<TLAS>(new TLAS(*this, name, command, tlasDescs),
+			[this](TLAS* p) { DeferredReleaser(p); });
 	}
 
 	WorkGraphHandle Device::CreateWorkGraph(wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords, UINT maxNodeInputs) const
 	{
-		return make_shared<WorkGraph>(*this, name, stateObject, maxInputRecords, maxNodeInputs);
+		return shared_ptr<WorkGraph>(new WorkGraph(*this, name, stateObject, maxInputRecords, maxNodeInputs),
+			[this](WorkGraph* p) { DeferredReleaser(p); });
 	}
 
-	void Device::ExecuteCommandList(const CommandHandle& command, QueueType queueType)
+	void Device::ReleaseCompleted() const
 	{
-		ID3D12CommandList* cmdLists[] = { command->GetCommandList().Get() };
-		ID3D12CommandQueue* cmdQueue = nullptr;
-		switch (queueType) {
-		case QueueType::Graphics:
-			cmdQueue = graphicsCommandQueue_.Get();
-			break;
-		case QueueType::Compute:
-			cmdQueue = computeCommandQueue_.Get();
-			break;
-		default:
-			throw runtime_error("[Fence::WaitCommand] invalid QueueType");
-		}
-		cmdQueue->ExecuteCommandLists(1, cmdLists);
+		deferredRelease_->ReleaseCompleted(
+			graphicsFence_->GetFence()->GetCompletedValue(),
+			computeFence_->GetFence()->GetCompletedValue()
+		);
+	}
+
+	void Device::WaitOnCPU(const SyncPoint& syncPoint) const
+	{
+		GetFence(syncPoint.queueType)->WaitSignal(syncPoint.fenceVal);
+		ReleaseCompleted();
 	}
 
 	const ComPtr<IDXGIFactory7>& Device::GetDXGIFactory() const
@@ -396,13 +455,29 @@ namespace sqrp
 		return latestDevice_;
 	}
 
-	const ComPtr<ID3D12CommandQueue>& Device::GetGraphicsCommandQueue() const
+	const ComPtr<ID3D12CommandQueue>& Device::GetCommandQueue(QueueType queueType) const
 	{
-		return graphicsCommandQueue_;
+		if (queueType == QueueType::Graphics) {
+			return graphicsCommandQueue_;
+		}
+		else if (queueType == QueueType::Compute) {
+			return computeCommandQueue_;
+		}
+		else {
+			throw runtime_error("[Device::GetCommandQueue] invalid QueueType");
+		}
 	}
 
-	const ComPtr<ID3D12CommandQueue>& Device::GetComputeCommandQueue() const
+	FenceHandle Device::GetFence(QueueType queueType) const
 	{
-		return computeCommandQueue_;
+		if (queueType == QueueType::Graphics) {
+			return graphicsFence_;
+		}
+		else if (queueType == QueueType::Compute) {
+			return computeFence_;
+		}
+		else {
+			throw runtime_error("[Device::GetFence] invalid QueueType");
+		}
 	}
 }

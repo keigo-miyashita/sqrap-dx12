@@ -41,7 +41,7 @@ namespace sqrp
 	}
 
 	DescriptorManager::DescriptorManager(const Device& device, wstring name, HeapType heapType, initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags)
-		: pDevice_(&device), heapType_(heapType), name_(name)
+		: pDevice_(&device), name_(name), heapType_(heapType)
 	{
 		numDescriptor_ = static_cast<UINT>(descManagerDesc.size());
 

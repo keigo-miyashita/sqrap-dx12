@@ -9,19 +9,35 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	static const std::wstring ShaderModel[] = {
-		L"vs_6_6",
-		L"ps_6_6",
-		L"gs_6_6",
-		L"ds_6_6",
-		L"hs_6_6",
-		L"as_6_6",
-		L"ms_6_6",
-		L"cs_6_8",
-		L"lib_6_3",
-		L"lib_6_9",
-		L"lib_6_9"
-	};
+	static wstring GetShaderModel(ShaderType shaderType)
+	{
+		switch (shaderType) {
+			case ShaderType::Vertex:
+				return L"vs_6_6";
+			case ShaderType::Pixel:
+				return L"ps_6_6";
+			case ShaderType::Geometry:
+				return L"gs_6_6";
+			case ShaderType::Domain:
+				return L"ds_6_6";
+			case ShaderType::Hull:
+				return L"hs_6_6";
+			case ShaderType::Amplification:
+				return L"as_6_6";
+			case ShaderType::Mesh:
+				return L"ms_6_6";
+			case ShaderType::Compute:
+				return L"cs_6_8";
+			case ShaderType::Raytracing:
+				return L"lib_6_3";
+			case ShaderType::WorkGraph:
+				return L"lib_6_9";
+			case ShaderType::Library:
+				return L"lib_6_9";
+			default:
+				throw runtime_error("[GetShaderModel] invalid shader type");
+		}
+	}
 
 	void Dxc::InitializeDxc()
 	{
@@ -66,81 +82,79 @@ namespace sqrp
 			}
 		}
 
-		vector<std::wstring> options;
-		if (!additionalOption.empty()) {
-			for (int i = 0; i < additionalOption.size(); i++) {
-				options.push_back(additionalOption[i]);
+		vector<wstring> args;
+		args.push_back(fileName);
+		args.push_back(L"-T");
+		args.push_back(GetShaderModel(shaderType));
+		if (shaderType == ShaderType::Raytracing || shaderType == ShaderType::WorkGraph || shaderType == ShaderType::Library) {
+			if (!entry.empty()) {
+				cout << "[Dxc::CompileShader] entry is ignored for Raytracing, WorkGraph and Library shaders. Specify entry as export of state object." << endl;
 			}
 		}
+		else if (!entry.empty()) {
+			args.push_back(L"-E");
+			args.push_back(entry);
+		}
+		for (const auto& opt : additionalOption) {
+			args.push_back(opt);
+		}
+
 		// Extract only the file name from the full path
 		wosyncstream wss(wcout);
 		wstring shaderName = fileName.substr(fileName.find_last_of(L"/\\") + 1);
-		wss << shaderName << L" [" << ShaderModel[ToInt(shaderType)] << L"] " << entry;
+		wss << shaderName << L" [" << GetShaderModel(shaderType) << L"] " << entry;
 #ifdef _DEBUG
-		options.push_back(L"-Zi");
-		options.push_back(L"-Fd");
-		wstring erasedExtension = fileName;
-		size_t pos = erasedExtension.find(L'.');
-		if (pos != wstring::npos) {
-			erasedExtension.erase(pos);
-		}
-		options.push_back(erasedExtension + L".pdb");
+		args.push_back(L"-Zi");
+		//args.push_back(L"-Fd");
+		args.push_back(L"-Qembed_debug");
 		wss << L" generate gdb";
 #endif // DEBUG
 		wss << endl;
+
 		if (shaderType == ShaderType::WorkGraph) {
-			options.push_back(L"-select-validator internal");
+			args.push_back(L"-select-validator");
+			args.push_back(L"internal");
 		}
+
 		ComPtr<IDxcBlobEncoding> source = nullptr;
-		result = library_->CreateBlobFromFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf());
+		result = utils_->LoadFile(fileName.c_str(), nullptr, source.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
-			throw runtime_error("[Dxc::CompileShader] CreateBlobFromFile failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[Dxc::CompileShader] LoadFile failed\nHRESULT = " + to_string(result));
+		}
+		BOOL knowEncoding = FALSE;
+		UINT32 codePage = DXC_CP_ACP;
+		source->GetEncoding(&knowEncoding, &codePage);
+
+		DxcBuffer sourceBuffer = {};
+		sourceBuffer.Ptr = source->GetBufferPointer();
+		sourceBuffer.Size = source->GetBufferSize();
+		sourceBuffer.Encoding = codePage;
+
+		vector<const wchar_t*> argPtrs;
+		argPtrs.reserve(args.size());
+		for (const auto& arg : args) {
+			argPtrs.push_back(arg.c_str());
 		}
 
-		ComPtr<IDxcOperationResult> dxcResult = nullptr;
-		std::vector<const wchar_t*> optionsPtrs;
-		optionsPtrs.reserve(options.size());
-		for (const auto& opt : options) {
-			optionsPtrs.push_back(opt.c_str());
-		}
-		if (shaderType == ShaderType::Raytracing || shaderType == ShaderType::WorkGraph || shaderType == ShaderType::Library) {
-			if (!entry.empty()) {
-				cout << "[Dxc::CompileShader] entry is ignored for Raytracing ,WorkGraph and Library shaders. Specify entry as export of state object." << endl;
-			}
-			result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[ToInt(shaderType)].c_str(), optionsPtrs.data(), optionsPtrs.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
-		}
-		else if (!entry.empty()) {
-			result = compiler_->Compile(source.Get(), fileName.c_str(), entry.c_str(), ShaderModel[ToInt(shaderType)].c_str(), optionsPtrs.data(), optionsPtrs.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
-		}
-		else {
-			result = compiler_->Compile(source.Get(), fileName.c_str(), nullptr, ShaderModel[ToInt(shaderType)].c_str(), optionsPtrs.data(), optionsPtrs.size(), nullptr, 0, incHandler.Get(), dxcResult.ReleaseAndGetAddressOf());
-		}
-		ComPtr<IDxcBlobEncoding> err;
+		ComPtr<IDxcResult> dxcResult = nullptr;
+		result = compiler_->Compile(&sourceBuffer, argPtrs.data(), static_cast<UINT32>(argPtrs.size()), incHandler.Get(), IID_PPV_ARGS(dxcResult.ReleaseAndGetAddressOf()));
+
 		if (FAILED(result)) {
-			string errorMsg = "[Dxc::CompileShader] Compile failed\nHRESULT = " + to_string(result);
-			if (dxcResult)
-			{
-				dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
-				if (err && err->GetBufferSize() > 0) {
-					errorMsg += "\n" + string((char*)err->GetBufferPointer());
-				}
+			throw runtime_error("[Dxc::CompileShader] Compile failed\nHRESULT = " + to_string(result));
+		}
+
+		HRESULT status = S_OK;
+		dxcResult->GetStatus(&status);
+		if (FAILED(status)) {
+			string errorMsg = "[Dxc::CompileShader] GetStatus failed\nHRESULT = " + to_string(status);
+			ComPtr<IDxcBlobUtf8> errors = nullptr;
+			dxcResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errors.ReleaseAndGetAddressOf()), nullptr);
+			if (errors && errors->GetStringLength() > 0) {
+				errorMsg += "\n" + string(errors->GetStringPointer(), errors->GetStringLength());
 			}
 			throw runtime_error(errorMsg);
 		}
-
-		HRESULT tmpResult;
-		dxcResult->GetStatus(&tmpResult);
-		if (FAILED(tmpResult)) {
-			string errorMsg = "[Dxc::CompileShader] GetStatus failed\nHRESULT = " + to_string(tmpResult);
-			if (dxcResult) {
-				dxcResult->GetErrorBuffer(err.ReleaseAndGetAddressOf());
-				if (err && err->GetBufferSize() > 0) {
-					errorMsg += "\n" + string((char*)err->GetBufferPointer());
-				}
-			}
-			throw runtime_error(errorMsg);
-		}
-		dxcResult->GetResult(shaderBlob.ReleaseAndGetAddressOf());
+		dxcResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(shaderBlob.ReleaseAndGetAddressOf()), nullptr);
 	}
 
 	shared_ptr<Shader> Dxc::CreateShader(ShaderType shaderType, const wstring& fileName, const wstring& entry, vector<std::wstring> additionalOption, const wstring& includePath) const
@@ -148,7 +162,7 @@ namespace sqrp
 		return make_shared<Shader>(*this, shaderType, fileName, entry, additionalOption, includePath);
 	}
 
-	const ComPtr<IDxcCompiler>& Dxc::GetCompiler() const
+	const ComPtr<IDxcCompiler3>& Dxc::GetCompiler() const
 	{
 		return compiler_;
 	}
