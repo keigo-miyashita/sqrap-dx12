@@ -5,6 +5,21 @@ using namespace std;
 using namespace DirectX;
 using namespace sqrp;
 
+namespace {
+// GUI で選ぶ色は「画面に出す値」（sRGB で符号化された値）なので、GPU の計算に使う前に線形に直す。
+// バックバッファの RTV は sRGB なので、出口で1回だけ符号化される。アルファは変換しない
+float SrgbToLinear(float c)
+{
+	return (c <= 0.04045f) ? c / 12.92f : std::pow((c + 0.055f) / 1.055f, 2.4f);
+}
+Color SrgbToLinear(const Color& c)
+{
+	return { XMFLOAT4(SrgbToLinear(c.color.x), SrgbToLinear(c.color.y), SrgbToLinear(c.color.z), c.color.w) };
+}
+// ルート定数は記録時にこのポインタから読まれるので、線形に直した diffuseColor_ をここに置く
+Color gpuDiffuseColor;
+}
+
 WorkGraphApp::WorkGraphApp(std::string windowName, unsigned int window_width, unsigned int window_height) : Application(windowName, window_width, window_height)
 {
 
@@ -51,6 +66,7 @@ bool WorkGraphApp::OnStart()
 	sphere0Buffer_->Write(sphere0_);
 
 	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
+	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
 	// Shaders
 	wstring shaderPath = wstring(SHADER_DIR) + L"WorkGraph.hlsl";
@@ -75,7 +91,7 @@ bool WorkGraphApp::OnStart()
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
 			{RootParamType::DescTable,	sphere0DescManager_},
-			{RootParamType::Constant,	DirectRootParamDesc{3, 4, (void*)(&diffuseColor_)}},
+			{RootParamType::Constant,	DirectRootParamDesc{3, 4, (void*)(&gpuDiffuseColor)}},
 		}
 		);
 
@@ -108,6 +124,7 @@ void WorkGraphApp::OnUpdate()
 
 	camera_.Update();
 	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
+	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
 	D3D12_SET_PROGRAM_DESC pgDesc;
 	pgDesc.Type = D3D12_PROGRAM_TYPE_WORK_GRAPH;
@@ -145,7 +162,7 @@ void WorkGraphApp::OnUpdate()
 		ImGui::SameLine();
 		ImGui::ColorEdit4("##SurfaceColor", (float*)&diffuseColor_);
 		gui_->EndCommand();
-		command_->DrawGui(gui_);
+		command_->DrawGui(gui_, swapChain_);
 	}
 
 	command_->EndRender(swapChain_);

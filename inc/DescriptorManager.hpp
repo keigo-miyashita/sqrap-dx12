@@ -24,8 +24,8 @@ namespace sqrp
 	struct DescriptorManagerDesc
 	{
 		ResourceHandle resource_;
-		ViewType type_;
-		UINT numReg_;
+		ViewType type_ = ViewType::NONE;
+		UINT numReg_ = 0;
 		bool isCounter_ = false;
 		D3D12_SAMPLER_DESC samplerDesc_ = {};
 		UINT mipSlice_ = 0;        // UAV用：書き込み対象のmip
@@ -40,7 +40,7 @@ namespace sqrp
 		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
-		HeapType heapType_;
+		HeapType heapType_ = HeapType::Resource;
 		ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
 		UINT viewOffset_ = 0;
 		UINT numDescriptor_ = 0;

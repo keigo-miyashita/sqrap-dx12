@@ -29,7 +29,7 @@ namespace sqrp
 
 	struct RootParameter
 	{
-		RootParamType rootParamType_;
+		RootParamType rootParamType_ = RootParamType::DescTable;
 		std::variant<DescriptorManagerHandle, DirectRootParamDesc> rootParamDesc_;
 		D3D12_SHADER_VISIBILITY shaderVisibility_ = D3D12_SHADER_VISIBILITY_ALL;
 	};

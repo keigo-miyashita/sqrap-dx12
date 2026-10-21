@@ -38,6 +38,23 @@ StructuredBuffer<uint> suzanneMeshIndex : register(t2); // TLAS
 
 RWTexture2D<float4> Output : register(u0);  // 出力バッファ
 
+// 画面で見て選んだ色（sRGB で符号化された値）を、シェーダの計算に使う線形の値に直す。
+float3 SrgbToLinear(float3 c)
+{
+    const float3 lo = c / 12.92f;
+    const float3 hi = pow((c + 0.055f) / 1.055f, 2.4f);
+    return lerp(hi, lo, step(c, 0.04045f));   // c <= 0.04045 なら lo
+}
+
+// 線形の値を画面に出す値（sRGB で符号化された値）に直す。
+// Output は UNORM で、バックバッファへは RTV を通らずコピーされるので、ここで1回だけ符号化する
+float3 LinearToSrgb(float3 c)
+{
+    const float3 lo = c * 12.92f;
+    const float3 hi = 1.055f * pow(c, 1.0f / 2.4f) - 0.055f;
+    return lerp(hi, lo, step(c, 0.0031308f));   // c <= 0.0031308 なら lo
+}
+
 [shader("raygeneration")]
 void rayGeneration()
 {
@@ -78,7 +95,7 @@ void rayGeneration()
     // hit groupが増えたときに気にする
     TraceRay(SceneBVH, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
 
-    Output[dispatchID] = float4(payload.color, 1.0f);
+    Output[dispatchID] = float4(LinearToSrgb(payload.color), 1.0f);
     //Output[dispatchID] = float4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
@@ -112,5 +129,5 @@ void closestHit(inout Payload payload, in BuiltInTriangleIntersectionAttributes 
 [shader("miss")]
 void miss(inout Payload payload)
 {
-    payload.color = float3(0.5f, 0.5f, 0.5f);
+    payload.color = SrgbToLinear(float3(0.5f, 0.5f, 0.5f));
 }

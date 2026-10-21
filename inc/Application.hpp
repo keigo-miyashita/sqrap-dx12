@@ -6,8 +6,8 @@ namespace sqrp
 {
 	struct MousePosition
 	{
-		int x;
-		int y;
+		int x = 0;
+		int y = 0;
 	};
 
 	class Input
@@ -35,6 +35,7 @@ namespace sqrp
 			return m;
 		}();
 		static inline int wheel_ = 0;
+		static inline int deltaWheel_ = 0;
 		static inline bool isPushedLButton_ = false;
 		static inline bool isPushedRButton_ = false;
 		static inline MousePosition pushedMousePos_;

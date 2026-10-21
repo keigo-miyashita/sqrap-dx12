@@ -18,15 +18,15 @@ namespace sqrp
 	{
 	private:
 		MeshHandle mesh_;
-		DirectX::XMFLOAT4 position_;
-		DirectX::XMFLOAT4 quotRotation_;
-		float scale_;
+		DirectX::XMFLOAT4 position_ = {0.0f, 0.0f, 0.0f, 1.0f};
+		DirectX::XMFLOAT4 quotRotation_ = { 0.0f, 0.0f, 0.0f, 1.0f };
+		float scale_ = 1.0f;
 
 	public:
 		Object(
 			const MeshHandle& mesh,
 			DirectX::XMFLOAT4 position = {0.0f, 0.0f, 0.0f, 1.0f},
-			DirectX::XMFLOAT4 quotRotation = {0.0f, 0.0f, 0.0f, 0.0f},
+			DirectX::XMFLOAT4 quotRotation = {0.0f, 0.0f, 0.0f, 1.0f},
 			float scale = 1.0f
 		);
 

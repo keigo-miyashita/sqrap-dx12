@@ -22,7 +22,11 @@ namespace sqrp
 		ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 		std::vector<TextureHandle> backBuffers_;
 		ComPtr<ID3D12DescriptorHeap> rtvHeap_ = nullptr;
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_ = {};
+		// RTV はバックバッファ1枚につき2つ。ヒープの先頭 N 個が sRGB（場面の描画用。書くときに
+		// 線形 -> sRGB に符号化する）、後ろの N 個が UNORM（ImGui 用。ImGui の色は画面に出す値
+		// そのものなので、符号化すると白っぽくなる）
+		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles_ = {};
+		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> unormRtvHandles_ = {};
 		ComPtr<ID3D12Resource> depthStencilBuffer_ = nullptr;
 		ComPtr<ID3D12DescriptorHeap> dsvHeap_ = nullptr;
 		D3D12_VIEWPORT viewport_ = {};
@@ -44,6 +48,7 @@ namespace sqrp
 		D3D12_RECT GetRect() const;
 		const ComPtr<ID3D12Resource>& GetDepthStencilBuffer() const;
 		const ComPtr<ID3D12DescriptorHeap>& GetDsvHeap() const;
-
+		D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle(UINT bufferIndex) const;
+		D3D12_CPU_DESCRIPTOR_HANDLE GetUnormRtvHandle(UINT bufferIndex) const;
 	};
 }

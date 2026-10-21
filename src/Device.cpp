@@ -50,7 +50,9 @@ namespace sqrp
 	void Device::CreateDXDevice(wstring gpuVendorName)
 	{
 		UINT flagsDXGI = 0;
+#ifdef _DEBUG
 		flagsDXGI |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
 		auto result = CreateDXGIFactory2(flagsDXGI, IID_PPV_ARGS(dxgiFactory_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Device::CreateDXDevice] CreateDXGIFactory2 failed\nHRESULT = " + to_string(result));
@@ -134,11 +136,11 @@ namespace sqrp
 		D3D12_FEATURE_DATA_D3D12_OPTIONS21 Options;
 		HRESULT result = device_->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS21, &Options, sizeof(Options));
 		if (FAILED(result)) {
-			cerr << "[Device::CheckWorkGraphSupport] CheckFeatureSupport failed\nHRESULT = " + to_string(result) << endl;
+			cerr << "[Device::CheckWorkGraphMeshNodeSupport] CheckFeatureSupport failed\nHRESULT = " + to_string(result) << endl;
 			return false;
 		}
 		if (Options.WorkGraphsTier < D3D12_WORK_GRAPHS_TIER_1_1) {
-			cerr << "[Device::CheckWorkGraphSupport] device does not support mesh nodes of work graphs" << endl;
+			cerr << "[Device::CheckWorkGraphMeshNodeSupport] device does not support mesh nodes of work graphs" << endl;
 			return hasSupportMeshNode;
 		}
 		hasSupportMeshNode = true;
@@ -397,9 +399,9 @@ namespace sqrp
 			[this](StateObject* p) { DeferredReleaser(p); });
 	}
 
-	SwapChainHandle Device::CreateSwapChain(wstring name, const HWND& hwnd, SIZE winSize) const
+	SwapChainHandle Device::CreateSwapChain(wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount) const
 	{
-		return shared_ptr<SwapChain>(new SwapChain(*this, name, hwnd, winSize),
+		return shared_ptr<SwapChain>(new SwapChain(*this, name, hwnd, winSize, bufferCount),
 			[this](SwapChain* p) { DeferredReleaser(p); });
 	}
 

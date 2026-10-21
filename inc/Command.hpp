@@ -35,7 +35,7 @@ namespace sqrp
 
 		const Device* pDevice_ = nullptr;
 		std::wstring name_;
-		D3D12_COMMAND_LIST_TYPE commandType_;
+		D3D12_COMMAND_LIST_TYPE commandType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		QueueType queueType_ = QueueType::Graphics;
 		std::vector<ComPtr<ID3D12CommandAllocator>> commandAllocators_;
 		ComPtr<ID3D12GraphicsCommandList> commandList_ = nullptr;
@@ -66,7 +66,7 @@ namespace sqrp
 		void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
 		void DispatchRays(const RaytracingHandle& raytracing);
 		void DrawIndirect(const MeshHandle& mesh, const IndirectHandle& indirect, const BufferHandle& buffer, UINT maxCommandNum);
-		void DrawGui(const GuiHandle& gui);
+		void DrawGui(const GuiHandle& gui, const SwapChainHandle& swapChain);
 		void ExecuteIndirect(const IndirectHandle& indirect);
 		void SetMesh(const MeshBaseHandle& mesh);
 		void SetComputeResource(const RootSignatureHandle& computeRootSig);

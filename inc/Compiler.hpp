@@ -22,6 +22,7 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 		std::vector<std::unique_ptr<Dxc>> workerDxcs_;
 		std::unique_ptr<ThreadPool> compileTP_ = nullptr;
+		CompilerType compilerType_ = CompilerType::Dxc;
 
 	public:
 		Compiler() = delete;

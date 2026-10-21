@@ -35,7 +35,7 @@ namespace sqrp
 		DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
 		D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBStripCutValue_ = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM };
+		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
 		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
 
 		GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts = DEFAULT_INPUT_LAYOUT);
@@ -75,7 +75,7 @@ namespace sqrp
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 		DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM };
+		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
 		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
 
 		MeshDesc() = default;
@@ -143,7 +143,7 @@ namespace sqrp
 		struct ShaderExportDesc
 		{
 			ShaderHandle shader_;
-			ShaderStage shaderStage_;
+			ShaderStage shaderStage_ = ShaderStage::RayGen;
 			ResourceSetHandle localResourceSet_;
 		};
 
@@ -153,7 +153,7 @@ namespace sqrp
 			struct HitGroupShaderExportDesc
 			{
 				ShaderHandle shader_;
-				ShaderStage shaderStage_;
+				ShaderStage shaderStage_ = ShaderStage::RayGen;
 			};
 
 			std::wstring groupName_;
@@ -166,7 +166,7 @@ namespace sqrp
 		// Ray tracing config
 		struct RayConfigDesc
 		{
-			UINT payloadSize_;
+			UINT payloadSize_ = 0;
 			UINT attributeSize_ = 1;
 			UINT rayDepth_ = 1;
 		};
@@ -186,7 +186,7 @@ namespace sqrp
 		// WorkGraphDesc 側の既定値を上書きする
 		struct ProgramDesc
 		{
-			NodeType nodeType_;
+			NodeType nodeType_ = NodeType::Compute;
 			std::wstring programName_;
 			std::vector<ShaderHandle> shaders_;
 			ResourceSetHandle resourceSet_;
@@ -207,11 +207,11 @@ namespace sqrp
 			D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 			D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 			D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM };
+			std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
 			DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
 		};
 
-		StateObjectType stateObjectType_;
+		StateObjectType stateObjectType_ = StateObjectType::Raytracing;
 		std::variant<RaytracingDesc, WorkGraphDesc> typeDesc_;
 	};
 
@@ -230,7 +230,7 @@ namespace sqrp
 		std::vector<std::wstring> misses;
 		std::vector<std::wstring> hitGroups;
 		std::wstring programName_;
-		StateObjectType stateObjectType_;
+		StateObjectType stateObjectType_ = StateObjectType::Raytracing;
 
 	public:
 		StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc);

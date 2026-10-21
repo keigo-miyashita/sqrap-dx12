@@ -38,10 +38,10 @@ namespace sqrp
 
 	struct TLASDesc
 	{
-		DirectX::XMMATRIX transform_;
+		DirectX::XMMATRIX transform_ = DirectX::XMMatrixIdentity();
 		UINT instanceMask_ = 0xff;
 		BLASHandle blas_;
-		D3D12_RAYTRACING_INSTANCE_FLAGS flags_;
+		D3D12_RAYTRACING_INSTANCE_FLAGS flags_ = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 	};
 
 	class TLAS

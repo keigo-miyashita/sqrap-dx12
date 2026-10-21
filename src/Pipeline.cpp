@@ -69,6 +69,9 @@ namespace sqrp
 		graphicsPSDesc.DSVFormat = desc.dsvFormat_;
 		graphicsPSDesc.IBStripCutValue = desc.IBStripCutValue_;
 		graphicsPSDesc.PrimitiveTopologyType = desc.primitiveType_;
+		if (desc.RTVFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
+			throw runtime_error("[GraphicsPipeline::GraphicsPipeline] RTVFormats_ size exceeds the maximum limit of 8");
+		}
 		graphicsPSDesc.NumRenderTargets = desc.RTVFormats_.size();
 		for (int i = 0; i < desc.RTVFormats_.size(); i++) {
 			graphicsPSDesc.RTVFormats[i] = desc.RTVFormats_[i];
@@ -108,6 +111,9 @@ namespace sqrp
 		meshPSDesc.DepthStencilState = desc.depthStencilDesc_;
 		meshPSDesc.DSVFormat = desc.dsvFormat_;
 		meshPSDesc.PrimitiveTopologyType = desc.primitiveType_;
+		if (desc.RTVFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
+			throw runtime_error("[MeshPipeline::MeshPipeline] RTVFormats_ size exceeds the maximum limit of 8");
+		}
 		meshPSDesc.NumRenderTargets = desc.RTVFormats_.size();
 		for (int i = 0; i < desc.RTVFormats_.size(); i++) {
 			meshPSDesc.RTVFormats[i] = desc.RTVFormats_[i];
@@ -203,19 +209,21 @@ namespace sqrp
 				}
 
 				for (auto hitGroup : rtDesc.hitGroups_) {
-					auto pLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
-					CD3DX12_SHADER_BYTECODE closesthitBcLib(hitGroup.closesthit_.shader_->GetBlob()->GetBufferPointer(), hitGroup.closesthit_.shader_->GetBlob()->GetBufferSize());
-					pLib->SetDXILLibrary(&closesthitBcLib);
-					pLib->DefineExport(hitGroup.closesthit_.shader_->GetEntryName().c_str());
+					auto pClosestLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+					CD3DX12_SHADER_BYTECODE closestBcLib(hitGroup.closesthit_.shader_->GetBlob()->GetBufferPointer(), hitGroup.closesthit_.shader_->GetBlob()->GetBufferSize());
+					pClosestLib->SetDXILLibrary(&closestBcLib);
+					pClosestLib->DefineExport(hitGroup.closesthit_.shader_->GetEntryName().c_str());
 					if (hitGroup.anyhit_.shader_) {
-						CD3DX12_SHADER_BYTECODE anyhitBcLib(hitGroup.anyhit_.shader_->GetBlob()->GetBufferPointer(), hitGroup.anyhit_.shader_->GetBlob()->GetBufferSize());
-						pLib->SetDXILLibrary(&anyhitBcLib);
-						pLib->DefineExport(hitGroup.anyhit_.shader_->GetEntryName().c_str());
+						auto pAnyLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
+						CD3DX12_SHADER_BYTECODE anyBcLib(hitGroup.anyhit_.shader_->GetBlob()->GetBufferPointer(), hitGroup.anyhit_.shader_->GetBlob()->GetBufferSize());
+						pAnyLib->SetDXILLibrary(&anyBcLib);
+						pAnyLib->DefineExport(hitGroup.anyhit_.shader_->GetEntryName().c_str());
 					}
 					if (hitGroup.intersection_.shader_) {
+						auto pItsLib = stateObjectDesc_.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 						CD3DX12_SHADER_BYTECODE intersectionBcLib(hitGroup.intersection_.shader_->GetBlob()->GetBufferPointer(), hitGroup.intersection_.shader_->GetBlob()->GetBufferSize());
-						pLib->SetDXILLibrary(&intersectionBcLib);
-						pLib->DefineExport(hitGroup.intersection_.shader_->GetEntryName().c_str());
+						pItsLib->SetDXILLibrary(&intersectionBcLib);
+						pItsLib->DefineExport(hitGroup.intersection_.shader_->GetEntryName().c_str());
 					}
 
 					auto pHitGroup = stateObjectDesc_.CreateSubobject<CD3DX12_HIT_GROUP_SUBOBJECT>();
@@ -289,6 +297,9 @@ namespace sqrp
 
 					auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
 					pRTFormats->SetNumRenderTargets(static_cast<UINT>(wgDesc.RTVFormats_.size()));
+					if (wgDesc.RTVFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
+						throw runtime_error("[StateObject::StateObject] RTVFormats_ size exceeds the maximum limit of 8");
+					}
 					for (UINT i = 0; i < wgDesc.RTVFormats_.size(); i++) {
 						pRTFormats->SetRenderTargetFormat(i, wgDesc.RTVFormats_[i]);
 					}

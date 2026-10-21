@@ -59,7 +59,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		BufferType type_;
+		BufferType type_ = BufferType::Default;
 		UINT strideSize_ = 0;
 		UINT numElement_ = 0;
 		UINT64 offsetCounter_ = 0;
@@ -196,7 +196,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		UINT64 size_;
+		UINT64 size_ = 0;
 
 	public:
 		AS(const Device& device, std::wstring name, UINT64 size);

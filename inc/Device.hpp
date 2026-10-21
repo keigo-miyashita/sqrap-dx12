@@ -95,7 +95,7 @@ namespace sqrp
 		RaytracingHandle		CreateRaytracing(std::wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const;
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;
 		StateObjectHandle		CreateStateObject(std::wstring name, const StateObjectDesc soDesc) const;
-		SwapChainHandle			CreateSwapChain(std::wstring name, const HWND& hwnd, SIZE winSize) const;
+		SwapChainHandle			CreateSwapChain(std::wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount = 2) const;
 		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1) const;
 		TLASHandle				CreateTLAS(std::wstring name, const CommandHandle& command, const std::vector<TLASDesc>& tlasDescs) const;
 		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;

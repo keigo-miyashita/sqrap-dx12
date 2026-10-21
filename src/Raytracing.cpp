@@ -203,6 +203,7 @@ namespace sqrp
 
 				raysDesc_.MissShaderTable.StartAddress = startAddress;
 				raysDesc_.MissShaderTable.SizeInBytes = sumMissRegionSize;
+				raysDesc_.MissShaderTable.StrideInBytes = eachMissSize;
 				startAddress += sumMissRegionSize;
 
 				raysDesc_.HitGroupTable.StartAddress = startAddress;

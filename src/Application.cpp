@@ -87,20 +87,21 @@ namespace sqrp
 
 		deltaMousePos_.x = currentMousePos_.x - prevMousePos_.x;
 		deltaMousePos_.y = currentMousePos_.y - prevMousePos_.y;
+		deltaWheel_ = wheel_;
+		wheel_ = 0;
 
 		prevMousePos_ = currentMousePos_;
 	}
 
 	bool Input::IsPushKey(UINT key)
 	{
-		return isLogicalPushKey_[key].isPushed;
+		auto it = isLogicalPushKey_.find(key);
+		return it != isLogicalPushKey_.end() && it->second.isPushed;
 	}
 
 	int Input::GetWheel()
 	{
-		int w = wheel_;
-		wheel_ = 0;
-		return w;
+		return deltaWheel_;
 	}
 
 	MousePosition Input::GetPushedPos()

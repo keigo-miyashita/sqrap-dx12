@@ -9,8 +9,11 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Compiler::Compiler(CompilerType type, int numThreads)
+	Compiler::Compiler(CompilerType type, int numThreads) : compilerType_(type)
 	{
+		if (type != CompilerType::Dxc) {
+			throw runtime_error("[Compiler::Compiler] unsupported compiler type");
+		}
 		workerDxcs_.reserve(numThreads);
 		for (int i = 0; i < numThreads; i++) {
 			workerDxcs_.emplace_back(make_unique<Dxc>());

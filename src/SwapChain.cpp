@@ -53,7 +53,7 @@ namespace sqrp
 		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		heapDesc.NodeMask = 0;
-		heapDesc.NumDescriptors = 2;
+		heapDesc.NumDescriptors = swapChainDesc1.BufferCount * 2;   // sRGB と UNORM の2つずつ
 		result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[SwapChain::CreateSwapChain] CreateDescriptorHeap for RTV failed\nHRESULT = " + to_string(result));
@@ -68,7 +68,11 @@ namespace sqrp
 		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-		for (int i = 0; i < swapChainDesc1.BufferCount; i++) {
+		rtvHandles_.reserve(swapChainDesc1.BufferCount);
+		unormRtvHandles_.reserve(swapChainDesc1.BufferCount);
+		const UINT rtvIncrement = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+		for (UINT i = 0; i < swapChainDesc1.BufferCount; i++) {
 			backBuffers_[i] = make_shared<Texture>();
 			ComPtr<ID3D12Resource> resource;
 			result = swapChain_->GetBuffer(i, IID_PPV_ARGS(resource.ReleaseAndGetAddressOf()));
@@ -79,9 +83,19 @@ namespace sqrp
 			backBuffers_[i]->SetResource(resource);
 			wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
 			backBuffers_[i]->SetName(nameBackBuffer.c_str());
-			rtvDesc.Format = backBuffers_[i]->GetResource()->GetDesc().Format;
+			//rtvDesc.Format = backBuffers_[i]->GetResource()->GetDesc().Format;
 			pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &rtvDesc, handle);
-			handle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			rtvHandles_.push_back(handle);
+			handle.ptr += rtvIncrement;
+		}
+
+		// ImGui 用の UNORM の RTV。sRGB の分の後ろに並べる（先頭 N 個の並びは変えない）
+		D3D12_RENDER_TARGET_VIEW_DESC unormRtvDesc = rtvDesc;
+		unormRtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		for (UINT i = 0; i < swapChainDesc1.BufferCount; i++) {
+			pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &unormRtvDesc, handle);
+			unormRtvHandles_.push_back(handle);
+			handle.ptr += rtvIncrement;
 		}
 
 		viewport_ = CD3DX12_VIEWPORT(backBuffers_[0]->GetResource().Get());
@@ -128,6 +142,9 @@ namespace sqrp
 	SwapChain::SwapChain(const Device& device, wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount)
 		: pDevice_(&device), name_(name), bufferCount_(bufferCount)
 	{
+		if (bufferCount_ < 2 || bufferCount_ > DXGI_MAX_SWAP_CHAIN_BUFFERS) {
+			throw runtime_error("[SwapChain::SwapChain] bufferCount must be between 2 and " + to_string(DXGI_MAX_SWAP_CHAIN_BUFFERS));
+		}
 
 		CreateSwapChain(hwnd, winSize);
 
@@ -168,5 +185,15 @@ namespace sqrp
 	const ComPtr<ID3D12DescriptorHeap>& SwapChain::GetDsvHeap() const
 	{
 		return dsvHeap_;
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetRtvHandle(UINT bufferIndex) const
+	{
+		return rtvHandles_[bufferIndex];
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::GetUnormRtvHandle(UINT bufferIndex) const
+	{
+		return unormRtvHandles_[bufferIndex];
 	}
 }

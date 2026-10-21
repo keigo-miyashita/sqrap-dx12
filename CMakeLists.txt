@@ -57,6 +57,7 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC
     D3D12_SDK_VERSION_MACRO=${D3D12_SDK_VERSION}
     D3D12_SDK_PATH_MACRO=${D3D12_SDK_PATH}
+    NOMINMAX
 )
 
 # NOTE : 順序に注意

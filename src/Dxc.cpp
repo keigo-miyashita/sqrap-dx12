@@ -63,7 +63,6 @@ namespace sqrp
 	void Dxc::CompileShader(ComPtr<IDxcBlob>& shaderBlob, ShaderType shaderType, const wstring& fileName, const wstring& entry, vector<std::wstring> additionalOption, const wstring& includePath) const
 	{
 		ComPtr<IDxcIncludeHandler> incHandler = nullptr;
-		ComPtr<IDxcBlob> incBlob = nullptr;
 
 		HRESULT result = utils_->CreateDefaultIncludeHandler(incHandler.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
@@ -72,13 +71,8 @@ namespace sqrp
 
 		if (!includePath.empty()) {
 			DWORD attrib = GetFileAttributesW(includePath.c_str());
-			if (attrib == INVALID_FILE_ATTRIBUTES) {
-				throw runtime_error("[Dxc::CompileShader] include file not found");
-			}
-
-			result = incHandler->LoadSource(includePath.c_str(), incBlob.ReleaseAndGetAddressOf());
-			if (FAILED(result)) {
-				throw runtime_error("[Dxc::CompileShader] LoadSource failed\nHRESULT = " + to_string(result));
+			if (attrib == INVALID_FILE_ATTRIBUTES || !(attrib & FILE_ATTRIBUTE_DIRECTORY)) {
+				throw runtime_error("[Dxc::CompileShader] include directory not found");
 			}
 		}
 
@@ -97,6 +91,10 @@ namespace sqrp
 		}
 		for (const auto& opt : additionalOption) {
 			args.push_back(opt);
+		}
+		if (!includePath.empty()) {
+			args.push_back(L"-I");
+			args.push_back(includePath);
 		}
 
 		// Extract only the file name from the full path

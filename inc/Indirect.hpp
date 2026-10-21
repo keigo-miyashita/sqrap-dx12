@@ -16,7 +16,7 @@ namespace sqrp
 
 	struct IndirectDesc
 	{
-		IndirectType type_;
+		IndirectType type_ = IndirectType::Draw;
 		UINT rootParameterIndex_ = 0;
 		UINT numConstant_ = 0;
 	};

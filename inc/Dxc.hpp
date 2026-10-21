@@ -33,6 +33,5 @@ namespace sqrp
 		const ComPtr<IDxcLibrary>& GetLibrary() const;
 		const ComPtr<IDxcUtils>& GetUtils() const;
 		ComPtr<IDxcIncludeHandler> GetIncHandler();
-		ComPtr<IDxcBlob> GetIncBlob();
 	};
 }

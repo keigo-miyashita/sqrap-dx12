@@ -6,8 +6,8 @@ namespace sqrp
 {
 	struct CameraMatrix
 	{
-		DirectX::XMMATRIX view;
-		DirectX::XMMATRIX proj;
+		DirectX::XMMATRIX view = DirectX::XMMatrixIdentity();
+		DirectX::XMMATRIX proj = DirectX::XMMatrixIdentity();
 	};
 
 	enum class CameraMode

@@ -49,38 +49,53 @@ namespace sqrp
 
 		for (auto& mesh : model.meshes) {
 			for (auto& primitive : mesh.primitives) {
-				int posAccessorIndex = primitive.attributes["POSITION"];
+				auto posItr = primitive.attributes.find("POSITION");
+				if (posItr == primitive.attributes.end()) {
+					throw runtime_error("[Mesh::LoadModel] POSITION attribute not found in primitive");
+				}
+				int posAccessorIndex = posItr->second;
 				const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
 				const tinygltf::BufferView& posBufferView = model.bufferViews[posAccessor.bufferView];
 				tinygltf::Buffer& posBuffer = model.buffers[posBufferView.buffer];
 				float* positions = reinterpret_cast<float*>(&posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset]);
 
-				int normalAccessorIndex = primitive.attributes["NORMAL"];
-				const tinygltf::Accessor& normalAccessor = model.accessors[normalAccessorIndex];
-				const tinygltf::BufferView& normalBufferView = model.bufferViews[normalAccessor.bufferView];
-				tinygltf::Buffer& normalBuffer = model.buffers[normalBufferView.buffer];
-				float* normals = reinterpret_cast<float*>(&normalBuffer.data[normalBufferView.byteOffset + normalAccessor.byteOffset]);
+				float* normals = nullptr;
+				auto normalItr = primitive.attributes.find("NORMAL");
+				if (normalItr != primitive.attributes.end()) {
+					int normalAccessorIndex = normalItr->second;
+					const tinygltf::Accessor& normalAccessor = model.accessors[normalAccessorIndex];
+					const tinygltf::BufferView& normalBufferView = model.bufferViews[normalAccessor.bufferView];
+					tinygltf::Buffer& normalBuffer = model.buffers[normalBufferView.buffer];
+					normals = reinterpret_cast<float*>(&normalBuffer.data[normalBufferView.byteOffset + normalAccessor.byteOffset]);
+				}
 
-				int tangentAccessorIndex = primitive.attributes["TANGENT"];
-				const tinygltf::Accessor& tangentAccessor = model.accessors[tangentAccessorIndex];
-				const tinygltf::BufferView& tangentBufferView = model.bufferViews[tangentAccessor.bufferView];
-				tinygltf::Buffer& tangentBuffer = model.buffers[tangentBufferView.buffer];
-				float* tangents = reinterpret_cast<float*>(&tangentBuffer.data[tangentBufferView.byteOffset + tangentAccessor.byteOffset]);
+				float* tangents = nullptr;
+				auto tangentItr = primitive.attributes.find("TANGENT");
+				if (tangentItr != primitive.attributes.end()) {
+					int tangentAccessorIndex = tangentItr->second;
+					const tinygltf::Accessor& tangentAccessor = model.accessors[tangentAccessorIndex];
+					const tinygltf::BufferView& tangentBufferView = model.bufferViews[tangentAccessor.bufferView];
+					tinygltf::Buffer& tangentBuffer = model.buffers[tangentBufferView.buffer];
+					tangents = reinterpret_cast<float*>(&tangentBuffer.data[tangentBufferView.byteOffset + tangentAccessor.byteOffset]);
+				}
 
-				int uvAccessorIndex = primitive.attributes["TEXCOORD_0"];
-				const tinygltf::Accessor& uvAccessor = model.accessors[uvAccessorIndex];
-				const tinygltf::BufferView& uvBufferView = model.bufferViews[uvAccessor.bufferView];
-				tinygltf::Buffer& uvBuffer = model.buffers[uvBufferView.buffer];
-				float* uvs = reinterpret_cast<float*>(&uvBuffer.data[uvBufferView.byteOffset + uvAccessor.byteOffset]);
+				float* uvs = nullptr;
+				auto uvItr = primitive.attributes.find("TEXCOORD_0");
+				if (uvItr != primitive.attributes.end()) {
+					int uvAccessorIndex = uvItr->second;
+					const tinygltf::Accessor& uvAccessor = model.accessors[uvAccessorIndex];
+					const tinygltf::BufferView& uvBufferView = model.bufferViews[uvAccessor.bufferView];
+					tinygltf::Buffer& uvBuffer = model.buffers[uvBufferView.buffer];
+					uvs = reinterpret_cast<float*>(&uvBuffer.data[uvBufferView.byteOffset + uvAccessor.byteOffset]);
+				}
 
 				for (int i = 0; i < posAccessor.count; i++) {
-					vertices.push_back(
-						{
-							(XMFLOAT4(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], 1.0f)),
-							(XMFLOAT4(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], 1.0f)),
-							(XMFLOAT4(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3])),
-							(XMFLOAT2(uvs[i * 2], uvs[i * 2 + 1]))
-						});
+					Vertex v{};
+					v.position = XMFLOAT4(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], 1.0f);
+					if (normals)  v.normal = XMFLOAT4(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], 1.0f);
+					if (tangents) v.tangent = XMFLOAT4(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
+					if (uvs)      v.uv = XMFLOAT2(uvs[i * 2], uvs[i * 2 + 1]);
+					vertices.push_back(v);
 				}
 
 				int indicesAccessorIndex = primitive.indices;
@@ -264,16 +279,20 @@ namespace sqrp
 		for (auto& mesh : model.meshes) {
 			int primitiveIndex = 0;
 			for (auto& primitive : mesh.primitives) {
-				int posAccessorIndex = primitive.attributes["POSITION"];
+				auto posItr = primitive.attributes.find("POSITION");
+				if (posItr == primitive.attributes.end()) {
+					throw runtime_error("[GLTFMesh::LoadModel] POSITION attribute not found in primitive");
+				}
+				int posAccessorIndex = posItr->second;
 				const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
 				const tinygltf::BufferView& posBufferView = model.bufferViews[posAccessor.bufferView];
 				tinygltf::Buffer& posBuffer = model.buffers[posBufferView.buffer];
 				float* positions = reinterpret_cast<float*>(&posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset]);
 
 				float* normals = nullptr;
-				bool hasNormal = primitive.attributes.contains("NORMAL");
-				if (hasNormal) {
-					int normalAccessorIndex = primitive.attributes["NORMAL"];
+				auto normalItr = primitive.attributes.find("NORMAL");
+				if (normalItr != primitive.attributes.end()) {
+					int normalAccessorIndex = normalItr->second;
 					const tinygltf::Accessor& normalAccessor = model.accessors[normalAccessorIndex];
 					const tinygltf::BufferView& normalBufferView = model.bufferViews[normalAccessor.bufferView];
 					tinygltf::Buffer& normalBuffer = model.buffers[normalBufferView.buffer];
@@ -281,9 +300,9 @@ namespace sqrp
 				}
 
 				float* tangents = nullptr;
-				bool hasTangent = primitive.attributes.contains("TANGENT");
-				if (hasTangent) {
-					int tangentAccessorIndex = primitive.attributes["TANGENT"];
+				auto tangentItr = primitive.attributes.find("TANGENT");
+				if (tangentItr != primitive.attributes.end()) {
+					int tangentAccessorIndex = tangentItr->second;
 					const tinygltf::Accessor& tangentAccessor = model.accessors[tangentAccessorIndex];
 					const tinygltf::BufferView& tangentBufferView = model.bufferViews[tangentAccessor.bufferView];
 					tinygltf::Buffer& tangentBuffer = model.buffers[tangentBufferView.buffer];
@@ -291,9 +310,9 @@ namespace sqrp
 				}
 
 				float* uvs = nullptr;
-				bool hasUV = primitive.attributes.contains("TEXCOORD_0");
-				if (hasUV) {
-					int uvAccessorIndex = primitive.attributes["TEXCOORD_0"];
+				auto uvItr = primitive.attributes.find("TEXCOORD_0");
+				if (uvItr != primitive.attributes.end()) {
+					int uvAccessorIndex = uvItr->second;
 					const tinygltf::Accessor& uvAccessor = model.accessors[uvAccessorIndex];
 					const tinygltf::BufferView& uvBufferView = model.bufferViews[uvAccessor.bufferView];
 					tinygltf::Buffer& uvBuffer = model.buffers[uvBufferView.buffer];
@@ -303,9 +322,9 @@ namespace sqrp
 				for (int i = 0; i < posAccessor.count; i++) {
 					Vertex v{};
 					v.position = XMFLOAT4(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], 1.0f);
-					if (hasNormal)  v.normal  = XMFLOAT4(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], 1.0f);
-					if (hasTangent) v.tangent = XMFLOAT4(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
-					if (hasUV)      v.uv      = XMFLOAT2(uvs[i * 2], uvs[i * 2 + 1]);
+					if (normals)  v.normal  = XMFLOAT4(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2], 1.0f);
+					if (tangents) v.tangent = XMFLOAT4(tangents[i * 4], tangents[i * 4 + 1], tangents[i * 4 + 2], tangents[i * 4 + 3]);
+					if (uvs)      v.uv      = XMFLOAT2(uvs[i * 2], uvs[i * 2 + 1]);
 					vertices_.push_back(v);
 				}
 
@@ -423,7 +442,11 @@ namespace sqrp
 
 		for (auto& mesh : model.meshes) {
 			for (auto& primitive : mesh.primitives) {
-				int posAccessorIndex = primitive.attributes["POSITION"];
+				auto posItr = primitive.attributes.find("POSITION");
+				if (posItr == primitive.attributes.end()) {
+					throw runtime_error("[ASMesh::LoadModelForAS] POSITION attribute not found in primitive");
+				}
+				int posAccessorIndex = posItr->second;
 				const tinygltf::Accessor& posAccessor = model.accessors[posAccessorIndex];
 				const tinygltf::BufferView& posBufferView = model.bufferViews[posAccessor.bufferView];
 				tinygltf::Buffer& posBuffer = model.buffers[posBufferView.buffer];

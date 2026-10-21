@@ -86,7 +86,7 @@ namespace sqrp
 	void Command::BeginRender(const SwapChainHandle& swapChain)
 	{
 		if (queueType_ != QueueType::Graphics) {
-			throw runtime_error("[Command::EndRender] EndRender can only be called on a graphics command list");
+			throw runtime_error("[Command::BeginRender] BeginRender can only be called on a graphics command list");
 		}
 
 		auto bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
@@ -95,8 +95,7 @@ namespace sqrp
 
 		commandList_->ResourceBarrier(1, &barrier);
 
-		auto rtvHandle = swapChain->GetRtvHeap()->GetCPUDescriptorHandleForHeapStart();
-		rtvHandle.ptr += bbIdx * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		auto rtvHandle = swapChain->GetRtvHandle(bbIdx);
 		auto dsvHandle = swapChain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
 		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
@@ -104,7 +103,8 @@ namespace sqrp
 		commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 		// Clear display
-		float clearColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+		// RTV は sRGB なので、クリアの色も線形の値で渡す（0.214 は画面上の 0.5 の灰色）
+		float clearColor[] = { 0.214f, 0.214f, 0.214f, 1.0f };
 		commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 		// Set viewport and scissors
@@ -235,10 +235,21 @@ namespace sqrp
 		commandList_->ExecuteIndirect(indirect->GetCommandSignature().Get(), maxCommandNum, buffer->GetResource().Get(), 0, nullptr, 0);
 	}
 
-	void Command::DrawGui(const GuiHandle& gui)
+	void Command::DrawGui(const GuiHandle& gui, const SwapChainHandle& swapChain)
 	{
+		// ImGui の色は画面に出す値そのものなので、符号化しない UNORM の RTV に描く。
+		// ImGui の PSO の形式（Gui の ImGui_ImplDX12_Init に渡した UNORM）とも一致する
+		const UINT bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
+		auto guiRtvHandle = swapChain->GetUnormRtvHandle(bbIdx);
+		commandList_->OMSetRenderTargets(1, &guiRtvHandle, false, nullptr);
+
 		commandList_->SetDescriptorHeaps(1, gui->GetImGuiDescHeap().GetAddressOf());
 		gui->Draw(*this);
+
+		// GUI の後にも場面を描けるよう、sRGB の RTV と深度に戻しておく
+		auto rtvHandle = swapChain->GetRtvHandle(bbIdx);
+		auto dsvHandle = swapChain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	}
 
 	void Command::ExecuteIndirect(const IndirectHandle& indirect)

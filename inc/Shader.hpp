@@ -13,7 +13,7 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Dxc* pDxc_ = nullptr;
-		ShaderType shaderType_;
+		ShaderType shaderType_ = ShaderType::Vertex;
 		// ShaderのByte codeを格納
 		ComPtr<IDxcBlob> blob_ = nullptr;
 		std::wstring entryName_;

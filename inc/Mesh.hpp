@@ -134,10 +134,10 @@ namespace sqrp
 		std::wstring name_ = L"";
 		std::vector<ASVertex> ASVertices_;
 		BufferHandle vertexBuffer_;
-		D3D12_VERTEX_BUFFER_VIEW vbView_;
+		D3D12_VERTEX_BUFFER_VIEW vbView_ = {};
 		std::vector<uint32_t> indices_;
 		BufferHandle indexBuffer_;
-		D3D12_INDEX_BUFFER_VIEW ibView_;
+		D3D12_INDEX_BUFFER_VIEW ibView_ = {};
 
 		static bool LoadModelForAS(std::string modelPath, std::vector<ASVertex>& ASVertices, std::vector<uint32_t>& indices);
 		void CreateVertexBuffer(const CommandHandle& command);

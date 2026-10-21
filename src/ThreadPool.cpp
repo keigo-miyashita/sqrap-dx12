@@ -56,6 +56,9 @@ namespace sqrp
 
 	ThreadPool::ThreadPool(int numThreads)
 	{
+		if (numThreads <= 0) {
+			throw invalid_argument("[ThreadPool::ThreadPool] numThreads must be greater than 0");
+		}
 		workers_.reserve(numThreads);
 		for (int i = 0; i < numThreads; i++) {
 			workers_.emplace_back(thread([this, i]() {ProcessTask(i); }));
