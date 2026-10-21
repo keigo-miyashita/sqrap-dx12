@@ -216,6 +216,10 @@ namespace sqrp
 				raysDesc_.Depth = depth;
 			}
 		}
+		else
+		{
+			throw runtime_error("[Raytracing::Raytracing] Invalid StateObjectDesc for Raytracing");
+		}
 	}
 
 	D3D12_DISPATCH_RAYS_DESC Raytracing::GetDispatchRayDesc() const

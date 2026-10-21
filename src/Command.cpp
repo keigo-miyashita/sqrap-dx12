@@ -437,7 +437,7 @@ namespace sqrp
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
 	}
 
-	SyncPoint Command::Submit()
+	TimelinePoint Command::Submit()
 	{
 		Close();
 

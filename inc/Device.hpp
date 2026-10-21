@@ -27,14 +27,10 @@ namespace sqrp
 	class Gui;
 	class Shader;
 	class SwapChain;
+	class TimelinePoint;
 
 	enum class QueueType {
 		Graphics, Compute
-	};
-
-	struct SyncPoint {
-		QueueType queueType = QueueType::Graphics;
-		UINT64 fenceVal = 0;
 	};
 
 	class Device
@@ -101,7 +97,7 @@ namespace sqrp
 		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
 
 		void ReleaseCompleted() const;
-		void WaitOnCPU(const SyncPoint& syncPoint) const;
+		void WaitOnCPU(const TimelinePoint& timelinePoint) const;
 
 		const ComPtr<IDXGIFactory7>& GetDXGIFactory() const;
 		const ComPtr<ID3D12Device>& GetDevice() const;

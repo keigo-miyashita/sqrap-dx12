@@ -39,7 +39,12 @@ namespace sqrp
 		workGraphIndex_ = workGraphProp_->GetWorkGraphIndex(stateObject->GetProgramName().c_str());
 
 		if (stateObject->GetStateObjectType() == StateObjectType::WorkGraphMesh) {
+			if (maxInputRecords == 0 || maxNodeInputs == 0) {
+				throw runtime_error("[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs must be greater than 0 for WorkGraphMesh");
+			}
 			workGraphProp_->SetMaximumInputRecords(workGraphIndex_, maxInputRecords, maxNodeInputs);
+		} else if (maxInputRecords != 0 || maxNodeInputs != 0) {
+			cout << "[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs are ignored for work graph without mesh nodes." << endl;
 		}
 
 		workGraphProp_->GetWorkGraphMemoryRequirements(workGraphIndex_, &memReqs_);

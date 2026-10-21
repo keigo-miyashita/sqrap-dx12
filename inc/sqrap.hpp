@@ -18,6 +18,7 @@
 #include <RootSignature.hpp>
 #include <Shader.hpp>
 #include <SwapChain.hpp>
+#include <TimelinePoint.hpp>
 #include <WorkGraph.hpp>
 
 #include <Alias.hpp>

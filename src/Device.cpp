@@ -431,9 +431,9 @@ namespace sqrp
 		);
 	}
 
-	void Device::WaitOnCPU(const SyncPoint& syncPoint) const
+	void Device::WaitOnCPU(const TimelinePoint& timelinePoint) const
 	{
-		GetFence(syncPoint.queueType)->WaitSignal(syncPoint.fenceVal);
+		GetFence(timelinePoint.GetQueueType())->WaitSignal(timelinePoint.GetFenceValue());
 		ReleaseCompleted();
 	}
 

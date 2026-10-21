@@ -3,6 +3,7 @@
 #include "pch.hpp"
 
 #include "Device.hpp"
+#include "TimelinePoint.hpp"
 
 #include "Alias.hpp"
 
@@ -83,7 +84,7 @@ namespace sqrp
 		void SetPipeline(const ComputePipelineHandle& computePipeline);
 		void SetPipeline(const MeshPipelineHandle& meshPipeline);
 		void SetRaytracingState(const StateObjectHandle& stateObject);
-		SyncPoint Submit();
+		TimelinePoint Submit();
 		void WaitCommand();
 		// "init" prefixed methods perform initialization and internally invoke WaitCommand to ensure readiness.
 		void InitDataToBuffer(const BufferHandle& buffer, void* pData, UINT strideSize, UINT numElement);
