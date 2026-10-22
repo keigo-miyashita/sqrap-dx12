@@ -11,13 +11,13 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	void BLAS::CreateBLAS(const ASMeshHandle& mesh, const CommandHandle& command)
+	void BLAS::CreateBLAS(const MeshHandle& mesh, const CommandHandle& command)
 	{
 		D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 		geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
 		geomDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
 		geomDesc.Triangles.VertexBuffer.StartAddress = mesh->GetVertexBuffer()->GetGPUAddress();
-		geomDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(ASVertex);
+		geomDesc.Triangles.VertexBuffer.StrideInBytes = sizeof(Vertex);
 		geomDesc.Triangles.VertexCount = mesh->GetVertexCount();
 		geomDesc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 		geomDesc.Triangles.IndexBuffer = mesh->GetIndexBuffer()->GetGPUAddress();
@@ -60,7 +60,7 @@ namespace sqrp
 		command->WaitCommand();
 	}
 
-	BLAS::BLAS(const Device& device, wstring name, const CommandHandle& command, const ASMeshHandle& mesh)
+	BLAS::BLAS(const Device& device, wstring name, const CommandHandle& command, const MeshHandle& mesh)
 		: pDevice_(&device), name_(name)
 	{
 		CreateBLAS(mesh, command);

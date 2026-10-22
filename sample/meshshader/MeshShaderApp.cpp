@@ -40,7 +40,7 @@ bool MeshShaderApp::OnStart()
 
 	// Objects data
 	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";
-	sphere_ = device_.CreateMesh(command_, modelPath);
+	sphere_ = device_.CreateMesh(L"Suzanne", command_, modelPath);
 
 	// Scene Items
 	// Camera
@@ -78,11 +78,11 @@ bool MeshShaderApp::OnStart()
 		L"sphere0",
 		HeapType::Resource,
 		{
-			{ cameraBuffer_,				ViewType::CBV, 0},
-			{ light0Buffer_,				ViewType::CBV, 1},
-			{ sphere0Buffer_,				ViewType::CBV, 2},
-			{ sphere_->GetVertexBuffer(),	ViewType::SRV, 0 },
-			{ sphere_->GetIndexBuffer(),	ViewType::SRV, 1 }
+			{ .resource_ = cameraBuffer_,				.type_ = ViewType::CBV, .numReg_ = 0},
+			{ .resource_ = light0Buffer_,				.type_ = ViewType::CBV, .numReg_ = 1},
+			{ .resource_ = sphere0Buffer_,				.type_ = ViewType::CBV, .numReg_ = 2},
+			{ .resource_ = sphere_->GetVertexBuffer(),	.type_ = ViewType::SRV, .numReg_ = 0 },
+			{ .resource_ = sphere_->GetIndexBuffer(),	.type_ = ViewType::SRV, .numReg_ = 1 }
 		}
 	);
 	// RootSignature
@@ -90,8 +90,8 @@ bool MeshShaderApp::OnStart()
 		L"sphere0",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	sphere0DescManager_},
-			{RootParamType::Constant,	DirectRootParamDesc{3, 4, (void*)(&gpuDiffuseColor)}},
+			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = sphere0DescManager_},
+			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 3, .numConstant_ = 4, .constantPtr_ = (void*)(&gpuDiffuseColor)}},
 		}
 	);
 

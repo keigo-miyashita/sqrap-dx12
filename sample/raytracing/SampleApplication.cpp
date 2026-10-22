@@ -38,10 +38,9 @@ bool SampleApplication::OnStart()
 	SIZE size = { GetWindowWidth(), GetWindowHeight() };
 	swapChain_ = device_.CreateSwapChain(L"Main", GetWindowHWND(), size);
 
-	// ASMesh
+	// Mesh
 	string modelPath = string(MODEL_DIR) + "Suzanne.gltf";
-	suzanneASMesh_ = device_.CreateASMesh(command_, modelPath);
-	suzanneMesh_ = device_.CreateMesh(command_, modelPath);
+	suzanneMesh_ = device_.CreateMesh(L"Suzanne", command_, modelPath);
 
 	// Scene Items
 	// Camera
@@ -50,7 +49,7 @@ bool SampleApplication::OnStart()
 	light0_.pos = XMFLOAT4(10.0f, 10.0f, -5.0f, 1.0f);
 	light0_.color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
 
-	suzanneBLAS_ = device_.CreateBLAS(L"suzanne", command_, suzanneASMesh_);
+	suzanneBLAS_ = device_.CreateBLAS(L"Suzanne", command_, suzanneMesh_);
 	XMMATRIX modelMat = XMMatrixMultiply(XMMatrixRotationY(XMConvertToRadians(180)), XMMatrixIdentity());
 	sceneTLAS_ = device_.CreateTLAS(
 		L"scene",
@@ -88,13 +87,13 @@ bool SampleApplication::OnStart()
 		L"suzanne",
 		HeapType::Resource,
 		{
-			{ cameraBuffer_,					ViewType::CBV, 0},
-			{ light0Buffer_,					ViewType::CBV, 1},
-			{ sceneTLAS_->GetASBuffer(),		ViewType::SRV, 0},
-			{ suzanneMesh_->GetVertexBuffer(),	ViewType::SRV, 1},
-			{ suzanneMesh_->GetIndexBuffer(),	ViewType::SRV, 2},
+			{ .resource_ = cameraBuffer_,					.type_ = ViewType::CBV, .numReg_ = 0},
+			{ .resource_ = light0Buffer_,					.type_ = ViewType::CBV, .numReg_ = 1},
+			{ .resource_ = sceneTLAS_->GetASBuffer(),		.type_ = ViewType::SRV, .numReg_ = 0},
+			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.type_ = ViewType::SRV, .numReg_ = 1},
+			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.type_ = ViewType::SRV, .numReg_ = 2},
 			// NOTE : Need output UAV
-			{ outputTexture_,					ViewType::UAV, 0}
+			{ .resource_ = outputTexture_,					.type_ = ViewType::UAV, .numReg_ = 0}
 		}
 	);
 	// RootSignature
@@ -102,8 +101,8 @@ bool SampleApplication::OnStart()
 		L"suzanne",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{RootParamType::DescTable,	suzanneDescManager_},
-			{RootParamType::Constant,	DirectRootParamDesc{2, 4, (void*)(&gpuDiffuseColor)}}
+			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = suzanneDescManager_},
+			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 2, .numConstant_ = 4, .constantPtr_ = (void*)(&gpuDiffuseColor)}}
 		}
 	);
 
@@ -123,23 +122,22 @@ bool SampleApplication::OnStart()
 	rayTracingStates_ = device_.CreateStateObject(
 		L"rayTracing",
 		{
-			StateObjectType::Raytracing,
-			StateObjectDesc::RaytracingDesc
+			.typeDesc_ = StateObjectDesc::RaytracingDesc
 			{
-				suzanneRootSignature_,
-				{
-					{rayGen_, ShaderStage::RayGen},
+				.globalRootSig_ = suzanneRootSignature_,
+				.rayGens_ = {
+					{.shader_ = rayGen_},
 				},
-				{
-					{miss_, ShaderStage::Miss},
+				.misses_ = {
+					{.shader_ = miss_},
 				},
-				{
+				.hitGroups_ = {
 					{
-						L"HitGroup",
-						{ closestHit_, ShaderStage::ClosestHit },
+						.groupName_ = L"HitGroup",
+						.closestHit_ = closestHit_,
 					}
 				},
-				{3 * sizeof(float), 2 * sizeof(float), 1}
+				.rayConfigDesc_ = {.payloadSize_ = 3 * sizeof(float), .attributeSize_ = 2 * sizeof(float), .rayDepth_ = 1}
 			}
 		}
 	);

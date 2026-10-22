@@ -7,7 +7,6 @@
 namespace sqrp
 {
 	class AS;
-	class ASMesh;
 	class Buffer;
 	class Command;
 	class Device;
@@ -25,11 +24,11 @@ namespace sqrp
 		std::wstring name_;
 		ASHandle ASBuffer_;
 		BufferHandle scratchBuffer_;
-		void CreateBLAS(const ASMeshHandle& mesh, const CommandHandle& command);
+		void CreateBLAS(const MeshHandle& mesh, const CommandHandle& command);
 
 	public:
 
-		BLAS(const Device& device, std::wstring name, const CommandHandle& command, const ASMeshHandle& mesh);
+		BLAS(const Device& device, std::wstring name, const CommandHandle& command, const MeshHandle& mesh);
 		BLAS(const BLAS&) = delete;
 		BLAS& operator=(const BLAS&) = delete;
 

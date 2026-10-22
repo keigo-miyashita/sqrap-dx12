@@ -38,7 +38,7 @@ namespace sqrp
 		stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(workGraphProp_.ReleaseAndGetAddressOf()));
 		workGraphIndex_ = workGraphProp_->GetWorkGraphIndex(stateObject->GetProgramName().c_str());
 
-		if (stateObject->GetStateObjectType() == StateObjectType::WorkGraphMesh) {
+		if (stateObject->HasGraphicsNodes()) {
 			if (maxInputRecords == 0 || maxNodeInputs == 0) {
 				throw runtime_error("[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs must be greater than 0 for WorkGraphMesh");
 			}

@@ -284,19 +284,7 @@ namespace sqrp
 			[this](AS* p) { DeferredReleaser(p); });
 	}
 
-	ASMeshHandle Device::CreateASMesh(const CommandHandle& command, string modelPath) const
-	{
-		return shared_ptr<ASMesh>(new ASMesh(*this, command, modelPath),
-			[this](ASMesh* p) { DeferredReleaser(p); });
-	}
-
-	ASMeshHandle Device::CreateASMesh(wstring name, const CommandHandle& command, const vector<ASVertex>& ASVertices, const vector<uint32_t>& indices) const
-	{
-		return shared_ptr<ASMesh>(new ASMesh(*this, name, command, ASVertices, indices),
-			[this](ASMesh* p) { DeferredReleaser(p); });
-	}
-
-	BLASHandle Device::CreateBLAS(wstring name, const CommandHandle& command, const ASMeshHandle& mesh) const
+	BLASHandle Device::CreateBLAS(wstring name, const CommandHandle& command, const MeshHandle& mesh) const
 	{
 		return shared_ptr<BLAS>(new BLAS(*this, name, command, mesh),
 			[this](BLAS* p) { DeferredReleaser(p); });
@@ -351,27 +339,15 @@ namespace sqrp
 			[this](Indirect* p) { DeferredReleaser(p); });
 	}
 
-	MeshHandle Device::CreateMesh(const CommandHandle& command, string modelPath) const
+	MeshHandle Device::CreateMesh(std::wstring name, const CommandHandle& command, std::string modelPath) const
 	{
-		return shared_ptr<Mesh>(new Mesh(*this, command, modelPath),
+		return shared_ptr<Mesh>(new Mesh(*this, name, command, modelPath),
 			[this](Mesh* p) { DeferredReleaser(p); });
 	}
 
-	GLTFMeshHandle Device::CreateGLTFMesh(const CommandHandle& command, string modelPath) const
-	{
-		return shared_ptr<GLTFMesh>(new GLTFMesh(*this, command, modelPath),
-			[this](GLTFMesh* p) { DeferredReleaser(p); });
-	}
-
-	MeshHandle Device::CreateMesh(wstring name, const CommandHandle& command, const vector<Vertex>& vertices, const vector<uint32_t>& indices) const
+	MeshHandle Device::CreateMesh(std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const
 	{
 		return shared_ptr<Mesh>(new Mesh(*this, name, command, vertices, indices),
-			[this](Mesh* p) { DeferredReleaser(p); });
-	}
-
-	MeshHandle Device::CreateMesh(wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum) const
-	{
-		return shared_ptr<Mesh>(new Mesh(*this, name, command, verticesNum, indicesNum),
 			[this](Mesh* p) { DeferredReleaser(p); });
 	}
 

@@ -5,7 +5,6 @@
 namespace sqrp
 {
 	class AS;
-	class ASMesh;
 	class BLAS;
 	class Buffer;
 	class Command;
@@ -16,9 +15,7 @@ namespace sqrp
 	class GraphicsPipeline;
 	class Gui;
 	class Indirect;
-	class MeshBase;
 	class Mesh;
-	class GLTFMesh;
 	class MeshPipeline;
 	class Raytracing;
 	class Resource;
@@ -32,7 +29,6 @@ namespace sqrp
 	class WorkGraph;
 
 	using ASHandle = std::shared_ptr<AS>;
-	using ASMeshHandle = std::shared_ptr<ASMesh>;
 	using BLASHandle = std::shared_ptr<BLAS>;
 	using BufferHandle = std::shared_ptr<Buffer>;
 	using CommandHandle = std::shared_ptr<Command>;
@@ -43,9 +39,7 @@ namespace sqrp
 	using GraphicsPipelineHandle = std::shared_ptr<GraphicsPipeline>;
 	using GuiHandle = std::shared_ptr<Gui>;
 	using IndirectHandle = std::shared_ptr<Indirect>;
-	using MeshBaseHandle = std::shared_ptr<MeshBase>;
 	using MeshHandle = std::shared_ptr<Mesh>;
-	using GLTFMeshHandle = std::shared_ptr<GLTFMesh>;
 	using MeshPipelineHandle = std::shared_ptr<MeshPipeline>;
 	using RaytracingHandle = std::shared_ptr<Raytracing>;
 	using ResourceHandle = std::shared_ptr<Resource>;

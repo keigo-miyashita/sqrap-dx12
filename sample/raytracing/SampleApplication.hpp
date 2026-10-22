@@ -37,7 +37,6 @@ private:
 	sqrp::GuiHandle gui_;
 
 	// Mesh
-	sqrp::ASMeshHandle suzanneASMesh_;
 	sqrp::MeshHandle suzanneMesh_;
 
 	// Scene Items

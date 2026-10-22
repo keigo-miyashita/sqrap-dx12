@@ -122,16 +122,6 @@ namespace sqrp
 		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
-	enum class StateObjectType
-	{
-		Raytracing, WorkGraph, WorkGraphMesh
-	};
-
-	enum class ShaderStage
-	{
-		RayGen, ClosestHit, Anyhit, Intersection, Miss, Callable, Compute, Mesh, Pixel
-	};
-
 	enum class NodeType
 	{
 		Compute, Graphics,
@@ -143,23 +133,16 @@ namespace sqrp
 		struct ShaderExportDesc
 		{
 			ShaderHandle shader_;
-			ShaderStage shaderStage_ = ShaderStage::RayGen;
 			ResourceSetHandle localResourceSet_;
 		};
 
 		// Shader and binded resource for HitGroup(ClosestHit, Anyhit, Intersection)
 		struct HitGroupExportDesc
 		{
-			struct HitGroupShaderExportDesc
-			{
-				ShaderHandle shader_;
-				ShaderStage shaderStage_ = ShaderStage::RayGen;
-			};
-
 			std::wstring groupName_;
-			HitGroupShaderExportDesc closesthit_;
-			HitGroupShaderExportDesc anyhit_;
-			HitGroupShaderExportDesc intersection_;
+			ShaderHandle closestHit_;
+			ShaderHandle anyHit_;
+			ShaderHandle intersection_;
 			ResourceSetHandle localResourceSet_;
 		};
 
@@ -211,7 +194,6 @@ namespace sqrp
 			DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
 		};
 
-		StateObjectType stateObjectType_ = StateObjectType::Raytracing;
 		std::variant<RaytracingDesc, WorkGraphDesc> typeDesc_;
 	};
 
@@ -230,7 +212,10 @@ namespace sqrp
 		std::vector<std::wstring> misses;
 		std::vector<std::wstring> hitGroups;
 		std::wstring programName_;
-		StateObjectType stateObjectType_ = StateObjectType::Raytracing;
+		bool hasGraphicsNodes_ = false;
+
+		void CreateStateObject(const StateObjectDesc::RaytracingDesc& rtDesc);
+		void CreateStateObject(const StateObjectDesc::WorkGraphDesc& wgDesc);
 
 	public:
 		StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc);
@@ -238,10 +223,10 @@ namespace sqrp
 		StateObject& operator=(const StateObject&) = delete;
 		const ComPtr<ID3D12StateObject>& GetStateObject() const;
 		const std::wstring& GetProgramName() const;
-		StateObjectType GetStateObjectType() const;
 		const StateObjectDesc& GetStateObjectDesc() const;
 		const std::vector<std::wstring>& GetRayGens() const;
 		const std::vector<std::wstring>& GetMisses() const;
 		const std::vector<std::wstring>& GetHitGroups() const;
+		bool HasGraphicsNodes() const;
 	};
 }

@@ -58,7 +58,7 @@ namespace sqrp
 		Command& operator=(const Command&) = delete;
 		void BeginRender(const SwapChainHandle& swapchain);
 		void EndRender(const SwapChainHandle& swapchain);
-		void AddDrawIndexed(const MeshBaseHandle& mesh, UINT numInstances);
+		void AddDrawIndexed(const MeshHandle& mesh, UINT numInstances);
 		void AddDrawIndexedLine(const MeshHandle& mesh, UINT numInstances);
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
 		void Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers);
@@ -69,7 +69,7 @@ namespace sqrp
 		void DrawIndirect(const MeshHandle& mesh, const IndirectHandle& indirect, const BufferHandle& buffer, UINT maxCommandNum);
 		void DrawGui(const GuiHandle& gui, const SwapChainHandle& swapChain);
 		void ExecuteIndirect(const IndirectHandle& indirect);
-		void SetMesh(const MeshBaseHandle& mesh);
+		void SetMesh(const MeshHandle& mesh);
 		void SetComputeResource(const RootSignatureHandle& computeRootSig);
 		void SetComputeRoot32BitConstants(UINT rootParamIndex, const ConstantsHandle& constant);
 		void SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManagerHandle& descManager);

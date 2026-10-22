@@ -72,9 +72,7 @@ namespace sqrp
 		void Init(std::wstring gpuVendorName, ComPtr<ID3D12DebugDevice>& debugDevice);
 		void ShowUsedVramSize();
 		ASHandle				CreateAS(std::wstring name, UINT64 size) const;
-		ASMeshHandle			CreateASMesh(const CommandHandle& command, std::string modelPath) const;
-		ASMeshHandle			CreateASMesh(std::wstring name, const CommandHandle& command, const std::vector<ASVertex>& ASVertices, const std::vector<uint32_t>& indices) const;
-		BLASHandle				CreateBLAS(std::wstring name, const CommandHandle& command, const ASMeshHandle& mesh) const;
+		BLASHandle				CreateBLAS(std::wstring name, const CommandHandle& command, const MeshHandle& mesh) const;
 		BufferHandle			CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE) const;
 		CommandHandle			CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, UINT frameCount = 1) const;
 		ComputePipelineHandle	CreateComputePipeline(std::wstring name, const ComputeDesc& desc) const;
@@ -83,10 +81,8 @@ namespace sqrp
 		GraphicsPipelineHandle	CreateGraphicsPipeline(std::wstring name, const GraphicsDesc& desc) const;
 		GuiHandle				CreateGui(const HWND& hwnd) const;
 		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, const RootSignatureHandle& rootSignature, UINT byteStride, UINT maxCommandCount = 0, const BufferHandle& argumentBuffer = nullptr, const BufferHandle& counterBuffer = nullptr) const;
-		MeshHandle				CreateMesh(const CommandHandle& command, std::string modelPath) const;
-		GLTFMeshHandle			CreateGLTFMesh(const CommandHandle& command, std::string modelPath) const;
+		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, std::string modelPath) const;
 		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
-		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, UINT verticesNum, UINT indicesNum) const;
 		MeshPipelineHandle		CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const;
 		RaytracingHandle		CreateRaytracing(std::wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const;
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;

@@ -8,6 +8,7 @@
 #include <Device.hpp>
 #include <Dxc.hpp>
 #include <Fence.hpp>
+#include <GLTFLoader.hpp>
 #include <Gui.hpp>
 #include <Indirect.hpp>
 #include <Mesh.hpp>
