@@ -83,26 +83,26 @@ bool SampleApplication::OnStart()
 	miss_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"miss");
 
 	// Descriptor Manager
+	DescriptorLayout suzanneLayout({ {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::SRV, 0}, {ViewType::SRV, 1}, {ViewType::SRV, 2}, {ViewType::UAV, 0} });
 	suzanneDescManager_ = device_.CreateDescriptorManager(
-		L"suzanne",
-		HeapType::Resource,
 		{
-			{ .resource_ = cameraBuffer_,					.type_ = ViewType::CBV, .numReg_ = 0},
-			{ .resource_ = light0Buffer_,					.type_ = ViewType::CBV, .numReg_ = 1},
-			{ .resource_ = sceneTLAS_->GetASBuffer(),		.type_ = ViewType::SRV, .numReg_ = 0},
-			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.type_ = ViewType::SRV, .numReg_ = 1},
-			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.type_ = ViewType::SRV, .numReg_ = 2},
+			{ .resource_ = cameraBuffer_,					.type_ = ViewType::CBV, .regIndex_ = 0},
+			{ .resource_ = light0Buffer_,					.type_ = ViewType::CBV, .regIndex_ = 1},
+			{ .resource_ = sceneTLAS_->GetASBuffer(),		.type_ = ViewType::SRV, .regIndex_ = 0},
+			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.type_ = ViewType::SRV, .regIndex_ = 1},
+			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.type_ = ViewType::SRV, .regIndex_ = 2},
 			// NOTE : Need output UAV
-			{ .resource_ = outputTexture_,					.type_ = ViewType::UAV, .numReg_ = 0}
-		}
+			{ .resource_ = outputTexture_,					.type_ = ViewType::UAV, .regIndex_ = 0}
+		},
+		suzanneLayout
 	);
 	// RootSignature
 	suzanneRootSignature_ = device_.CreateRootSignature(
 		L"suzanne",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = suzanneDescManager_},
-			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 2, .numConstant_ = 4, .constantPtr_ = (void*)(&gpuDiffuseColor)}}
+			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = suzanneLayout},
+			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 2, .numConstant_ = 4}}
 		}
 	);
 
@@ -156,12 +156,13 @@ bool SampleApplication::OnStart()
 void SampleApplication::OnUpdate()
 {
 	command_->BeginRender(swapChain_);
+	command_->SetDescriptorHeap();
 
 	camera_.Update();
 	cameraBuffer_->Write(RayTracigCameraMatrix{ camera_.GetView(), camera_.GetProj(), camera_.GetInvViewProj(), camera_.GetInvView(), camera_.GetPos() });
 	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
-	command_->SetRaytracingResource(suzanneRootSignature_);
+	command_->SetRaytracingResource(suzanneRootSignature_, { suzanneDescManager_, make_shared<Constants>((void*)&gpuDiffuseColor, 4) });
 	command_->SetRaytracingState(rayTracingStates_);
 	command_->DispatchRays(rayTracing_);
 

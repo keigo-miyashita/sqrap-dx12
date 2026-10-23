@@ -115,8 +115,15 @@ namespace sqrp
 					for (const auto& resourceSetDesc : resourceSetDescs) {
 						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
 							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-							auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-							pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							// Same order as RootSignature: CBV/SRV/UAV table, then sampler table
+							if (descriptorManagerHandle->HasResource()) {
+								auto add = descriptorManagerHandle->GetResourceDescHeapGPUHandle();
+								pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							}
+							if (descriptorManagerHandle->HasSampler()) {
+								auto add = descriptorManagerHandle->GetSamplerDescHeapGPUHandle();
+								pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							}
 						}
 						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
 							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
@@ -147,8 +154,15 @@ namespace sqrp
 					for (const auto& resourceSetDesc : resourceSetDescs) {
 						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
 							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-							auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-							pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							// Same order as RootSignature: CBV/SRV/UAV table, then sampler table
+							if (descriptorManagerHandle->HasResource()) {
+								auto add = descriptorManagerHandle->GetResourceDescHeapGPUHandle();
+								pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							}
+							if (descriptorManagerHandle->HasSampler()) {
+								auto add = descriptorManagerHandle->GetSamplerDescHeapGPUHandle();
+								pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							}
 						}
 						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
 							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
@@ -179,8 +193,15 @@ namespace sqrp
 					for (const auto& resourceSetDesc : resourceSetDescs) {
 						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
 							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-							auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-							pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							// Same order as RootSignature: CBV/SRV/UAV table, then sampler table
+							if (descriptorManagerHandle->HasResource()) {
+								auto add = descriptorManagerHandle->GetResourceDescHeapGPUHandle();
+								pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							}
+							if (descriptorManagerHandle->HasSampler()) {
+								auto add = descriptorManagerHandle->GetSamplerDescHeapGPUHandle();
+								pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+							}
 						}
 						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
 							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);

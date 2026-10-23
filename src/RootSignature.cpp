@@ -11,34 +11,58 @@ namespace sqrp
 	RootSignature::RootSignature(const Device& device, wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams)
 		: pDevice_(&device), flag_(flag), rootParams_(rootParams), name_(name)
 	{
-		for (auto rootParam_ : rootParams) {
+		for (const auto& rootParam_ : rootParams_) {
 			CD3DX12_ROOT_PARAMETER1 rp;
 			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				rp.InitAsDescriptorTable(descManager->GetNumDescRanges(), descManager->GetPDescRanges(), rootParam_.shaderVisibility_);
-				rps_.push_back(rp);
-				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
+				const DescriptorLayout& descLayout = get<DescriptorLayout>(rootParam_.rootParamDesc_);
+				for (const auto& reg : descLayout.GetUsedRegs()) {
+					if (!usedRegs_.insert(reg).second) {
+						throw runtime_error("[RootSignature::RootSignature] duplicate register index in DescriptorLayout");
+					}
+				}
+				if (descLayout.GetResourceDescNum() != 0) {
+					rp.InitAsDescriptorTable(descLayout.GetResourceDescNum(), descLayout.GetPResourceDescRanges(), rootParam_.shaderVisibility_);
+					rps_.push_back(rp);
+					size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
+				}
+				if (descLayout.GetSamplerDescNum() != 0) {
+					rp.InitAsDescriptorTable(descLayout.GetSamplerDescNum(), descLayout.GetPSamplerDescRanges(), rootParam_.shaderVisibility_);
+					rps_.push_back(rp);
+					size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
+				}
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				if (!usedRegs_.insert({ ViewType::CBV, directDesc.numReg_ }).second) {
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index in CBV");
+				}
 				rp.InitAsConstantBufferView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				if (!usedRegs_.insert({ ViewType::SRV, directDesc.numReg_ }).second) {
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index in SRV");
+				}
 				rp.InitAsShaderResourceView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				if (!usedRegs_.insert({ ViewType::UAV, directDesc.numReg_ }).second) {
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index in UAV");
+				}
 				rp.InitAsUnorderedAccessView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				if (!usedRegs_.insert({ ViewType::CBV, directDesc.numReg_ }).second) {
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index in root constants");
+				}
 				rp.InitAsConstants(directDesc.numConstant_, directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
 				// For padding

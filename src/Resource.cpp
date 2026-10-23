@@ -17,25 +17,19 @@ namespace sqrp
 
 	}
 
-	void Resource::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
+	D3D12_CONSTANT_BUFFER_VIEW_DESC Resource::MakeCBV() const
 	{
-		if (rscType_ == ResourceType::Texture) {
-			throw runtime_error("[Resource::CreateCBV] cannot create CBV for texture");
-		}
+		throw runtime_error("[Resource::MakeCBV] this resource type cannot create CBV");
 	}
 
-	void Resource::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
+	D3D12_SHADER_RESOURCE_VIEW_DESC Resource::MakeSRV() const
 	{
-		if (rscType_ == ResourceType::AS) {
-			throw runtime_error("[Resource::CreateUAV] cannot create UAV for AS");
-		}
+		throw runtime_error("[Resource::MakeSRV] this resource type cannot create SRV");
 	}
 
-	void Resource::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
+	D3D12_UNORDERED_ACCESS_VIEW_DESC Resource::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
-		if (rscType_ == ResourceType::Texture) {
-			throw runtime_error("[Resource::CreateUAVCounter] cannot create UAVCounter for texture");
-		}
+		throw runtime_error("[Resource::MakeUAV] this resource type cannot create UAV");
 	}
 
 	D3D12_HEAP_TYPE Resource::GetHeapType() const
@@ -201,17 +195,15 @@ namespace sqrp
 		Unmap();
 	}
 
-	void Buffer::CreateCBV(DescriptorManager& descManager, UINT viewOffset)
+	D3D12_CONSTANT_BUFFER_VIEW_DESC Buffer::MakeCBV() const
 	{
 		D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc = {};
 		viewDesc.BufferLocation = resource_->GetGPUVirtualAddress();
 		viewDesc.SizeInBytes = strideSize_ * numElement_;
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateConstantBufferView(&viewDesc, heapHandle);
+		return viewDesc;
 	}
 
-	void Buffer::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
+	D3D12_SHADER_RESOURCE_VIEW_DESC Buffer::MakeSRV() const
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
 		viewDesc.Format = DXGI_FORMAT_UNKNOWN;
@@ -221,38 +213,23 @@ namespace sqrp
 		viewDesc.Buffer.FirstElement = 0;
 		viewDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateShaderResourceView(resource_.Get(), &viewDesc, heapHandle);
+		return viewDesc;
 	}
 
-	void Buffer::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
+	D3D12_UNORDERED_ACCESS_VIEW_DESC Buffer::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
+		if (mipSlice > 0) {
+			throw runtime_error("[Buffer::MakeUAV] mipSlice must be 0 for buffer UAV");
+		}
 		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 		viewDesc.Format = DXGI_FORMAT_UNKNOWN;
 		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 		viewDesc.Buffer.StructureByteStride = strideSize_;
 		viewDesc.Buffer.NumElements = numElement_;
 		viewDesc.Buffer.FirstElement = 0;
+		viewDesc.Buffer.CounterOffsetInBytes = isCounter ? offsetCounter_ : 0;
 		viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), nullptr, &viewDesc, heapHandle);
-	}
-
-	void Buffer::CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset)
-	{
-		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
-		viewDesc.Format = DXGI_FORMAT_UNKNOWN;
-		viewDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		viewDesc.Buffer.StructureByteStride = strideSize_;
-		viewDesc.Buffer.NumElements = numElement_;
-		viewDesc.Buffer.FirstElement = 0;
-		viewDesc.Buffer.CounterOffsetInBytes = offsetCounter_;
-		viewDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), resource_.Get(), &viewDesc, heapHandle);
+		return viewDesc;
 	}
 
 	UINT Buffer::GetStrideSize() const
@@ -341,7 +318,7 @@ namespace sqrp
 		resource_.Reset();
 	}
 
-	void Texture::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
+	D3D12_SHADER_RESOURCE_VIEW_DESC Texture::MakeSRV() const
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
 		viewDesc.Format = format_;
@@ -371,13 +348,14 @@ namespace sqrp
 			viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 		}
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateShaderResourceView(resource_.Get(), &viewDesc, heapHandle);
+		return viewDesc;
 	}
 
-	void Texture::CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice)
+	D3D12_UNORDERED_ACCESS_VIEW_DESC Texture::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
+		if (isCounter) {
+			throw runtime_error("[Texture::MakeUAV] UAV for texture cannot have counter");
+		}
 		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 		viewDesc.Format = format_;
 		if (texDim_ == TextureDim::Tex1D) {
@@ -403,9 +381,7 @@ namespace sqrp
 			viewDesc.Texture2DArray.ArraySize = 6;
 			viewDesc.Texture2DArray.PlaneSlice = 0;
 		}
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateUnorderedAccessView(resource_.Get(), nullptr, &viewDesc, heapHandle);
+		return viewDesc;
 	}
 
 	UINT Texture::GetStrideSize() const
@@ -459,15 +435,13 @@ namespace sqrp
 		resource_->SetName((name_ + L"_AS").c_str());
 	}
 
-	void AS::CreateSRV(DescriptorManager& descManager, UINT viewOffset)
+	D3D12_SHADER_RESOURCE_VIEW_DESC AS::MakeSRV() const
 	{
 		D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
 		viewDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		viewDesc.RaytracingAccelerationStructure.Location = resource_->GetGPUVirtualAddress();
-		auto heapHandle = descManager.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-		heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
-		pDevice_->GetDevice()->CreateShaderResourceView(nullptr, &viewDesc, heapHandle);
+		return viewDesc;
 	}
 
 	Constants::Constants(void* constants, UINT numConstants)

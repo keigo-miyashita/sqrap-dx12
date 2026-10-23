@@ -287,134 +287,144 @@ namespace sqrp
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
 	}
 
-	void Command::SetComputeResource(const RootSignatureHandle& computeRootSig)
+	void Command::SetComputeResource(const RootSignatureHandle& computeRootSig, initializer_list<variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle>> bindingResources)
 	{
-		SetComputeRootSig(computeRootSig);
-
-		vector<ID3D12DescriptorHeap*> heaps;
-		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
-			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				auto heap = descManager->GetDescriptorHeap().Get();
-				if (find(heaps.begin(), heaps.end(), heap) == heaps.end()) {
-					heaps.push_back(heap);
-				}
-			}
+		const auto& rootParams = computeRootSig->GetRootParametersVec();
+		if (bindingResources.size() != rootParams.size()) {
+			throw runtime_error("[Command::SetComputeResource] The number of binding resources does not match the number of root parameters");
 		}
-		if (!heaps.empty()) {
-			commandList_->SetDescriptorHeaps(static_cast<UINT>(heaps.size()), heaps.data());
-		}
-
-		int rootParamIndex = 0;
-		for (const auto& rootParam_ : computeRootSig->GetRootParametersVec()) {
-			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				SetComputeRootDescriptorTable(rootParamIndex, descManager);
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle CBV
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle SRV
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle UAV
-			}
-			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				//SetComputeRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
-				commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
-			}
-			rootParamIndex++;
-		}
-	}
-
-	void Command::SetComputeRoot32BitConstants(UINT rootParamIndex, const ConstantsHandle& constant)
-	{
-		commandList_->SetComputeRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
-	}
-
-	void Command::SetComputeRootDescriptorTable(UINT rootParamIndex, const DescriptorManagerHandle& descManager)
-	{
-		commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-	}
-
-	void Command::SetComputeRootSig(const RootSignatureHandle& computeRootSig)
-	{
 		commandList_->SetComputeRootSignature(computeRootSig->GetRootSignature().Get());
-	}
-
-	void Command::SetDescriptorHeap(const DescriptorManagerHandle& descManager)
-	{
-		commandList_->SetDescriptorHeaps(1, descManager->GetDescriptorHeap().GetAddressOf());
-	}
-
-	void Command::SetGraphicsResource(const RootSignatureHandle& graphicsRootSig)
-	{
-		SetGraphicsRootSig(graphicsRootSig);
-
-		vector<ID3D12DescriptorHeap*> heaps;
-		for (const auto& rootParam_ : graphicsRootSig->GetRootParametersVec()) {
-			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				auto heap = descManager->GetDescriptorHeap().Get();
-				if (find(heaps.begin(), heaps.end(), heap) == heaps.end()) {
-					heaps.push_back(heap);
-				}
-			}
-		}
-		if (!heaps.empty()) {
-			commandList_->SetDescriptorHeaps(static_cast<UINT>(heaps.size()), heaps.data());
-		}
 
 		int rootParamIndex = 0;
-		for (const auto& rootParam_ : graphicsRootSig->GetRootParametersVec()) {
-			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
-				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(rootParam_.rootParamDesc_);
-				SetGraphicsRootDescriptorTable(rootParamIndex, descManager);
+		auto bindingResourceIt = bindingResources.begin();
+		for (int i = 0; i < rootParams.size(); i++) {
+			if (rootParams[i].rootParamType_ == RootParamType::DescTable) {
+				if (!holds_alternative<DescriptorManagerHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetComputeResource] Expected DescriptorManagerHandle for root parameter index " + to_string(i));
+				}
+				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(bindingResourceIt[i]);
+				if (descManager->HasResource()) {
+					commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetResourceDescHeapGPUHandle());
+					rootParamIndex++;
+				}
+				if (descManager->HasSampler()) {
+					commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetSamplerDescHeapGPUHandle());
+					rootParamIndex++;
+				}
 			}
-			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle CBV
+			else if (rootParams[i].rootParamType_ == RootParamType::CBV) {
+				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetComputeResource] Expected BufferHandle for root parameter index " + to_string(i));
+				}
+				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
+				commandList_->SetComputeRootConstantBufferView(rootParamIndex, buffer->GetGPUAddress());
+				rootParamIndex++;
 			}
-			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle SRV
+			else if (rootParams[i].rootParamType_ == RootParamType::SRV) {
+				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetComputeResource] Expected BufferHandle for root parameter index " + to_string(i));
+				}
+				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
+				commandList_->SetComputeRootShaderResourceView(rootParamIndex, buffer->GetGPUAddress());
+				rootParamIndex++;
 			}
-			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				// NOTE : to handle UAV
+			else if (rootParams[i].rootParamType_ == RootParamType::UAV) {
+				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetComputeResource] Expected BufferHandle for root parameter index " + to_string(i));
+				}
+				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
+				commandList_->SetComputeRootUnorderedAccessView(rootParamIndex, buffer->GetGPUAddress());
+				rootParamIndex++;
 			}
-			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
-				//SetGraphicsRoot32BitConstants(rootParamIndex, /*pointer*/ nullptr);
-				commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, directDesc.numConstant_, directDesc.constantPtr_, 0);
+			else if (rootParams[i].rootParamType_ == RootParamType::Constant) {
+				if (!holds_alternative<ConstantsHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetComputeResource] Expected ConstantsHandle for root parameter index " + std::to_string(i));
+				}
+				ConstantsHandle constants = get<ConstantsHandle>(bindingResourceIt[i]);
+				auto directDesc = get<DirectRootParamDesc>(rootParams[i].rootParamDesc_);
+				if (constants->GetNumConstants() != directDesc.numConstant_) {
+					throw runtime_error("[Command::SetComputeResource] The number of constants in ConstantsHandle does not match the number of constants in DirectRootParamDesc for root parameter index " + std::to_string(i));
+				}
+				commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, constants->GetConstants(), 0);
+				rootParamIndex++;
 			}
-			rootParamIndex++;
 		}
 	}
 
-	void Command::SetGraphicsRoot32BitConstants(UINT rootParamIndex, const ConstantsHandle& constant)
+	void Command::SetDescriptorHeap()
 	{
-		commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, constant->GetNumConstants(), constant->GetConstants(), 0);
+		ID3D12DescriptorHeap* const heaps[] = { pDevice_->GetResourceDescriptorHeap().Get(), pDevice_->GetSamplerDescriptorHeap().Get()};
+		commandList_->SetDescriptorHeaps(2, heaps);
 	}
 
-	void Command::SetGraphicsRootDescriptorTable(UINT rootParamIndex, const DescriptorManagerHandle& descManager)
+	void Command::SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, initializer_list<variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle>> bindingResources)
 	{
-		commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-	}
+		const auto& rootParams = graphicsRootSig->GetRootParametersVec();
+		if (bindingResources.size() != rootParams.size()) {
+			throw runtime_error("[Command::SetGraphicsResource] The number of binding resources does not match the number of root parameters");
+		}
 
-	void Command::SetGraphicsRootSig(const RootSignatureHandle& graphicsRootSig)
-	{
 		commandList_->SetGraphicsRootSignature(graphicsRootSig->GetRootSignature().Get());
+
+		int rootParamIndex = 0;
+		auto bindingResourceIt = bindingResources.begin();
+		for (int i = 0; i < rootParams.size(); i++) {
+			if (rootParams[i].rootParamType_ == RootParamType::DescTable) {
+				if (!holds_alternative<DescriptorManagerHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetGraphicsResource] Expected DescriptorManagerHandle for root parameter index " + to_string(i));
+				}
+				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(bindingResourceIt[i]);
+				if (descManager->HasResource()) {
+					commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetResourceDescHeapGPUHandle());
+					rootParamIndex++;
+				}
+				if (descManager->HasSampler()) {
+					commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetSamplerDescHeapGPUHandle());
+					rootParamIndex++;
+				}
+			}
+			else if (rootParams[i].rootParamType_ == RootParamType::CBV) {
+				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetGraphicsResource] Expected BufferHandle for root parameter index " + to_string(i));
+				}
+				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
+				commandList_->SetGraphicsRootConstantBufferView(rootParamIndex, buffer->GetGPUAddress());
+				rootParamIndex++;
+			}
+			else if (rootParams[i].rootParamType_ == RootParamType::SRV) {
+				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetGraphicsResource] Expected BufferHandle for root parameter index " + to_string(i));
+				}
+				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
+				commandList_->SetGraphicsRootShaderResourceView(rootParamIndex, buffer->GetGPUAddress());
+				rootParamIndex++;
+			}
+			else if (rootParams[i].rootParamType_ == RootParamType::UAV) {
+				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetGraphicsResource] Expected BufferHandle for root parameter index " + to_string(i));
+				}
+				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
+				commandList_->SetGraphicsRootUnorderedAccessView(rootParamIndex, buffer->GetGPUAddress());
+				rootParamIndex++;
+			}
+			else if (rootParams[i].rootParamType_ == RootParamType::Constant) {
+				if (!holds_alternative<ConstantsHandle>(bindingResourceIt[i])) {
+					throw runtime_error("[Command::SetGraphicsResource] Expected ConstantsHandle for root parameter index " + std::to_string(i));
+				}
+				ConstantsHandle constants = get<ConstantsHandle>(bindingResourceIt[i]);
+				auto directDesc = get<DirectRootParamDesc>(rootParams[i].rootParamDesc_);
+				if (constants->GetNumConstants() != directDesc.numConstant_) {
+					throw runtime_error("[Command::SetGraphicsResource] The number of constants in ConstantsHandle does not match the number of constants in DirectRootParamDesc for root parameter index " + std::to_string(i));
+				}
+				commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, directDesc.numConstant_, constants->GetConstants(), 0);
+				rootParamIndex++;
+			}
+		}
 	}
 
-	void Command::SetRaytracingResource(const RootSignatureHandle& rayTracingRootSig)
+	void Command::SetRaytracingResource(const RootSignatureHandle& rayTracingRootSig, initializer_list<variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle>> bindingResources)
 	{
-		SetComputeResource(rayTracingRootSig);
+		SetComputeResource(rayTracingRootSig, bindingResources);
 	}
 
 	void Command::SetPipeline(const GraphicsPipelineHandle& graphicsPipeline)

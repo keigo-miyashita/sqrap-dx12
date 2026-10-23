@@ -2,6 +2,8 @@
 
 #include "pch.hpp"
 
+#include "DescriptorLayout.hpp"
+
 #include "Alias.hpp"
 
 namespace sqrp
@@ -11,21 +13,11 @@ namespace sqrp
 	class Resource;
 	class Texture;
 
-	enum class HeapType
-	{
-		Resource, Sampler,
-	};
-
-	enum class ViewType
-	{
-		NONE, CBV, SRV, UAV, SAMPLER,
-	};
-
 	struct DescriptorManagerDesc
 	{
 		ResourceHandle resource_;
 		ViewType type_ = ViewType::NONE;
-		UINT numReg_ = 0;
+		UINT regIndex_ = 0;
 		bool isCounter_ = false;
 		D3D12_SAMPLER_DESC samplerDesc_ = {};
 		UINT mipSlice_ = 0;        // UAV用：書き込み対象のmip
@@ -38,36 +30,18 @@ namespace sqrp
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 		const Device* pDevice_ = nullptr;
-		std::wstring name_;
-		// CBV_SRV_UABまたはSamplerを1つずつ（キューに）セットできる
-		HeapType heapType_ = HeapType::Resource;
-		ComPtr<ID3D12DescriptorHeap> descHeap_ = nullptr;
-		UINT viewOffset_ = 0;
-		UINT numDescriptor_ = 0;
-		// Descriptor Table
-		std::vector<CD3DX12_DESCRIPTOR_RANGE1> descRanges_;
-		UINT baseRegCBV_ = 0;
-		UINT numCBV_ = 0;
-		UINT baseRegSRV_ = 0;
-		UINT numSRV_ = 0;
-		UINT baseRegUAV_ = 0;
-		UINT numUAV_ = 0;
-		UINT baseRegSampler_ = 0;
-		UINT numSampler_ = 0;
-
-		void CreateCBV(const ResourceHandle& resource);
-		void CreateSRV(const ResourceHandle& resource);
-		void CreateUAV(const ResourceHandle& resource, UINT mipSlice = 0);
-		void CreateUAVCounter(const ResourceHandle& resource);
-		void CreateSampler(const D3D12_SAMPLER_DESC& desc);
+		bool hasResource_ = false;
+		bool hasSampler_ = false;
+		D3D12_GPU_DESCRIPTOR_HANDLE resourceDescHeapGPUHandle_ = {};
+		D3D12_GPU_DESCRIPTOR_HANDLE samplerDescHeapGPUHandle_ = {};
 
 	public:
-		DescriptorManager(const Device& pDevice, std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
+		DescriptorManager(const Device& device, std::initializer_list<DescriptorManagerDesc> descManagerDesc, DescriptorLayout descLayout);
 		DescriptorManager(const DescriptorManager&) = delete;
 		DescriptorManager& operator=(const DescriptorManager&) = delete;
-		const ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeap() const;
-		HeapType GetHeapType() const;
-		UINT GetNumDescRanges() const;
-		const CD3DX12_DESCRIPTOR_RANGE1* GetPDescRanges() const;
+		bool HasResource() const;
+		bool HasSampler() const;
+		D3D12_GPU_DESCRIPTOR_HANDLE GetResourceDescHeapGPUHandle() const;
+		D3D12_GPU_DESCRIPTOR_HANDLE GetSamplerDescHeapGPUHandle() const;
 	};
 }

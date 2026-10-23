@@ -14,6 +14,9 @@ extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = D3D12_SDK
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = D3D12_SDK_PATH_MACRO; }
 
 namespace {
+	constexpr UINT NUM_RESOURCE_DESC_HEAP = 500000;
+	constexpr UINT NUM_SAMPLER_DESC_HEAP = 1024;
+
 	void EnableDebugLayer()
 	{
 		ComPtr<ID3D12Debug> debugLayer = nullptr;
@@ -180,6 +183,32 @@ namespace sqrp
 		computeCommandQueue_->SetName(L"ComputeCommandQueue");
 	}
 
+	void Device::CreateDescriptorHeap()
+	{
+		HRESULT result = {};
+		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		heapDesc.NodeMask = 0;
+		heapDesc.NumDescriptors = NUM_RESOURCE_DESC_HEAP;
+		result = device_->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(resourceDescHeap_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw runtime_error("[Device::CreateDescriptorHeap] CreateDescriptorHeap failed\nHRESULT = " + to_string(result));
+		}
+		resourceDescHeap_->SetName(L"ResourceDescriptorHeap");
+
+		heapDesc = {};
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		heapDesc.NodeMask = 0;
+		heapDesc.NumDescriptors = NUM_SAMPLER_DESC_HEAP;
+		result = device_->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(samplerDescHeap_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw runtime_error("[Device::CreateDescriptorHeap] CreateDescriptorHeap failed\nHRESULT = " + to_string(result));
+		}
+		samplerDescHeap_->SetName(L"SamplerDescriptorHeap");
+	}
+
 	template<typename T>
 	void Device::DeferredReleaser(T* p) const
 	{
@@ -225,6 +254,8 @@ namespace sqrp
 		graphicsFence_ = CreateFence(QueueType::Graphics, L"GraphicsFence");
 		computeFence_ = CreateFence(QueueType::Compute, L"ComputeFence");
 
+		CreateDescriptorHeap();
+
 		deferredRelease_ = make_unique<DeferredRelease>();
 	}
 
@@ -252,6 +283,8 @@ namespace sqrp
 
 		graphicsFence_ = CreateFence(QueueType::Graphics, L"GraphicsFence");
 		computeFence_ = CreateFence(QueueType::Compute, L"ComputeFence");
+
+		CreateDescriptorHeap();
 
 		deferredRelease_ = make_unique<DeferredRelease>();
 	}
@@ -311,9 +344,9 @@ namespace sqrp
 			[this](ComputePipeline* p) { DeferredReleaser(p); });
 	}
 
-	DescriptorManagerHandle Device::CreateDescriptorManager(wstring name, HeapType heapType, initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags) const
+	DescriptorManagerHandle Device::CreateDescriptorManager(initializer_list<DescriptorManagerDesc> descManagerDesc, DescriptorLayout descLayout) const
 	{
-		return shared_ptr<DescriptorManager>(new DescriptorManager(*this, name, heapType, descManagerDesc, flags),
+		return shared_ptr<DescriptorManager>(new DescriptorManager(*this, descManagerDesc, descLayout),
 			[this](DescriptorManager* p) { DeferredReleaser(p); });
 	}
 	
@@ -457,5 +490,33 @@ namespace sqrp
 		else {
 			throw runtime_error("[Device::GetFence] invalid QueueType");
 		}
+	}
+
+	const ComPtr<ID3D12DescriptorHeap>& Device::GetResourceDescriptorHeap() const
+	{
+		return resourceDescHeap_;
+	}
+
+	const ComPtr<ID3D12DescriptorHeap>& Device::GetSamplerDescriptorHeap() const
+	{
+		return samplerDescHeap_;
+	}
+
+	UINT Device::AllocateResourceDescriptorFrontIndex(UINT count) const
+	{
+		const UINT start = resourceDescFrontIndex_.fetch_add(count);
+		if (start + count > NUM_RESOURCE_DESC_HEAP) {
+			throw runtime_error("[Device::AllocateResourceDescriptorFrontIndex] resource descriptor heap overflow");
+		}
+		return start;
+	}
+
+	UINT Device::AllocateSamplerDescriptorFrontIndex(UINT count) const
+	{
+		const UINT start = samplerDescFrontIndex_.fetch_add(count);
+		if (start + count > NUM_SAMPLER_DESC_HEAP) {
+			throw runtime_error("[Device::AllocateSamplerDescriptorFrontIndex] sampler descriptor heap overflow");
+		}
+		return start;
 	}
 }

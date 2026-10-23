@@ -74,22 +74,22 @@ bool SampleApplication::OnStart()
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
 
 	// Descriptor Manager
+	DescriptorLayout sphere0Layout({ {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2} });
 	sphere0DescManager_ = device_.CreateDescriptorManager(
-		L"sphere0",
-		HeapType::Resource,
 		{
-			{ .resource_ = cameraBuffer_, .type_ = ViewType::CBV, .numReg_ = 0},
-			{ .resource_ = light0Buffer_, .type_ = ViewType::CBV, .numReg_ = 1},
-			{ .resource_ = sphere0Buffer_, .type_ = ViewType::CBV, .numReg_ = 2}
-		}
+			{ .resource_ = cameraBuffer_, .type_ = ViewType::CBV, .regIndex_ = 0},
+			{ .resource_ = light0Buffer_, .type_ = ViewType::CBV, .regIndex_ = 1},
+			{ .resource_ = sphere0Buffer_, .type_ = ViewType::CBV, .regIndex_ = 2}
+		},
+		sphere0Layout
 	);
 	// RootSignature
 	sphere0RootSignature_ = device_.CreateRootSignature(
 		L"sphere0",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = sphere0DescManager_},
-			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 3, .numConstant_ = 4, .constantPtr_ = (void*)&gpuDiffuseColor}},
+			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = sphere0Layout},
+			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 3, .numConstant_ = 4}},
 		}
 	);
 	
@@ -106,13 +106,14 @@ bool SampleApplication::OnStart()
 void SampleApplication::OnUpdate()
 {
 	command_->BeginRender(swapChain_);
+	command_->SetDescriptorHeap();
 
 	camera_.Update();
 	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
 	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
 	command_->SetPipeline(lambert_);
-	command_->SetGraphicsResource(sphere0RootSignature_);
+	command_->SetGraphicsResource(sphere0RootSignature_, { sphere0DescManager_, make_shared<Constants>((void*)&gpuDiffuseColor, 4) });
 	command_->AddDrawIndexed(sphere_, 1);
 
 	// GUI

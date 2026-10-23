@@ -8,144 +8,107 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	void DescriptorManager::CreateCBV(const ResourceHandle& resource)
+	DescriptorManager::DescriptorManager(const Device& device, std::initializer_list<DescriptorManagerDesc> descManagerDesc, DescriptorLayout descLayout)
+		: pDevice_(&device)
 	{
-		resource->CreateCBV(*this, viewOffset_);
-		viewOffset_++;
-	}
-
-	void DescriptorManager::CreateSRV(const ResourceHandle& resource)
-	{
-		resource->CreateSRV(*this, viewOffset_);
-		viewOffset_++;
-	}
-
-	void DescriptorManager::CreateUAV(const ResourceHandle& resource, UINT mipSlice)
-	{
-		resource->CreateUAV(*this, viewOffset_, mipSlice);
-		viewOffset_++;
-	}
-
-	void DescriptorManager::CreateUAVCounter(const ResourceHandle& resource)
-	{
-		resource->CreateUAVCounter(*this, viewOffset_);
-		viewOffset_++;
-	}
-
-	void DescriptorManager::CreateSampler(const D3D12_SAMPLER_DESC& desc)
-	{
-		auto cpuHandle = descHeap_->GetCPUDescriptorHandleForHeapStart();
-		cpuHandle.ptr += viewOffset_ * pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		pDevice_->GetDevice()->CreateSampler(&desc, cpuHandle);
-		viewOffset_++;
-	}
-
-	DescriptorManager::DescriptorManager(const Device& device, wstring name, HeapType heapType, initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags)
-		: pDevice_(&device), name_(name), heapType_(heapType)
-	{
-		numDescriptor_ = static_cast<UINT>(descManagerDesc.size());
-
-		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		if (heapType_ == HeapType::Resource) {
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		if (descManagerDesc.size() == 0) {
+			throw runtime_error("[DescriptorManager::DescriptorManager] descManagerDesc is empty");
 		}
-		else if (heapType_ == HeapType::Sampler) {
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-		}
-		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		heapDesc.NodeMask = 0;
-		heapDesc.NumDescriptors = numDescriptor_;
-		HRESULT result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(descHeap_.ReleaseAndGetAddressOf()));
-		if (FAILED(result)) {
-			throw runtime_error("[DescriptorManager::DescriptorManager] CreateDescriptorHeap failed\nHRESULT = " + to_string(result));
-		}
-		descHeap_->SetName((name_ + L"DescriptorHeap").c_str());
 
-		ViewType currentType = ViewType::NONE;
-		for (const auto& desc : descManagerDesc) {
-			if (desc.type_ != currentType)
-			{
-				currentType = desc.type_;
-				switch (currentType)
-				{
-				case ViewType::CBV:    baseRegCBV_ = desc.numReg_; break;
-				case ViewType::SRV:    baseRegSRV_ = desc.numReg_; break;
-				case ViewType::UAV:    baseRegUAV_ = desc.numReg_; break;
-				case ViewType::SAMPLER: baseRegSampler_ = desc.numReg_; break;
-				default: break;
+		if (descManagerDesc.size() != descLayout.GetDescLayoutDesc().size()) {
+			throw runtime_error("[DescriptorManager::DescriptorManager] descManagerDesc size does not match descLayout size");
+		}
+
+		UINT resourceNum = 0;
+		UINT samplerNum = 0;
+		for (auto& desc : descManagerDesc) {
+			if (desc.type_ == ViewType::SAMPLER) {
+				samplerNum++;
+				hasSampler_ = true;
+			}
+			else {
+				resourceNum++;
+				hasResource_ = true;
+			}
+		}
+
+		const UINT resourceStart = pDevice_->AllocateResourceDescriptorFrontIndex(resourceNum);
+		const UINT samplerStart = pDevice_->AllocateSamplerDescriptorFrontIndex(samplerNum);
+
+		resourceDescHeapGPUHandle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+			pDevice_->GetResourceDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			resourceStart,
+			pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
+		);
+		samplerDescHeapGPUHandle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE(
+			pDevice_->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
+			samplerStart,
+			pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
+		);
+
+		UINT resourceViewOffset = resourceStart;
+		UINT samplerViewOffset = samplerStart;
+		
+		auto& descLayoutDesc = descLayout.GetDescLayoutDesc();
+		for (int i = 0; i < descManagerDesc.size(); i++) {
+			const auto& desc = descManagerDesc.begin()[i];
+			if ((desc.type_ != descLayoutDesc[i].first)
+				|| (desc.regIndex_ != descLayoutDesc[i].second)) {
+				throw runtime_error("[DescriptorManager::DescriptorManager] descriptor " + to_string(i) + " does not match the layout");
+			}
+			if (desc.type_ == ViewType::CBV) {
+				auto viewDesc = desc.resource_->MakeCBV();
+				auto heapHandle = pDevice_->GetResourceDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * resourceViewOffset;
+				pDevice_->GetDevice()->CreateConstantBufferView(&viewDesc, heapHandle);
+				resourceViewOffset++;
+			}
+			else if (desc.type_ == ViewType::SRV) {
+				auto viewDesc = desc.resource_->MakeSRV();
+				auto heapHandle = pDevice_->GetResourceDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * resourceViewOffset;
+				auto resource = desc.resource_->GetResource().Get();
+				if (desc.resource_->GetResourceType() == ResourceType::AS) {
+					resource = nullptr;
 				}
+				pDevice_->GetDevice()->CreateShaderResourceView(resource, &viewDesc, heapHandle);
+				resourceViewOffset++;
 			}
-			switch (desc.type_)
-			{
-			case ViewType::CBV:
-				numCBV_++;
-				CreateCBV(desc.resource_);
-				break;
-			case ViewType::SRV:
-				numSRV_++;
-				CreateSRV(desc.resource_);
-				break;
-			case ViewType::UAV:
-				numUAV_++;
-				if (desc.isCounter_) {
-					CreateUAVCounter(desc.resource_);
-				}
-				else {
-					CreateUAV(desc.resource_, desc.mipSlice_);
-				}
-				break;
-			case ViewType::SAMPLER:
-				numSampler_++;
-				CreateSampler(desc.samplerDesc_);
-				break;
-			default:
-				break;
+			else if (desc.type_ == ViewType::UAV) {
+				auto viewDesc = desc.resource_->MakeUAV(desc.isCounter_, desc.mipSlice_);
+				auto heapHandle = pDevice_->GetResourceDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * resourceViewOffset;
+				auto counterBuffer = desc.isCounter_ ? desc.resource_->GetResource().Get() : nullptr;
+				pDevice_->GetDevice()->CreateUnorderedAccessView(desc.resource_->GetResource().Get(), counterBuffer, &viewDesc, heapHandle);
+				resourceViewOffset++;
 			}
-		}
-
-		if (heapType_ == HeapType::Resource) {
-			if (numCBV_ != 0) {
-				CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
-				descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, numCBV_, baseRegCBV_, 0, flags, 0);
-				descRanges_.push_back(descRange);
-			}
-			if (numSRV_ != 0) {
-				CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
-				descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, numSRV_, baseRegSRV_, 0, flags, numCBV_);
-				descRanges_.push_back(descRange);
-			}
-			if (numUAV_ != 0) {
-				CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
-				descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, numUAV_, baseRegUAV_, 0, flags, numCBV_ + numSRV_);
-				descRanges_.push_back(descRange);
-			}
-		}
-		else if (heapType_ == HeapType::Sampler) {
-			if (numSampler_ != 0) {
-				CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
-				descRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, numSampler_, baseRegSampler_, 0, flags, 0);
-				descRanges_.push_back(descRange);
+			else if (desc.type_ == ViewType::SAMPLER) {
+				auto viewDesc = desc.samplerDesc_;
+				auto heapHandle = pDevice_->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) * samplerViewOffset;
+				pDevice_->GetDevice()->CreateSampler(&viewDesc, heapHandle);
+				samplerViewOffset++;
 			}
 		}
 	}
 
-	const ComPtr<ID3D12DescriptorHeap>& DescriptorManager::GetDescriptorHeap() const
+	bool DescriptorManager::HasResource() const
 	{
-		return descHeap_;
+		return hasResource_;
 	}
 
-	HeapType DescriptorManager::GetHeapType() const
+	bool DescriptorManager::HasSampler() const
 	{
-		return heapType_;
+		return hasSampler_;
 	}
 
-	UINT DescriptorManager::GetNumDescRanges() const
+	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::GetResourceDescHeapGPUHandle() const
 	{
-		return static_cast<UINT>(descRanges_.size());
+		return resourceDescHeapGPUHandle_;
 	}
 
-	const CD3DX12_DESCRIPTOR_RANGE1* DescriptorManager::GetPDescRanges() const
+	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::GetSamplerDescHeapGPUHandle() const
 	{
-		return descRanges_.data();
+		return samplerDescHeapGPUHandle_;
 	}
 }

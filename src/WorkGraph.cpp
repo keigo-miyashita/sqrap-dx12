@@ -93,8 +93,15 @@ namespace sqrp
 						for (const auto& resourceSetDesc : resourceSetDescs) {
 							if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
 								auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-								auto add = descriptorManagerHandle->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-								pThisLocalSig += CopyMem(pThisLocalSig, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+								// Same order as RootSignature: CBV/SRV/UAV table, then sampler table
+								if (descriptorManagerHandle->HasResource()) {
+									auto add = descriptorManagerHandle->GetResourceDescHeapGPUHandle();
+									pThisLocalSig += CopyMem(pThisLocalSig, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+								}
+								if (descriptorManagerHandle->HasSampler()) {
+									auto add = descriptorManagerHandle->GetSamplerDescHeapGPUHandle();
+									pThisLocalSig += CopyMem(pThisLocalSig, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+								}
 							}
 							else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
 								auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);

@@ -33,10 +33,9 @@ namespace sqrp
 		Resource(const Resource&) = delete;
 		Resource& operator=(const Resource&) = delete;
 
-		virtual void CreateCBV(DescriptorManager& descManager, UINT viewOffset);
-		virtual void CreateSRV(DescriptorManager& descManager, UINT viewOffset) = 0;
-		virtual void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0);
-		virtual void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset);
+		virtual D3D12_CONSTANT_BUFFER_VIEW_DESC MakeCBV() const;
+		virtual D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const;
+		virtual D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const;
 
 		const ComPtr<ID3D12Resource>& GetResource() const;
 		D3D12_GPU_VIRTUAL_ADDRESS GetGPUAddress() const;
@@ -135,10 +134,9 @@ namespace sqrp
 			Unmap();
 		}
 
-		void CreateCBV(DescriptorManager& descManager, UINT viewOffset) override;
-		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-		void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0) override;
-		void CreateUAVCounter(DescriptorManager& descManager, UINT viewOffset) override;
+		D3D12_CONSTANT_BUFFER_VIEW_DESC MakeCBV() const override;
+		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
+		D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const override;
 
 		UINT GetStrideSize() const;
 		UINT GetNumElement() const;
@@ -177,8 +175,8 @@ namespace sqrp
 		void Unmap();
 		void Reset();
 
-		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
-		void CreateUAV(DescriptorManager& descManager, UINT viewOffset, UINT mipSlice = 0) override;
+		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
+		D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const override;
 
 		UINT GetStrideSize() const;
 		UINT GetWidth() const;
@@ -201,7 +199,7 @@ namespace sqrp
 	public:
 		AS(const Device& device, std::wstring name, UINT64 size);
 
-		void CreateSRV(DescriptorManager& descManager, UINT viewOffset) override;
+		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
 	};
 
 	class Constants

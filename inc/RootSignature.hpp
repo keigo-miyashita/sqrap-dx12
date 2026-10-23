@@ -2,6 +2,7 @@
 
 #include "pch.hpp"
 
+#include "DescriptorLayout.hpp"
 #include "DescriptorManager.hpp"
 #include "Resource.hpp"
 
@@ -24,13 +25,12 @@ namespace sqrp
 		// 1つ32Bits = 4Bytes
 		// 例）float4 -> 16 Bytes -> numConstant_ = 4
 		UINT numConstant_ = 0;
-		void* constantPtr_ = nullptr;
 	};
 
 	struct RootParameter
 	{
 		RootParamType rootParamType_ = RootParamType::DescTable;
-		std::variant<DescriptorManagerHandle, DirectRootParamDesc> rootParamDesc_;
+		std::variant<DirectRootParamDesc, DescriptorLayout> rootParamDesc_;
 		D3D12_SHADER_VISIBILITY shaderVisibility_ = D3D12_SHADER_VISIBILITY_ALL;
 	};
 
@@ -47,6 +47,7 @@ namespace sqrp
 		std::vector<RootParameter> rootParams_;
 		std::wstring name_;
 		UINT size_ = 0;
+		std::set<std::pair<ViewType, UINT>> usedRegs_;
 
 	public:
 		RootSignature(const Device& device, std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams);

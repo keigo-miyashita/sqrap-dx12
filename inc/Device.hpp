@@ -4,6 +4,7 @@
 
 #include "AS.hpp"
 #include "DeferredRelease.hpp"
+#include "DescriptorLayout.hpp"
 #include "DescriptorManager.hpp"
 #include "Indirect.hpp"
 #include "Mesh.hpp"
@@ -50,6 +51,10 @@ namespace sqrp
 		FenceHandle graphicsFence_ = nullptr;
 		FenceHandle computeFence_ = nullptr;
 		mutable std::atomic<bool> hasComputeCommand_ = false;
+		ComPtr<ID3D12DescriptorHeap> resourceDescHeap_ = nullptr;
+		mutable std::atomic<UINT> resourceDescFrontIndex_ = 0;
+		ComPtr<ID3D12DescriptorHeap> samplerDescHeap_ = nullptr;
+		mutable std::atomic<UINT> samplerDescFrontIndex_ = 0;
 		std::unique_ptr<DeferredRelease> deferredRelease_ = nullptr;
 
 		void EnableFeatures(std::vector<UUID>& features) const;
@@ -60,6 +65,7 @@ namespace sqrp
 		bool CheckWorkGraphMeshNodeSupport();
 		void CreateDebugDevice(ComPtr<ID3D12DebugDevice>& debugDevice);
 		void CreateCommandQueue();
+		void CreateDescriptorHeap();
 		template<typename T>
 		void DeferredReleaser(T* p) const;
 
@@ -76,7 +82,7 @@ namespace sqrp
 		BufferHandle			CreateBuffer(std::wstring name, BufferType type, UINT strideSize, UINT numElement, D3D12_RESOURCE_FLAGS resourceFlag = D3D12_RESOURCE_FLAG_NONE) const;
 		CommandHandle			CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, UINT frameCount = 1) const;
 		ComputePipelineHandle	CreateComputePipeline(std::wstring name, const ComputeDesc& desc) const;
-		DescriptorManagerHandle	CreateDescriptorManager(std::wstring name, HeapType heapType, std::initializer_list<DescriptorManagerDesc> descManagerDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE) const;
+		DescriptorManagerHandle	CreateDescriptorManager(std::initializer_list<DescriptorManagerDesc> descManagerDesc, DescriptorLayout descLayout) const;
 		FenceHandle 			CreateFence(QueueType queueType, std::wstring name = L"") const;
 		GraphicsPipelineHandle	CreateGraphicsPipeline(std::wstring name, const GraphicsDesc& desc) const;
 		GuiHandle				CreateGui(const HWND& hwnd) const;
@@ -94,6 +100,8 @@ namespace sqrp
 
 		void ReleaseCompleted() const;
 		void WaitOnCPU(const TimelinePoint& timelinePoint) const;
+		UINT AllocateResourceDescriptorFrontIndex(UINT count) const;
+		UINT AllocateSamplerDescriptorFrontIndex(UINT count) const;
 
 		const ComPtr<IDXGIFactory7>& GetDXGIFactory() const;
 		const ComPtr<ID3D12Device>& GetDevice() const;
@@ -101,5 +109,7 @@ namespace sqrp
 		const ComPtr<LatestDevice>& GetLatestDevice() const;
 		const ComPtr<ID3D12CommandQueue>& GetCommandQueue(QueueType queueType) const;
 		FenceHandle GetFence(QueueType queueType) const;
+		const ComPtr<ID3D12DescriptorHeap>& GetResourceDescriptorHeap() const;
+		const ComPtr<ID3D12DescriptorHeap>& GetSamplerDescriptorHeap() const;
 	};
 }

@@ -31,6 +31,7 @@
 #include <memory>
 #include <queue>
 #include <ranges>
+#include <set>
 #include <span>
 #include <string>
 #include <syncstream>
