@@ -11,7 +11,7 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	void BLAS::CreateBLAS(const MeshHandle& mesh, const CommandHandle& command)
+	void BLAS::CreateBLAS(const Device& device, const MeshHandle& mesh, const CommandHandle& command)
 	{
 		D3D12_RAYTRACING_GEOMETRY_DESC geomDesc = {};
 		geomDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -32,7 +32,7 @@ namespace sqrp
 		buildInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
-		pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
+		device.GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 		cout << "BLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 		// CreateBuffer take strideSize and numElements as UINT, so we need to avoid overflow.
@@ -41,10 +41,10 @@ namespace sqrp
 		UINT64 scratchSize = prebuildInfo.ScratchDataSizeInBytes;
 		UINT strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
 		UINT numElements = static_cast<UINT>((scratchSize + strideSize - 1) / strideSize);
-		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_BLAS_scratch", BufferType::Unordered, strideSize, numElements);
+		scratchBuffer_ = device.CreateBuffer(name_ + L"_BLAS_scratch", BufferType::Unordered, strideSize, numElements);
 
 		cout << "BLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-		ASBuffer_ = pDevice_->CreateAS(name_ + L"_BLAS", prebuildInfo.ResultDataMaxSizeInBytes);
+		ASBuffer_ = device.CreateAS(name_ + L"_BLAS", prebuildInfo.ResultDataMaxSizeInBytes);
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 		buildASDesc.Inputs = buildInputs;
@@ -61,9 +61,9 @@ namespace sqrp
 	}
 
 	BLAS::BLAS(const Device& device, wstring name, const CommandHandle& command, const MeshHandle& mesh)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
-		CreateBLAS(mesh, command);
+		CreateBLAS(device, mesh, command);
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASAddress()
@@ -71,7 +71,7 @@ namespace sqrp
 		return ASBuffer_->GetResource()->GetGPUVirtualAddress();
 	}
 
-	void TLAS::CreateTLAS(const CommandHandle& command)
+	void TLAS::CreateTLAS(const Device& device, const CommandHandle& command)
 	{
 		vector<D3D12_RAYTRACING_INSTANCE_DESC> instanceDesc;
 		instanceDesc.resize(tlasDescs_.size());
@@ -90,7 +90,7 @@ namespace sqrp
 		}
 
 		shared_ptr<Buffer> uploadBuffer;
-		uploadBuffer = pDevice_->CreateBuffer(L"_upload", BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
+		uploadBuffer = device.CreateBuffer(L"_upload", BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 		void* rawPtr = uploadBuffer->Map();
 		if (rawPtr) {
 			D3D12_RAYTRACING_INSTANCE_DESC* pDesc = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(rawPtr);
@@ -98,7 +98,7 @@ namespace sqrp
 			uploadBuffer->Unmap();
 		}
 		cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
-		instanceDescBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
+		instanceDescBuffer_ = device.CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
 
 		command->CopyBuffer(uploadBuffer, uploadBuffer->GetInitialState(), instanceDescBuffer_, instanceDescBuffer_->GetInitialState());
 		command->WaitCommand();
@@ -111,7 +111,7 @@ namespace sqrp
 		buildInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO prebuildInfo = {};
-		pDevice_->GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
+		device.GetStableDevice()->GetRaytracingAccelerationStructurePrebuildInfo(&buildInputs, &prebuildInfo);
 
 		cout << "TLAS scratchBuffer size = " << prebuildInfo.ScratchDataSizeInBytes << endl;
 		// CreateBuffer take strideSize and numElements as UINT, so we need to avoid overflow.
@@ -120,10 +120,10 @@ namespace sqrp
 		UINT64 scratchSize = prebuildInfo.ScratchDataSizeInBytes;
 		UINT strideSize = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT;
 		UINT numElements = static_cast<UINT>((scratchSize + strideSize - 1) / strideSize);
-		scratchBuffer_ = pDevice_->CreateBuffer(name_ + L"_TLAS_scratch", BufferType::Unordered, strideSize, numElements);
+		scratchBuffer_ = device.CreateBuffer(name_ + L"_TLAS_scratch", BufferType::Unordered, strideSize, numElements);
 
 		cout << "TLAS ASBuffer size = " << prebuildInfo.ResultDataMaxSizeInBytes << endl;
-		ASBuffer_ = pDevice_->CreateAS(name_ + L"_TLAS", prebuildInfo.ResultDataMaxSizeInBytes);
+		ASBuffer_ = device.CreateAS(name_ + L"_TLAS", prebuildInfo.ResultDataMaxSizeInBytes);
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC buildASDesc = {};
 		buildASDesc.Inputs = buildInputs;
@@ -138,9 +138,9 @@ namespace sqrp
 	}
 
 	TLAS::TLAS(const Device& device, wstring name, const CommandHandle& command, const vector<TLASDesc>& tlasDescs)
-		: pDevice_(&device), name_(name), tlasDescs_(tlasDescs)
+		: name_(name), tlasDescs_(tlasDescs)
 	{
-		CreateTLAS(command);
+		CreateTLAS(device, command);
 	}
 
 	shared_ptr<AS> TLAS::GetASBuffer() const

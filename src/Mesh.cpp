@@ -26,12 +26,12 @@ namespace sqrp
 		return result;
 	}
 
-	void Mesh::CreateVertexBuffer(const CommandHandle& command, const std::vector<Vertex>& vertices)
+	void Mesh::CreateVertexBuffer(const Device& device, const CommandHandle& command, const std::vector<Vertex>& vertices)
 	{
 		vertexCount_ = static_cast<UINT>(vertices.size());
 
 		shared_ptr<Buffer> vertexUploadBuffer;
-		vertexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), vertices.size());
+		vertexUploadBuffer = device.CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), vertices.size());
 		void* rawPtr = vertexUploadBuffer->Map();
 		if (rawPtr) {
 			Vertex* pVertex = static_cast<Vertex*>(rawPtr);
@@ -39,7 +39,7 @@ namespace sqrp
 			vertexUploadBuffer->Unmap();
 		}
 
-		vertexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), vertices.size());
+		vertexBuffer_ = device.CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), vertices.size());
 
 		command->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
 		command->WaitCommand();
@@ -48,12 +48,12 @@ namespace sqrp
 		vbView_.StrideInBytes = sizeof(Vertex);
 	}
 
-	void Mesh::CreateIndexBuffer(const CommandHandle& command, const std::vector<uint32_t>& indices)
+	void Mesh::CreateIndexBuffer(const Device& device, const CommandHandle& command, const std::vector<uint32_t>& indices)
 	{
 		indexCount_ = static_cast<UINT>(indices.size());
 
 		shared_ptr<Buffer> indexUploadBuffer;
-		indexUploadBuffer = pDevice_->CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices.size());
+		indexUploadBuffer = device.CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices.size());
 		void* rawPtr = indexUploadBuffer->Map();
 		if (rawPtr) {
 			uint32_t* pIndex = static_cast<uint32_t*>(rawPtr);
@@ -61,7 +61,7 @@ namespace sqrp
 			indexUploadBuffer->Unmap();
 		}
 
-		indexBuffer_ = pDevice_->CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), indices.size());
+		indexBuffer_ = device.CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), indices.size());
 
 		command->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
 		command->WaitCommand();
@@ -71,19 +71,19 @@ namespace sqrp
 	}
 
 	Mesh::Mesh(const Device& device, std::wstring name, const CommandHandle& command, string modelPath)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
 		GLTFModel gltfMesh = LoadGLTF(modelPath);
-		CreateVertexBuffer(command, gltfMesh.mesh.vertices);
-		CreateIndexBuffer(command, gltfMesh.mesh.indices);
+		CreateVertexBuffer(device, command, gltfMesh.mesh.vertices);
+		CreateIndexBuffer(device, command, gltfMesh.mesh.indices);
 		subMeshes_ = gltfMesh.mesh.subMeshes;
 	}
 
 	Mesh::Mesh(const Device& device, std::wstring name, const CommandHandle& command, const vector<Vertex>& vertices, const vector<uint32_t>& indices)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
-		CreateVertexBuffer(command, vertices);
-		CreateIndexBuffer(command, indices);
+		CreateVertexBuffer(device, command, vertices);
+		CreateIndexBuffer(device, command, indices);
 		subMeshes_.push_back({ 0, static_cast<UINT>(indices.size()), 0, -1 });
 	}
 

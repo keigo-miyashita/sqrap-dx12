@@ -17,7 +17,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12StateObjectProperties> soProp_ = nullptr;
 		BufferHandle sbtBuffer_;

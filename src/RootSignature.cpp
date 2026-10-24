@@ -9,7 +9,7 @@ using namespace DirectX;
 namespace sqrp
 {
 	RootSignature::RootSignature(const Device& device, wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams)
-		: pDevice_(&device), flag_(flag), rootParams_(rootParams), name_(name)
+		: flag_(flag), rootParams_(rootParams), name_(name)
 	{
 		for (const auto& rootParam_ : rootParams_) {
 			CD3DX12_ROOT_PARAMETER1 rp;
@@ -87,7 +87,7 @@ namespace sqrp
 			throw runtime_error("[RootSignature::RootSignature] D3D12SerializeVersionedRootSignature failed\nHRESULT = " + to_string(result));
 		}
 
-		result = pDevice_->GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf()));
+		result = device.GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[RootSignature::RootSignature] CreateRootSignature failed\nHRESULT = " + to_string(result));
 		}

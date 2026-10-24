@@ -20,11 +20,10 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ASHandle ASBuffer_;
 		BufferHandle scratchBuffer_;
-		void CreateBLAS(const MeshHandle& mesh, const CommandHandle& command);
+		void CreateBLAS(const Device& device, const MeshHandle& mesh, const CommandHandle& command);
 
 	public:
 
@@ -49,13 +48,12 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		std::vector<TLASDesc> tlasDescs_;
 		BufferHandle instanceDescBuffer_;
 		ASHandle ASBuffer_;
 		BufferHandle scratchBuffer_;
-		void CreateTLAS(const CommandHandle& command);
+		void CreateTLAS(const Device& device, const CommandHandle& command);
 
 	public:
 

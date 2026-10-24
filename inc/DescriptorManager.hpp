@@ -28,8 +28,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
-		
 		DescriptorLayoutType descLayoutType_ = DescriptorLayoutType::Resource;
 		D3D12_GPU_DESCRIPTOR_HANDLE descHeapGPUHandle_ = {};
 

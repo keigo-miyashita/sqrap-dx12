@@ -40,7 +40,7 @@ namespace sqrp
 	}
 
 	GraphicsPipeline::GraphicsPipeline(const Device& device, wstring name, const GraphicsDesc& desc)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPSDesc = {};
 
@@ -78,7 +78,7 @@ namespace sqrp
 		}
 		graphicsPSDesc.SampleDesc = desc.sampleDesc_;
 
-		auto result = pDevice_->GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+		auto result = device.GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[GraphicsPipeline::GraphicsPipeline] CreateGraphicsPipelineState failed\nHRESULT = " + to_string(result));
 		}
@@ -91,7 +91,7 @@ namespace sqrp
 	}
 
 	MeshPipeline::MeshPipeline(const Device& device, wstring name, const MeshDesc& desc)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
 		D3DX12_MESH_SHADER_PIPELINE_STATE_DESC meshPSDesc = {};
 
@@ -126,7 +126,7 @@ namespace sqrp
 		streamDesc.pPipelineStateSubobjectStream = &meshStateStream;
 		streamDesc.SizeInBytes = sizeof(meshStateStream);
 
-		auto result = pDevice_->GetStableDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+		auto result = device.GetStableDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[MeshPipeline::MeshPipeline] CreatePipelineState failed\nHRESULT = " + to_string(result));
 		}
@@ -139,14 +139,14 @@ namespace sqrp
 	}
 
 	ComputePipeline::ComputePipeline(const Device& device, wstring name, const ComputeDesc& desc)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
 		D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
 		computePSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
 		computePSDesc.CS = CD3DX12_SHADER_BYTECODE(desc.CS_->GetBlob()->GetBufferPointer(), desc.CS_->GetBlob()->GetBufferSize());
 		computePSDesc.NodeMask = desc.nodeMask_;
 
-		HRESULT result = pDevice_->GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
+		HRESULT result = device.GetDevice()->CreateComputePipelineState(&computePSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[ComputePipeline::ComputePipeline] CreateComputePipelineState failed\nHRESULT = " + to_string(result));
 		}
@@ -158,7 +158,7 @@ namespace sqrp
 		return pipeline_;
 	}
 
-	void StateObject::CreateStateObject(const StateObjectDesc::RaytracingDesc& rtDesc)
+	void StateObject::CreateStateObject(const Device& device, const StateObjectDesc::RaytracingDesc& rtDesc)
 	{
 		stateObjectDesc_.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
 		auto pSoConfig = stateObjectDesc_.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
@@ -250,13 +250,13 @@ namespace sqrp
 		auto pPipelineConfig = stateObjectDesc_.CreateSubobject<CD3DX12_RAYTRACING_PIPELINE_CONFIG_SUBOBJECT>();
 		// ray depth
 		pPipelineConfig->Config(rtDesc.rayConfigDesc_.rayDepth_);
-		HRESULT result = pDevice_->GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
+		HRESULT result = device.GetStableDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[StateObject::CreateStateObject] CreateStateObject for raytracing failed\nHRESULT = " + to_string(result));
 		}
 	}
 
-	void StateObject::CreateStateObject(const StateObjectDesc::WorkGraphDesc& wgDesc)
+	void StateObject::CreateStateObject(const Device& device, const StateObjectDesc::WorkGraphDesc& wgDesc)
 	{
 		for (auto& programDesc : wgDesc.programDescs_) {
 			if (programDesc.nodeType_ == NodeType::Graphics) {
@@ -417,16 +417,16 @@ namespace sqrp
 			}
 		}
 
-		HRESULT result = pDevice_->GetLatestDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
+		HRESULT result = device.GetLatestDevice()->CreateStateObject(stateObjectDesc_, IID_PPV_ARGS(stateObject_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[StateObject::CreateStateObject] CreateStateObject for work graph failed\nHRESULT = " + to_string(result));
 		}
 	}
 
 	StateObject::StateObject(const Device& device, wstring name, const StateObjectDesc soDesc)
-		: pDevice_(&device), soDesc_(soDesc), name_(name)
+		: soDesc_(soDesc), name_(name)
 	{
-		visit([this](const auto& desc) { CreateStateObject(desc); }, soDesc_.typeDesc_);
+		visit([this, &device](const auto& desc) { CreateStateObject(device, desc); }, soDesc_.typeDesc_);
 	}
 
 	const ComPtr<ID3D12StateObject>& StateObject::GetStateObject() const

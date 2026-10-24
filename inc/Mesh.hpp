@@ -40,7 +40,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_ = L"";
 		BufferHandle vertexBuffer_;
 		D3D12_VERTEX_BUFFER_VIEW vbView_ = {};
@@ -50,8 +49,8 @@ namespace sqrp
 		UINT indexCount_ = 0;
 		std::vector<SubMesh> subMeshes_;
 
-		void CreateVertexBuffer(const CommandHandle& command, const std::vector<Vertex>& vertices);
-		void CreateIndexBuffer(const CommandHandle& command, const std::vector<uint32_t>& indices);
+		void CreateVertexBuffer(const Device& device, const CommandHandle& command, const std::vector<Vertex>& vertices);
+		void CreateIndexBuffer(const Device& device, const CommandHandle& command, const std::vector<uint32_t>& indices);
 
 	public:
 		Mesh(const Device& device, std::wstring name, const CommandHandle& command, std::string modelPath);

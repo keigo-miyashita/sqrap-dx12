@@ -40,7 +40,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		ComPtr<ID3D12RootSignature> rootSig_ = nullptr;
 		D3D12_ROOT_SIGNATURE_FLAGS flag_ = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 		std::vector<CD3DX12_ROOT_PARAMETER1> rps_;

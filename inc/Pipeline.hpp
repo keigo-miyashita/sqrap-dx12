@@ -52,7 +52,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
@@ -87,7 +86,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
@@ -111,7 +109,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
 
@@ -203,7 +200,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		const StateObjectDesc soDesc_;
 		std::wstring name_;
 		CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
@@ -214,8 +210,8 @@ namespace sqrp
 		std::wstring programName_;
 		bool hasGraphicsNodes_ = false;
 
-		void CreateStateObject(const StateObjectDesc::RaytracingDesc& rtDesc);
-		void CreateStateObject(const StateObjectDesc::WorkGraphDesc& wgDesc);
+		void CreateStateObject(const Device& device, const StateObjectDesc::RaytracingDesc& rtDesc);
+		void CreateStateObject(const Device& device, const StateObjectDesc::WorkGraphDesc& wgDesc);
 
 	public:
 		StateObject(const Device& device, std::wstring name, const StateObjectDesc soDesc);

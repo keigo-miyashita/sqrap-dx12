@@ -40,7 +40,7 @@ namespace sqrp
 	}
 
 	Raytracing::Raytracing(const Device& device, wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
 		stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp_.ReleaseAndGetAddressOf()));
 
@@ -93,7 +93,7 @@ namespace sqrp
 
 			UINT allRegionSize = sumRayGenRegionSize + sumMissRegionSize + sumHitGroupRegionSize;
 
-			sbtBuffer_ = pDevice_->CreateBuffer(name_ + L"_sbt", BufferType::Upload, allRegionSize, 1);
+			sbtBuffer_ = device.CreateBuffer(name_ + L"_sbt", BufferType::Upload, allRegionSize, 1);
 
 			void* rawPtr = sbtBuffer_->Map();
 			// uint8_t is 8 bit = 1 byte data

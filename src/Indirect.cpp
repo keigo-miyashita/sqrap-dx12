@@ -14,7 +14,7 @@ namespace sqrp
 		initializer_list<IndirectDesc> indirectDescs,
 		UINT byteStride,
 		const RootSignatureHandle& rootSignature
-	) : pDevice_(&device), name_(name)
+	) : name_(name)
 	{
 		bool needRootSignature = false;
 		UINT minByteStride = 0;
@@ -159,10 +159,10 @@ namespace sqrp
 
 		HRESULT result;
 		if (rootSignature) {
-			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc, rootSignature->GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+			result = device.GetDevice()->CreateCommandSignature(&cmdSigDesc, rootSignature->GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 		}
 		else {
-			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc, nullptr, IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+			result = device.GetDevice()->CreateCommandSignature(&cmdSigDesc, nullptr, IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 		}
 		if (FAILED(result)) {
 			throw runtime_error("[Indirect::Indirect] CreateCommandSignature failed\nHRESULT = " + to_string(result));
