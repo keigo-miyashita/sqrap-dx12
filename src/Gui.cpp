@@ -83,7 +83,7 @@ namespace sqrp
 	                                                     DXGI_FORMAT format)
 	{
 		if (slot == 0 || slot > kMaxUserTextures)
-			throw runtime_error("[Gui::RegisterTextureSRV] slot must be in 1.." + to_string(kMaxUserTextures));
+			throw runtime_error("[Gui::RegisterTextureSRV] slot must be between 1 and " + to_string(kMaxUserTextures));
 
 		UINT inc = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(
 		               D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

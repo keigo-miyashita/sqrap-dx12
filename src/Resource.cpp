@@ -19,17 +19,17 @@ namespace sqrp
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC Resource::MakeCBV() const
 	{
-		throw runtime_error("[Resource::MakeCBV] this resource type cannot create CBV");
+		throw runtime_error("[Resource::MakeCBV] a CBV cannot be created for this resource type");
 	}
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC Resource::MakeSRV() const
 	{
-		throw runtime_error("[Resource::MakeSRV] this resource type cannot create SRV");
+		throw runtime_error("[Resource::MakeSRV] an SRV cannot be created for this resource type");
 	}
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC Resource::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
-		throw runtime_error("[Resource::MakeUAV] this resource type cannot create UAV");
+		throw runtime_error("[Resource::MakeUAV] a UAV cannot be created for this resource type");
 	}
 
 	D3D12_HEAP_TYPE Resource::GetHeapType() const
@@ -185,7 +185,7 @@ namespace sqrp
 	void Buffer::Write(const void* src, UINT size)
 	{
 		if (size > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
-			throw std::runtime_error("[Buffer::Write] size of src is larger than buffer size");
+			throw std::runtime_error("[Buffer::Write] the size of src is larger than the buffer size");
 		}
 		void* rawPtr = Map();
 		if (!rawPtr) {
@@ -219,7 +219,7 @@ namespace sqrp
 	D3D12_UNORDERED_ACCESS_VIEW_DESC Buffer::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
 		if (mipSlice > 0) {
-			throw runtime_error("[Buffer::MakeUAV] mipSlice must be 0 for buffer UAV");
+			throw runtime_error("[Buffer::MakeUAV] mipSlice must be 0 for a buffer UAV");
 		}
 		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 		viewDesc.Format = DXGI_FORMAT_UNKNOWN;
@@ -354,7 +354,7 @@ namespace sqrp
 	D3D12_UNORDERED_ACCESS_VIEW_DESC Texture::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
 		if (isCounter) {
-			throw runtime_error("[Texture::MakeUAV] UAV for texture cannot have counter");
+			throw runtime_error("[Texture::MakeUAV] a texture UAV cannot have a counter");
 		}
 		D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc = {};
 		viewDesc.Format = format_;

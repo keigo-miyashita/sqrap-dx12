@@ -20,13 +20,8 @@ namespace sqrp
 						throw runtime_error("[RootSignature::RootSignature] duplicate register index in DescriptorLayout");
 					}
 				}
-				if (descLayout.GetResourceDescNum() != 0) {
-					rp.InitAsDescriptorTable(descLayout.GetResourceDescNum(), descLayout.GetPResourceDescRanges(), rootParam_.shaderVisibility_);
-					rps_.push_back(rp);
-					size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
-				}
-				if (descLayout.GetSamplerDescNum() != 0) {
-					rp.InitAsDescriptorTable(descLayout.GetSamplerDescNum(), descLayout.GetPSamplerDescRanges(), rootParam_.shaderVisibility_);
+				if (descLayout.GetRangeNum() != 0) {
+					rp.InitAsDescriptorTable(descLayout.GetRangeNum(), descLayout.GetPDescRanges(), rootParam_.shaderVisibility_);
 					rps_.push_back(rp);
 					size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 				}
@@ -34,7 +29,7 @@ namespace sqrp
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::CBV, directDesc.numReg_ }).second) {
-					throw runtime_error("[RootSignature::RootSignature] duplicate register index in CBV");
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index for a root CBV");
 				}
 				rp.InitAsConstantBufferView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
@@ -43,7 +38,7 @@ namespace sqrp
 			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::SRV, directDesc.numReg_ }).second) {
-					throw runtime_error("[RootSignature::RootSignature] duplicate register index in SRV");
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index for a root SRV");
 				}
 				rp.InitAsShaderResourceView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
@@ -52,7 +47,7 @@ namespace sqrp
 			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::UAV, directDesc.numReg_ }).second) {
-					throw runtime_error("[RootSignature::RootSignature] duplicate register index in UAV");
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index for a root UAV");
 				}
 				rp.InitAsUnorderedAccessView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
@@ -61,7 +56,7 @@ namespace sqrp
 			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
 				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::CBV, directDesc.numReg_ }).second) {
-					throw runtime_error("[RootSignature::RootSignature] duplicate register index in root constants");
+					throw runtime_error("[RootSignature::RootSignature] duplicate register index for root constants");
 				}
 				rp.InitAsConstants(directDesc.numConstant_, directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
@@ -75,9 +70,9 @@ namespace sqrp
 		}
 
 		CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-		// TODO : 
-		// Need another method for support sampler
-		// Third argument is for sampler
+		// TODO :
+		// Support static samplers
+		// The third and fourth arguments are the number of static samplers and their descs
 		rootSignatureDesc.Init_1_1(rps_.size(), rps_.data(), 0, nullptr, flag_);
 
 		ComPtr<ID3DBlob> rootSigBlob = nullptr;
@@ -89,7 +84,7 @@ namespace sqrp
 			if (errBlob) {
 				OutputDebugStringA((char*)errBlob->GetBufferPointer());
 			}
-			throw runtime_error("[RootSignature::RootSignature] D3D12SerializeRootSignature failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[RootSignature::RootSignature] D3D12SerializeVersionedRootSignature failed\nHRESULT = " + to_string(result));
 		}
 
 		result = pDevice_->GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf()));

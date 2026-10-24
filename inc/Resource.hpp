@@ -80,11 +80,11 @@ namespace sqrp
 		void Write(const T& data)
 		{
 			if (sizeof(T) > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
-				throw std::runtime_error("Buffer::Write : size of src is larger than buffer size");
+				throw std::runtime_error("[Buffer::Write] the size of src is larger than the buffer size");
 			}
 			void* rawPtr = Map();
 			if (!rawPtr) {
-				throw std::runtime_error("Buffer::Write : Map failed");
+				throw std::runtime_error("[Buffer::Write] Map failed");
 			}
 			*static_cast<T*>(rawPtr) = data;
 
@@ -94,11 +94,11 @@ namespace sqrp
 		void Write(const std::vector<T>& src)
 		{
 			if (src.size() * sizeof(T) > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
-				throw std::runtime_error("Buffer::Write : size of src is larger than buffer size");
+				throw std::runtime_error("[Buffer::Write] the size of src is larger than the buffer size");
 			}
 			void* rawPtr = Map();
 			if (!rawPtr) {
-				throw std::runtime_error("Buffer::Write : Map failed");
+				throw std::runtime_error("[Buffer::Write] Map failed");
 			}
 			memcpy(rawPtr, src.data(), sizeof(T) * src.size());
 
@@ -109,11 +109,11 @@ namespace sqrp
 		void Read(std::array<T, N>& dest)
 		{
 			if (sizeof(T) * N > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
-				throw std::runtime_error("Buffer::Read : size of dest is larger than buffer size");
+				throw std::runtime_error("[Buffer::Read] the size of dest is larger than the buffer size");
 			}
 			void* rawPtr = Map();
 			if (!rawPtr) {
-				throw std::runtime_error("Buffer::Read : Map failed");
+				throw std::runtime_error("[Buffer::Read] Map failed");
 			}
 			std::memcpy(dest.data(), rawPtr, dest.size() * sizeof(T));
 
@@ -123,11 +123,11 @@ namespace sqrp
 		void Read(std::vector<T>& dest)
 		{
 			if (dest.size() * sizeof(T) > static_cast<std::size_t>(GetStrideSize()) * GetNumElement()) {
-				throw std::runtime_error("Buffer::Read : size of dest is larger than buffer size");
+				throw std::runtime_error("[Buffer::Read] the size of dest is larger than the buffer size");
 			}
 			void* rawPtr = Map();
 			if (!rawPtr) {
-				throw std::runtime_error("Buffer::Read : Map failed");
+				throw std::runtime_error("[Buffer::Read] Map failed");
 			}
 			std::memcpy(dest.data(), rawPtr, dest.size() * sizeof(T));
 

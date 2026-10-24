@@ -82,7 +82,7 @@ namespace sqrp
 		args.push_back(GetShaderModel(shaderType));
 		if (shaderType == ShaderType::Raytracing || shaderType == ShaderType::WorkGraph || shaderType == ShaderType::Library) {
 			if (!entry.empty()) {
-				cout << "[Dxc::CompileShader] entry is ignored for Raytracing, WorkGraph and Library shaders. Specify entry as export of state object." << endl;
+				cout << "[Dxc::CompileShader] entry is ignored for Raytracing, WorkGraph and Library shaders. Specify the entry point as an export of the state object instead." << endl;
 			}
 		}
 		else if (!entry.empty()) {
@@ -144,7 +144,7 @@ namespace sqrp
 		HRESULT status = S_OK;
 		dxcResult->GetStatus(&status);
 		if (FAILED(status)) {
-			string errorMsg = "[Dxc::CompileShader] GetStatus failed\nHRESULT = " + to_string(status);
+			string errorMsg = "[Dxc::CompileShader] shader compilation failed\nHRESULT = " + to_string(status);
 			ComPtr<IDxcBlobUtf8> errors = nullptr;
 			dxcResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(errors.ReleaseAndGetAddressOf()), nullptr);
 			if (errors && errors->GetStringLength() > 0) {

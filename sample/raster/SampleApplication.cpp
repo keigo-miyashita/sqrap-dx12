@@ -74,12 +74,12 @@ bool SampleApplication::OnStart()
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
 
 	// Descriptor Manager
-	DescriptorLayout sphere0Layout({ {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2} });
+	DescriptorLayout sphere0Layout(DescriptorLayoutType::Resource, { {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2} });
 	sphere0DescManager_ = device_.CreateDescriptorManager(
 		{
-			{ .resource_ = cameraBuffer_, .type_ = ViewType::CBV, .regIndex_ = 0},
-			{ .resource_ = light0Buffer_, .type_ = ViewType::CBV, .regIndex_ = 1},
-			{ .resource_ = sphere0Buffer_, .type_ = ViewType::CBV, .regIndex_ = 2}
+			{ .resource_ = cameraBuffer_, .regIndex_ = 0},
+			{ .resource_ = light0Buffer_, .regIndex_ = 1},
+			{ .resource_ = sphere0Buffer_, .regIndex_ = 2}
 		},
 		sphere0Layout
 	);

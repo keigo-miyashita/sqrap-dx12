@@ -7,8 +7,8 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	DescriptorLayout::DescriptorLayout(std::vector<std::pair<ViewType, UINT>> descLayoutDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags)
-		: descLayoutDesc_(descLayoutDesc)
+	DescriptorLayout::DescriptorLayout(DescriptorLayoutType descLayoutType, std::vector<std::pair<ViewType, UINT>> descLayoutDesc, D3D12_DESCRIPTOR_RANGE_FLAGS flags)
+		: descLayoutType_(descLayoutType), descLayoutDesc_(descLayoutDesc)
 	{
 		if (descLayoutDesc.size() == 0) {
 			throw runtime_error("[DescriptorLayout::DescriptorLayout] descLayoutDesc is empty");
@@ -20,6 +20,12 @@ namespace sqrp
 		for (auto& desc : descLayoutDesc) {
 			auto currentType = ConvertDescriptorRangeType(desc.first);
 			auto currentIndex = desc.second;
+			if (descLayoutType_ == DescriptorLayoutType::Resource && desc.first == ViewType::SAMPLER) {
+				throw runtime_error("[DescriptorLayout::DescriptorLayout] SAMPLER cannot be used in a Resource layout");
+			}
+			if (descLayoutType_ == DescriptorLayoutType::Sampler && desc.first != ViewType::SAMPLER) {
+				throw runtime_error("[DescriptorLayout::DescriptorLayout] only SAMPLER can be used in a Sampler layout");
+			}
 			if (!usedRegs_.insert({ desc.first, currentIndex }).second)
 			{
 				throw runtime_error("[DescriptorLayout::DescriptorLayout] duplicate register index for the same view type");
@@ -27,12 +33,7 @@ namespace sqrp
 			if (numReg > 0 && (currentType != previousType || currentIndex != baseReg + numReg)) {
 				CD3DX12_DESCRIPTOR_RANGE1 descRange = {};
 				descRange.Init(previousType, numReg, baseReg, 0, flags, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND);
-				if (previousType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER) {
-					samplerDescRanges_.push_back(descRange);
-				}
-				else {
-					resourceDescRanges_.push_back(descRange);
-				}
+				descRanges_.push_back(descRange);
 				baseReg = currentIndex;
 				numReg = 0;
 			}
@@ -41,12 +42,7 @@ namespace sqrp
 		}
 		CD3DX12_DESCRIPTOR_RANGE1 descRange;
 		descRange.Init(previousType, numReg, baseReg, 0, flags, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND);
-		if (previousType == D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER) {
-			samplerDescRanges_.push_back(descRange);
-		}
-		else {
-			resourceDescRanges_.push_back(descRange);
-		}
+		descRanges_.push_back(descRange);
 	}
 
 	D3D12_DESCRIPTOR_RANGE_TYPE DescriptorLayout::ConvertDescriptorRangeType(ViewType type)
@@ -64,28 +60,23 @@ namespace sqrp
 			return D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 		}
 		else {
-			throw runtime_error("[DescriptorLayout::ConvertDescriptorRangeType] Invalid view type");
+			throw runtime_error("[DescriptorLayout::ConvertDescriptorRangeType] invalid view type");
 		}
 	}
 
-	UINT DescriptorLayout::GetResourceDescNum() const
+	UINT DescriptorLayout::GetRangeNum() const
 	{
-		return static_cast<UINT>(resourceDescRanges_.size());
+		return static_cast<UINT>(descRanges_.size());
 	}
 
-	UINT DescriptorLayout::GetSamplerDescNum() const
+	UINT DescriptorLayout::GetViewNum() const
 	{
-		return static_cast<UINT>(samplerDescRanges_.size());
+		return static_cast<UINT>(descLayoutDesc_.size());
 	}
 
-	const CD3DX12_DESCRIPTOR_RANGE1* DescriptorLayout::GetPResourceDescRanges() const
+	const CD3DX12_DESCRIPTOR_RANGE1* DescriptorLayout::GetPDescRanges() const
 	{
-		return resourceDescRanges_.data();
-	}
-
-	const CD3DX12_DESCRIPTOR_RANGE1* DescriptorLayout::GetPSamplerDescRanges() const
-	{
-		return samplerDescRanges_.data();
+		return descRanges_.data();
 	}
 
 	const std::set<std::pair<ViewType, UINT>>& DescriptorLayout::GetUsedRegs() const
@@ -96,5 +87,10 @@ namespace sqrp
 	const std::vector<std::pair<ViewType, UINT>>& DescriptorLayout::GetDescLayoutDesc() const
 	{
 		return descLayoutDesc_;
+	}
+
+	DescriptorLayoutType DescriptorLayout::GetDescriptorLayoutType() const
+	{
+		return descLayoutType_;
 	}
 }

@@ -40,11 +40,11 @@ namespace sqrp
 
 		if (stateObject->HasGraphicsNodes()) {
 			if (maxInputRecords == 0 || maxNodeInputs == 0) {
-				throw runtime_error("[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs must be greater than 0 for WorkGraphMesh");
+				throw runtime_error("[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs must be greater than 0 for a work graph with mesh nodes");
 			}
 			workGraphProp_->SetMaximumInputRecords(workGraphIndex_, maxInputRecords, maxNodeInputs);
 		} else if (maxInputRecords != 0 || maxNodeInputs != 0) {
-			cout << "[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs are ignored for work graph without mesh nodes." << endl;
+			cout << "[WorkGraph::WorkGraph] maxInputRecords and maxNodeInputs are ignored for a work graph without mesh nodes." << endl;
 		}
 
 		workGraphProp_->GetWorkGraphMemoryRequirements(workGraphIndex_, &memReqs_);
@@ -93,15 +93,8 @@ namespace sqrp
 						for (const auto& resourceSetDesc : resourceSetDescs) {
 							if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
 								auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-								// Same order as RootSignature: CBV/SRV/UAV table, then sampler table
-								if (descriptorManagerHandle->HasResource()) {
-									auto add = descriptorManagerHandle->GetResourceDescHeapGPUHandle();
-									pThisLocalSig += CopyMem(pThisLocalSig, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-								}
-								if (descriptorManagerHandle->HasSampler()) {
-									auto add = descriptorManagerHandle->GetSamplerDescHeapGPUHandle();
-									pThisLocalSig += CopyMem(pThisLocalSig, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-								}
+								auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
+								pThisLocalSig += CopyMem(pThisLocalSig, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
 							}
 							else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
 								auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);

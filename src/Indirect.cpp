@@ -12,79 +12,157 @@ namespace sqrp
 	Indirect::Indirect(const Device& device,
 		wstring name,
 		initializer_list<IndirectDesc> indirectDescs,
-		const RootSignatureHandle& rootSignature,
 		UINT byteStride,
-		UINT maxCommandCount,
-		const BufferHandle& argumentBuffer,
-		const BufferHandle& counterBuffer
-	) : pDevice_(&device), name_(name), maxCommandCount_(maxCommandCount), argumentBuffer_(argumentBuffer), counterBuffer_(counterBuffer)
+		const RootSignatureHandle& rootSignature
+	) : pDevice_(&device), name_(name)
 	{
-		for (auto indirectDesc : indirectDescs) {
+		bool needRootSignature = false;
+		UINT minByteStride = 0;
+		vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgDescs;
+		D3D12_COMMAND_SIGNATURE_DESC cmdSigDesc = {};
+		const vector<RootParameter>* rootParams = rootSignature ? &rootSignature->GetRootParametersVec() : nullptr;
+		const auto& indirectDescsItr = indirectDescs.begin();
+
+		auto checkRootParameterIndex =
+			[&](UINT rootParamIndex) {
+			if (!rootSignature) {
+				throw runtime_error("[Indirect::Indirect] rootSignature is required because an argument changes root arguments (Constant / IncConstant / CBV / SRV / UAV)");
+			}
+
+			if (rootParamIndex >= rootParams->size()) {
+				throw runtime_error("[Indirect::Indirect] rootParameterIndex_ (" + to_string(rootParamIndex) + ") is out of range of rootSignature (" + to_string(rootParams->size()) + " parameters)");
+			}
+			};
+
+		for (int i = 0; i < indirectDescs.size(); i++) {
 			D3D12_INDIRECT_ARGUMENT_DESC desc = {};
-			if (indirectDesc.type_ == IndirectType::Draw) {
+			if (indirectDescsItr[i].type_ == IndirectType::Draw) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_DRAW_ARGUMENTS);
 			}
-			else if (indirectDesc.type_ == IndirectType::DrawIndexed) {
+			else if (indirectDescsItr[i].type_ == IndirectType::DrawIndexed) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
 			}
-			else if (indirectDesc.type_ == IndirectType::Dispatch) {
+			else if (indirectDescsItr[i].type_ == IndirectType::Dispatch) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_DISPATCH_ARGUMENTS);
 			}
-			else if (indirectDesc.type_ == IndirectType::VB) {
+			else if (indirectDescsItr[i].type_ == IndirectType::VB) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_VERTEX_BUFFER_VIEW;
 				desc.VertexBuffer.Slot = 0;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_VERTEX_BUFFER_VIEW);
 			}
-			else if (indirectDesc.type_ == IndirectType::IB) {
+			else if (indirectDescsItr[i].type_ == IndirectType::IB) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_INDEX_BUFFER_VIEW;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_INDEX_BUFFER_VIEW);
 			}
-			else if (indirectDesc.type_ == IndirectType::Constant) {
+			else if (indirectDescsItr[i].type_ == IndirectType::Constant) {
+				const UINT rootParamIndex = indirectDescsItr[i].rootParameterIndex_;
+				checkRootParameterIndex(rootParamIndex);
+				if ((*rootParams)[rootParamIndex].rootParamType_ != RootParamType::Constant) {
+					throw runtime_error("[Indirect::Indirect] indirect desc " + to_string(i) + ": root parameter " + to_string(rootParamIndex) + " is not a root constant");
+				}
+				auto& directRootParamDesc = std::get<DirectRootParamDesc>((*rootParams)[rootParamIndex].rootParamDesc_);
+				if (indirectDescsItr[i].numConstant_ != directRootParamDesc.numConstant_) {
+					throw runtime_error("[Indirect::Indirect] indirect desc " + to_string(i) + ": numConstant_ (" + to_string(indirectDescsItr[i].numConstant_) + ") does not match root parameter " + to_string(rootParamIndex) + " (" + to_string(directRootParamDesc.numConstant_) + ")");
+				}
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-				desc.Constant.RootParameterIndex = indirectDesc.rootParameterIndex_;
+				desc.Constant.RootParameterIndex = rootParamIndex;
 				desc.Constant.DestOffsetIn32BitValues = 0;
-				desc.Constant.Num32BitValuesToSet = indirectDesc.numConstant_;
-				indirectArgDesc_.push_back(desc);
+				desc.Constant.Num32BitValuesToSet = indirectDescsItr[i].numConstant_;
+				minByteStride += sizeof(UINT) * indirectDescsItr[i].numConstant_;
+				indirectArgDescs.push_back(desc);
+				needRootSignature = true;
 			}
-			else if (indirectDesc.type_ == IndirectType::CBV) {
+			else if (indirectDescsItr[i].type_ == IndirectType::CBV) {
+				const UINT rootParamIndex = indirectDescsItr[i].rootParameterIndex_;
+				checkRootParameterIndex(rootParamIndex);
+				if ((*rootParams)[rootParamIndex].rootParamType_ != RootParamType::CBV) {
+					throw runtime_error("[Indirect::Indirect] indirect desc " + to_string(i) + ": root parameter " + to_string(rootParamIndex) + " is not a root CBV");
+				}
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-				desc.ConstantBufferView.RootParameterIndex = indirectDesc.rootParameterIndex_;
-				indirectArgDesc_.push_back(desc);
+				desc.ConstantBufferView.RootParameterIndex = rootParamIndex;
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+				needRootSignature = true;
 			}
-			else if (indirectDesc.type_ == IndirectType::SRV) {
+			else if (indirectDescsItr[i].type_ == IndirectType::SRV) {
+				const UINT rootParamIndex = indirectDescsItr[i].rootParameterIndex_;
+				checkRootParameterIndex(rootParamIndex);
+				if ((*rootParams)[rootParamIndex].rootParamType_ != RootParamType::SRV) {
+					throw runtime_error("[Indirect::Indirect] indirect desc " + to_string(i) + ": root parameter " + to_string(rootParamIndex) + " is not a root SRV");
+				}
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_SHADER_RESOURCE_VIEW;
-				desc.ShaderResourceView.RootParameterIndex = indirectDesc.rootParameterIndex_;
-				indirectArgDesc_.push_back(desc);
+				desc.ShaderResourceView.RootParameterIndex = rootParamIndex;
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+				needRootSignature = true;
 			}
-			else if (indirectDesc.type_ == IndirectType::UAV) {
+			else if (indirectDescsItr[i].type_ == IndirectType::UAV) {
+				const UINT rootParamIndex = indirectDescsItr[i].rootParameterIndex_;
+				checkRootParameterIndex(rootParamIndex);
+				if ((*rootParams)[rootParamIndex].rootParamType_ != RootParamType::UAV) {
+					throw runtime_error("[Indirect::Indirect] indirect desc " + to_string(i) + ": root parameter " + to_string(rootParamIndex) + " is not a root UAV");
+				}
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_UNORDERED_ACCESS_VIEW;
-				desc.UnorderedAccessView.RootParameterIndex = indirectDesc.rootParameterIndex_;
-				indirectArgDesc_.push_back(desc);
+				desc.UnorderedAccessView.RootParameterIndex = rootParamIndex;
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+				needRootSignature = true;
 			}
-			else if (indirectDesc.type_ == IndirectType::Ray) {
+			else if (indirectDescsItr[i].type_ == IndirectType::Ray) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_RAYS;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_DISPATCH_RAYS_DESC);
 			}
-			else if (indirectDesc.type_ == IndirectType::Mesh) {
+			else if (indirectDescsItr[i].type_ == IndirectType::Mesh) {
 				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DISPATCH_MESH;
-				indirectArgDesc_.push_back(desc);
+				indirectArgDescs.push_back(desc);
+				minByteStride += sizeof(D3D12_DISPATCH_MESH_ARGUMENTS);
+			}
+			else if (indirectDescsItr[i].type_ == IndirectType::IncConstant) {
+				const UINT rootParamIndex = indirectDescsItr[i].rootParameterIndex_;
+				checkRootParameterIndex(rootParamIndex);
+				if ((*rootParams)[rootParamIndex].rootParamType_ != RootParamType::Constant) {
+					throw runtime_error("[Indirect::Indirect] indirect desc " + to_string(i) + ": root parameter " + to_string(rootParamIndex) + " is not a root constant");
+				}
+				desc.Type = D3D12_INDIRECT_ARGUMENT_TYPE_INCREMENTING_CONSTANT;
+				desc.IncrementingConstant.RootParameterIndex = indirectDescsItr[i].rootParameterIndex_;
+				desc.IncrementingConstant.DestOffsetIn32BitValues = 0;
+				indirectArgDescs.push_back(desc);
+				minByteStride += 0;
+				needRootSignature = true;
+			}
+			else {
+				throw runtime_error("[Indirect::Indirect] invalid IndirectType");
 			}
 		}
 
-		cmdSigDesc_.pArgumentDescs = indirectArgDesc_.data();
-		cmdSigDesc_.NumArgumentDescs = indirectArgDesc_.size();
-		cmdSigDesc_.ByteStride = byteStride;
-		cmdSigDesc_.NodeMask = 0;
+		if (minByteStride > byteStride) {
+			throw runtime_error("[Indirect::Indirect] byteStride (" + to_string(byteStride) + ") is smaller than the total size of the arguments (" + to_string(minByteStride) + ")");
+		}
+
+		if (rootSignature && !needRootSignature) {
+			throw runtime_error("[Indirect::Indirect] rootSignature must be nullptr when no argument changes root arguments (Constant / IncConstant / CBV / SRV / UAV)");
+		}
+
+		cmdSigDesc.pArgumentDescs = indirectArgDescs.data();
+		cmdSigDesc.NumArgumentDescs = static_cast<UINT>(indirectArgDescs.size());
+		cmdSigDesc.ByteStride = byteStride;
+		cmdSigDesc.NodeMask = 0;
 
 		HRESULT result;
 		if (rootSignature) {
-			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, rootSignature->GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc, rootSignature->GetRootSignature().Get(), IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 		}
 		else {
-			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc_, nullptr, IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
+			result = pDevice_->GetDevice()->CreateCommandSignature(&cmdSigDesc, nullptr, IID_PPV_ARGS(cmdSig_.ReleaseAndGetAddressOf()));
 		}
 		if (FAILED(result)) {
 			throw runtime_error("[Indirect::Indirect] CreateCommandSignature failed\nHRESULT = " + to_string(result));
@@ -97,24 +175,5 @@ namespace sqrp
 	const ComPtr<ID3D12CommandSignature>& Indirect::GetCommandSignature() const
 	{
 		return cmdSig_;
-	}
-
-	UINT Indirect::GetMaxCommandCount() const
-	{
-		return maxCommandCount_;
-	}
-
-	BufferHandle Indirect::GetArgumentBuffer() const
-	{
-		return argumentBuffer_;
-	}
-	BufferHandle Indirect::GetCounterBuffer() const
-	{
-		return counterBuffer_;
-	}
-
-	UINT64 Indirect::GetCounterBufferOffset() const
-	{
-		return counterBuffer_->GetOffsetCounter();
 	}
 }

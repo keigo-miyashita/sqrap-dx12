@@ -19,96 +19,90 @@ namespace sqrp
 			throw runtime_error("[DescriptorManager::DescriptorManager] descManagerDesc size does not match descLayout size");
 		}
 
-		UINT resourceNum = 0;
-		UINT samplerNum = 0;
-		for (auto& desc : descManagerDesc) {
-			if (desc.type_ == ViewType::SAMPLER) {
-				samplerNum++;
-				hasSampler_ = true;
-			}
-			else {
-				resourceNum++;
-				hasResource_ = true;
-			}
+		descLayoutType_ = descLayout.GetDescriptorLayoutType();
+
+		UINT heapOffsetNum = descLayout.GetViewNum();
+
+		UINT heapStart = 0;
+		D3D12_GPU_DESCRIPTOR_HANDLE heapGPUHandle = {};
+		UINT incrementSize = 0;
+		if (descLayoutType_ == DescriptorLayoutType::Resource) {
+			heapStart = pDevice_->AllocateResourceDescriptorFrontIndex(heapOffsetNum);
+			heapGPUHandle = pDevice_->GetResourceDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+			incrementSize = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		}
+		else if (descLayoutType_ == DescriptorLayoutType::Sampler) {
+			heapStart = pDevice_->AllocateSamplerDescriptorFrontIndex(heapOffsetNum);
+			heapGPUHandle = pDevice_->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+			incrementSize = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 		}
 
-		const UINT resourceStart = pDevice_->AllocateResourceDescriptorFrontIndex(resourceNum);
-		const UINT samplerStart = pDevice_->AllocateSamplerDescriptorFrontIndex(samplerNum);
+		descHeapGPUHandle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE(heapGPUHandle, heapStart, incrementSize);
 
-		resourceDescHeapGPUHandle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-			pDevice_->GetResourceDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			resourceStart,
-			pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
-		);
-		samplerDescHeapGPUHandle_ = CD3DX12_GPU_DESCRIPTOR_HANDLE(
-			pDevice_->GetSamplerDescriptorHeap()->GetGPUDescriptorHandleForHeapStart(),
-			samplerStart,
-			pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
-		);
-
-		UINT resourceViewOffset = resourceStart;
-		UINT samplerViewOffset = samplerStart;
+		UINT viewOffset = heapStart;
 		
 		auto& descLayoutDesc = descLayout.GetDescLayoutDesc();
-		for (int i = 0; i < descManagerDesc.size(); i++) {
-			const auto& desc = descManagerDesc.begin()[i];
-			if ((desc.type_ != descLayoutDesc[i].first)
-				|| (desc.regIndex_ != descLayoutDesc[i].second)) {
-				throw runtime_error("[DescriptorManager::DescriptorManager] descriptor " + to_string(i) + " does not match the layout");
+		for (int i = 0; i < descLayoutDesc.size(); i++) {
+			const auto& layoutDesc = descLayoutDesc.begin()[i];
+			const auto& managerDesc = descManagerDesc.begin()[i];
+			if (managerDesc.regIndex_ != layoutDesc.second) {
+				throw runtime_error("[DescriptorManager::DescriptorManager] regIndex_ of descriptor " + to_string(i) + " does not match the layout");
 			}
-			if (desc.type_ == ViewType::CBV) {
-				auto viewDesc = desc.resource_->MakeCBV();
+			if (layoutDesc.first == ViewType::CBV) {
+				if (descLayoutType_ == DescriptorLayoutType::Sampler) {
+					throw runtime_error("[DescriptorManager::DescriptorManager] a CBV cannot be created in the sampler descriptor heap");
+				}
+				auto viewDesc = managerDesc.resource_->MakeCBV();
 				auto heapHandle = pDevice_->GetResourceDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * resourceViewOffset;
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
 				pDevice_->GetDevice()->CreateConstantBufferView(&viewDesc, heapHandle);
-				resourceViewOffset++;
+				viewOffset++;
 			}
-			else if (desc.type_ == ViewType::SRV) {
-				auto viewDesc = desc.resource_->MakeSRV();
+			else if (layoutDesc.first == ViewType::SRV) {
+				if (descLayoutType_ == DescriptorLayoutType::Sampler) {
+					throw runtime_error("[DescriptorManager::DescriptorManager] an SRV cannot be created in the sampler descriptor heap");
+				}
+				auto viewDesc = managerDesc.resource_->MakeSRV();
 				auto heapHandle = pDevice_->GetResourceDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * resourceViewOffset;
-				auto resource = desc.resource_->GetResource().Get();
-				if (desc.resource_->GetResourceType() == ResourceType::AS) {
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+				auto resource = managerDesc.resource_->GetResource().Get();
+				if (managerDesc.resource_->GetResourceType() == ResourceType::AS) {
 					resource = nullptr;
 				}
 				pDevice_->GetDevice()->CreateShaderResourceView(resource, &viewDesc, heapHandle);
-				resourceViewOffset++;
+				viewOffset++;
 			}
-			else if (desc.type_ == ViewType::UAV) {
-				auto viewDesc = desc.resource_->MakeUAV(desc.isCounter_, desc.mipSlice_);
+			else if (layoutDesc.first == ViewType::UAV) {
+				if (descLayoutType_ == DescriptorLayoutType::Sampler) {
+					throw runtime_error("[DescriptorManager::DescriptorManager] a UAV cannot be created in the sampler descriptor heap");
+				}
+				auto viewDesc = managerDesc.resource_->MakeUAV(managerDesc.isCounter_, managerDesc.mipSlice_);
 				auto heapHandle = pDevice_->GetResourceDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * resourceViewOffset;
-				auto counterBuffer = desc.isCounter_ ? desc.resource_->GetResource().Get() : nullptr;
-				pDevice_->GetDevice()->CreateUnorderedAccessView(desc.resource_->GetResource().Get(), counterBuffer, &viewDesc, heapHandle);
-				resourceViewOffset++;
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) * viewOffset;
+				auto counterBuffer = managerDesc.isCounter_ ? managerDesc.resource_->GetResource().Get() : nullptr;
+				pDevice_->GetDevice()->CreateUnorderedAccessView(managerDesc.resource_->GetResource().Get(), counterBuffer, &viewDesc, heapHandle);
+				viewOffset++;
 			}
-			else if (desc.type_ == ViewType::SAMPLER) {
-				auto viewDesc = desc.samplerDesc_;
+			else if (layoutDesc.first == ViewType::SAMPLER) {
+				if (descLayoutType_ == DescriptorLayoutType::Resource) {
+					throw runtime_error("[DescriptorManager::DescriptorManager] a sampler cannot be created in the resource descriptor heap");
+				}
+				auto viewDesc = managerDesc.samplerDesc_;
 				auto heapHandle = pDevice_->GetSamplerDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) * samplerViewOffset;
+				heapHandle.ptr += pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) * viewOffset;
 				pDevice_->GetDevice()->CreateSampler(&viewDesc, heapHandle);
-				samplerViewOffset++;
+				viewOffset++;
 			}
 		}
 	}
 
-	bool DescriptorManager::HasResource() const
+	DescriptorLayoutType DescriptorManager::GetDescriptorLayoutType() const
 	{
-		return hasResource_;
+		return descLayoutType_;
 	}
 
-	bool DescriptorManager::HasSampler() const
+	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::GetDescHeapGPUHandle() const
 	{
-		return hasSampler_;
-	}
-
-	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::GetResourceDescHeapGPUHandle() const
-	{
-		return resourceDescHeapGPUHandle_;
-	}
-
-	D3D12_GPU_DESCRIPTOR_HANDLE DescriptorManager::GetSamplerDescHeapGPUHandle() const
-	{
-		return samplerDescHeapGPUHandle_;
+		return descHeapGPUHandle_;
 	}
 }

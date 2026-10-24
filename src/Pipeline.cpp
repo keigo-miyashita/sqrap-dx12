@@ -70,7 +70,7 @@ namespace sqrp
 		graphicsPSDesc.IBStripCutValue = desc.IBStripCutValue_;
 		graphicsPSDesc.PrimitiveTopologyType = desc.primitiveType_;
 		if (desc.RTVFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
-			throw runtime_error("[GraphicsPipeline::GraphicsPipeline] RTVFormats_ size exceeds the maximum limit of 8");
+			throw runtime_error("[GraphicsPipeline::GraphicsPipeline] RTVFormats_ has more than 8 formats");
 		}
 		graphicsPSDesc.NumRenderTargets = desc.RTVFormats_.size();
 		for (int i = 0; i < desc.RTVFormats_.size(); i++) {
@@ -112,7 +112,7 @@ namespace sqrp
 		meshPSDesc.DSVFormat = desc.dsvFormat_;
 		meshPSDesc.PrimitiveTopologyType = desc.primitiveType_;
 		if (desc.RTVFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
-			throw runtime_error("[MeshPipeline::MeshPipeline] RTVFormats_ size exceeds the maximum limit of 8");
+			throw runtime_error("[MeshPipeline::MeshPipeline] RTVFormats_ has more than 8 formats");
 		}
 		meshPSDesc.NumRenderTargets = desc.RTVFormats_.size();
 		for (int i = 0; i < desc.RTVFormats_.size(); i++) {
@@ -301,7 +301,7 @@ namespace sqrp
 			auto pRTFormats = stateObjectDesc_.CreateSubobject<CD3DX12_RENDER_TARGET_FORMATS_SUBOBJECT>();
 			pRTFormats->SetNumRenderTargets(static_cast<UINT>(wgDesc.RTVFormats_.size()));
 			if (wgDesc.RTVFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
-				throw runtime_error("[StateObject::CreateStateObject] RTVFormats_ size exceeds the maximum limit of 8");
+				throw runtime_error("[StateObject::CreateStateObject] RTVFormats_ has more than 8 formats");
 			}
 			for (UINT i = 0; i < wgDesc.RTVFormats_.size(); i++) {
 				pRTFormats->SetRenderTargetFormat(i, wgDesc.RTVFormats_[i]);
@@ -442,7 +442,7 @@ namespace sqrp
 			return get<StateObjectDesc::WorkGraphDesc>(soDesc_.typeDesc_).workGraphProgramName_;
 		}
 		else {
-			throw runtime_error("[StateObject::GetProgramName] cannot get program name for raytracing pipeline");
+			throw runtime_error("[StateObject::GetProgramName] a raytracing state object has no program name");
 		}
 	}
 

@@ -74,14 +74,14 @@ bool WorkGraphApp::OnStart()
 	lambertPS_ = dxc_.CreateShader(ShaderType::Pixel, shaderPath, L"PSmain");
 
 	// Descriptor Manager
-	DescriptorLayout sphere0Layout({ {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2}, {ViewType::SRV, 0}, {ViewType::SRV, 1} });
+	DescriptorLayout sphere0Layout(DescriptorLayoutType::Resource, { {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2}, {ViewType::SRV, 0}, {ViewType::SRV, 1} });
 	sphere0DescManager_ = device_.CreateDescriptorManager(
 		{
-			{ .resource_ = cameraBuffer_,				.type_ = ViewType::CBV, .regIndex_ = 0},
-			{ .resource_ = light0Buffer_,				.type_ = ViewType::CBV, .regIndex_ = 1},
-			{ .resource_ = sphere0Buffer_,				.type_ = ViewType::CBV, .regIndex_ = 2},
-			{ .resource_ = sphere_->GetVertexBuffer(),	.type_ = ViewType::SRV, .regIndex_ = 0 },
-			{ .resource_ = sphere_->GetIndexBuffer(),	.type_ = ViewType::SRV, .regIndex_ = 1 }
+			{ .resource_ = cameraBuffer_,				.regIndex_ = 0},
+			{ .resource_ = light0Buffer_,				.regIndex_ = 1},
+			{ .resource_ = sphere0Buffer_,				.regIndex_ = 2},
+			{ .resource_ = sphere_->GetVertexBuffer(),	.regIndex_ = 0 },
+			{ .resource_ = sphere_->GetIndexBuffer(),	.regIndex_ = 1 }
 		},
 		sphere0Layout
 	);

@@ -83,16 +83,16 @@ bool SampleApplication::OnStart()
 	miss_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"miss");
 
 	// Descriptor Manager
-	DescriptorLayout suzanneLayout({ {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::SRV, 0}, {ViewType::SRV, 1}, {ViewType::SRV, 2}, {ViewType::UAV, 0} });
+	DescriptorLayout suzanneLayout(DescriptorLayoutType::Resource, { {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::SRV, 0}, {ViewType::SRV, 1}, {ViewType::SRV, 2}, {ViewType::UAV, 0} });
 	suzanneDescManager_ = device_.CreateDescriptorManager(
 		{
-			{ .resource_ = cameraBuffer_,					.type_ = ViewType::CBV, .regIndex_ = 0},
-			{ .resource_ = light0Buffer_,					.type_ = ViewType::CBV, .regIndex_ = 1},
-			{ .resource_ = sceneTLAS_->GetASBuffer(),		.type_ = ViewType::SRV, .regIndex_ = 0},
-			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.type_ = ViewType::SRV, .regIndex_ = 1},
-			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.type_ = ViewType::SRV, .regIndex_ = 2},
+			{ .resource_ = cameraBuffer_,					.regIndex_ = 0},
+			{ .resource_ = light0Buffer_,					.regIndex_ = 1},
+			{ .resource_ = sceneTLAS_->GetASBuffer(),		.regIndex_ = 0},
+			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.regIndex_ = 1},
+			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.regIndex_ = 2},
 			// NOTE : Need output UAV
-			{ .resource_ = outputTexture_,					.type_ = ViewType::UAV, .regIndex_ = 0}
+			{ .resource_ = outputTexture_,					.regIndex_ = 0}
 		},
 		suzanneLayout
 	);
@@ -162,7 +162,7 @@ void SampleApplication::OnUpdate()
 	cameraBuffer_->Write(RayTracigCameraMatrix{ camera_.GetView(), camera_.GetProj(), camera_.GetInvViewProj(), camera_.GetInvView(), camera_.GetPos() });
 	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
-	command_->SetRaytracingResource(suzanneRootSignature_, { suzanneDescManager_, make_shared<Constants>((void*)&gpuDiffuseColor, 4) });
+	command_->SetComputeResource(suzanneRootSignature_, { suzanneDescManager_, make_shared<Constants>((void*)&gpuDiffuseColor, 4) });
 	command_->SetRaytracingState(rayTracingStates_);
 	command_->DispatchRays(rayTracing_);
 

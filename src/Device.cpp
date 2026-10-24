@@ -1,6 +1,8 @@
 #include "Device.hpp"
 
 #include "Command.hpp"
+#include "DescriptorLayout.hpp"
+#include "DescriptorManager.hpp"
 #include "Fence.hpp"
 #include "Gui.hpp"
 #include "Shader.hpp"
@@ -143,7 +145,7 @@ namespace sqrp
 			return false;
 		}
 		if (Options.WorkGraphsTier < D3D12_WORK_GRAPHS_TIER_1_1) {
-			cerr << "[Device::CheckWorkGraphMeshNodeSupport] device does not support mesh nodes of work graphs" << endl;
+			cerr << "[Device::CheckWorkGraphMeshNodeSupport] device does not support work graph mesh nodes" << endl;
 			return hasSupportMeshNode;
 		}
 		hasSupportMeshNode = true;
@@ -168,7 +170,7 @@ namespace sqrp
 		HRESULT result;
 		result = device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(graphicsCommandQueue_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("[Device::CreateCommandQueue] CreateCommandQueue for graphics queue failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[Device::CreateCommandQueue] CreateCommandQueue for the graphics queue failed\nHRESULT = " + to_string(result));
 		}
 		graphicsCommandQueue_->SetName(L"GraphicsCommandQueue");
 
@@ -178,7 +180,7 @@ namespace sqrp
 		cmdQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 		result = device_->CreateCommandQueue(&cmdQueueDesc, IID_PPV_ARGS(computeCommandQueue_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("[Device::CreateCommandQueue] CreateCommandQueue for compute queue failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[Device::CreateCommandQueue] CreateCommandQueue for the compute queue failed\nHRESULT = " + to_string(result));
 		}
 		computeCommandQueue_->SetName(L"ComputeCommandQueue");
 	}
@@ -193,7 +195,7 @@ namespace sqrp
 		heapDesc.NumDescriptors = NUM_RESOURCE_DESC_HEAP;
 		result = device_->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(resourceDescHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("[Device::CreateDescriptorHeap] CreateDescriptorHeap failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[Device::CreateDescriptorHeap] CreateDescriptorHeap for the resource descriptor heap failed\nHRESULT = " + to_string(result));
 		}
 		resourceDescHeap_->SetName(L"ResourceDescriptorHeap");
 
@@ -204,7 +206,7 @@ namespace sqrp
 		heapDesc.NumDescriptors = NUM_SAMPLER_DESC_HEAP;
 		result = device_->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(samplerDescHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
-			throw runtime_error("[Device::CreateDescriptorHeap] CreateDescriptorHeap failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[Device::CreateDescriptorHeap] CreateDescriptorHeap for the sampler descriptor heap failed\nHRESULT = " + to_string(result));
 		}
 		samplerDescHeap_->SetName(L"SamplerDescriptorHeap");
 	}
@@ -275,7 +277,7 @@ namespace sqrp
 		InitializeLatestDevice();
 
 #ifdef _DEBUG
-		cout << "Try to create DebugDevice" << endl;
+		cout << "Creating DebugDevice" << endl;
 		CreateDebugDevice(debugDevice);
 #endif // _DEBUG
 
@@ -291,14 +293,14 @@ namespace sqrp
 
 	void Device::ShowUsedVramSize()
 	{
-		cout << "Try to get Vram info" << endl;
+		cout << "Getting VRAM info" << endl;
 		DXGI_QUERY_VIDEO_MEMORY_INFO memInfo = {};
 		if (SUCCEEDED(adapter_->QueryVideoMemoryInfo(
 			0,
 			DXGI_MEMORY_SEGMENT_GROUP_LOCAL,
 			&memInfo)))
 		{
-			cout << "Scceeded to get memory info" << endl;
+			cout << "Got VRAM info" << endl;
 			/*wcout << L"Adapter: " << desc.Description << endl;*/
 			cout << (memInfo.CurrentUsage / (1024.0 * 1024.0)) << " MB" << endl;
 			cout << (memInfo.Budget / (1024.0 * 1024.0)) << " MB" << endl;
@@ -366,9 +368,9 @@ namespace sqrp
 		return make_shared<Gui>(*this, hwnd);
 	}
 
-	IndirectHandle Device::CreateIndirect(wstring name, initializer_list<IndirectDesc> indirectDescs, const RootSignatureHandle& rootSignature, UINT byteStride, UINT maxCommandCount, const BufferHandle& argumentBuffer, const BufferHandle& counterBuffer) const
+	IndirectHandle Device::CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, UINT byteStride, const RootSignatureHandle& rootSignature) const
 	{
-		return shared_ptr<Indirect>(new Indirect(*this, name, indirectDescs, rootSignature, byteStride, maxCommandCount, argumentBuffer, counterBuffer),
+		return shared_ptr<Indirect>(new Indirect(*this, name, indirectDescs, byteStride, rootSignature),
 			[this](Indirect* p) { DeferredReleaser(p); });
 	}
 

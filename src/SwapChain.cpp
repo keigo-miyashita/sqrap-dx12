@@ -41,7 +41,7 @@ namespace sqrp
 		}
 		result = swapChain1.As(&swapChain_);
 		if (FAILED(result)) {
-			throw runtime_error("[SwapChain::CreateSwapChain] As for IDXGISwapChain4 failed\nHRESULT = " + to_string(result));
+			throw runtime_error("[SwapChain::CreateSwapChain] QueryInterface for IDXGISwapChain4 failed\nHRESULT = " + to_string(result));
 		}
 
 		result = swapChain_->GetDesc1(&swapChainDesc1);

@@ -4,8 +4,6 @@
 
 #include "AS.hpp"
 #include "DeferredRelease.hpp"
-#include "DescriptorLayout.hpp"
-#include "DescriptorManager.hpp"
 #include "Indirect.hpp"
 #include "Mesh.hpp"
 #include "Pipeline.hpp"
@@ -24,6 +22,8 @@ namespace sqrp
 	void DebugOutputFormatString(const char* format, ...);
 
 	class Command;
+	class DescriptorLayout;
+	class DescriptorManager;
 	class Fence;
 	class Gui;
 	class Shader;
@@ -86,7 +86,7 @@ namespace sqrp
 		FenceHandle 			CreateFence(QueueType queueType, std::wstring name = L"") const;
 		GraphicsPipelineHandle	CreateGraphicsPipeline(std::wstring name, const GraphicsDesc& desc) const;
 		GuiHandle				CreateGui(const HWND& hwnd) const;
-		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, const RootSignatureHandle& rootSignature, UINT byteStride, UINT maxCommandCount = 0, const BufferHandle& argumentBuffer = nullptr, const BufferHandle& counterBuffer = nullptr) const;
+		IndirectHandle			CreateIndirect(std::wstring name, std::initializer_list<IndirectDesc> indirectDescs, UINT byteStride, const RootSignatureHandle& rootSignature = nullptr) const;
 		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, std::string modelPath) const;
 		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 		MeshPipelineHandle		CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const;

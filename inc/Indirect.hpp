@@ -11,7 +11,7 @@ namespace sqrp
 
 	enum class IndirectType
 	{
-		Draw, DrawIndexed, Dispatch, VB, IB, Constant, CBV, SRV, UAV, Ray, Mesh
+		Draw, DrawIndexed, Dispatch, VB, IB, Constant, CBV, SRV, UAV, Ray, Mesh, IncConstant
 	};
 
 	struct IndirectDesc
@@ -30,29 +30,17 @@ namespace sqrp
 		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12CommandSignature> cmdSig_ = nullptr;
-		std::vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgDesc_;
-		D3D12_COMMAND_SIGNATURE_DESC cmdSigDesc_ = {};
-		UINT maxCommandCount_ = 0;
-		BufferHandle argumentBuffer_ = nullptr;
-		BufferHandle counterBuffer_ = nullptr;
 
 	public:
 		Indirect(
 			const Device& device,
 			std::wstring name,
 			std::initializer_list<IndirectDesc> indirectDescs,
-			const RootSignatureHandle& rootSignature,
 			UINT byteStride,
-			UINT maxCommandCount = 0,
-			const BufferHandle& argumentBuffer = nullptr,
-			const BufferHandle& counterBuffer = nullptr
+			const RootSignatureHandle& rootSignature = nullptr
 		);
 		Indirect(const Indirect&) = delete;
 		Indirect& operator=(const Indirect&) = delete;
 		const ComPtr<ID3D12CommandSignature>& GetCommandSignature() const;
-		UINT GetMaxCommandCount() const;
-		BufferHandle GetArgumentBuffer() const;
-		BufferHandle GetCounterBuffer() const;
-		UINT64 GetCounterBufferOffset() const;
 	};
 }
