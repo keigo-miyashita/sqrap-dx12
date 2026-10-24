@@ -16,7 +16,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
 		std::wstring name_;
 		ComPtr<ID3D12WorkGraphProperties1> workGraphProp_ = nullptr;
 		D3D12_PROGRAM_IDENTIFIER workGraphProgramID_ = {};

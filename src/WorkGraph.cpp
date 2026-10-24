@@ -24,7 +24,7 @@ namespace sqrp
 	}
 
 	WorkGraph::WorkGraph(const Device& device, wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords, UINT maxNodeInputs)
-		: pDevice_(&device), name_(name)
+		: name_(name)
 	{
 		ComPtr<ID3D12StateObjectProperties1> soProp = nullptr;
 		auto result = stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp.ReleaseAndGetAddressOf()));
@@ -52,7 +52,7 @@ namespace sqrp
 		CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(memReqs_.MaxSizeInBytes);
 		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 		CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
-		result = pDevice_->GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
+		result = device.GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[WorkGraph::WorkGraph] CreateCommittedResource for backing memory failed\nHRESULT = " + to_string(result));
 		}
@@ -80,7 +80,7 @@ namespace sqrp
 				}
 			}
 			if (maxLocalRootSigSize != 0) {
-				localRootSigBuffer_ = pDevice_->CreateBuffer(L"_WorkGraph_localRootSig", BufferType::Upload, maxLocalRootSigSize, numLocalRootSig);
+				localRootSigBuffer_ = device.CreateBuffer(L"_WorkGraph_localRootSig", BufferType::Upload, maxLocalRootSigSize, numLocalRootSig);
 				void* rawPtr = localRootSigBuffer_->Map();
 				for (auto& programDesc : workGraphDesc.programDescs_) {
 					if (programDesc.resourceSet_) {
