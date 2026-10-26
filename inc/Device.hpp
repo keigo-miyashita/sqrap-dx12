@@ -87,6 +87,7 @@ namespace sqrp
 		CommandHandle			CreateCommand(std::wstring name, D3D12_COMMAND_LIST_TYPE commandType = D3D12_COMMAND_LIST_TYPE_DIRECT, UINT frameCount = 1) const;
 		ComputePipelineHandle	CreateComputePipeline(std::wstring name, const ComputeDesc& desc) const;
 		DescriptorManagerHandle	CreateDescriptorManager(std::initializer_list<DescriptorManagerDesc> descManagerDesc, DescriptorLayout descLayout) const;
+		DescriptorManagerHandle	CreateDescriptorManager(std::initializer_list<D3D12_SAMPLER_DESC> samplerDescs, DescriptorLayout descLayout) const;
 		FenceHandle 			CreateFence(QueueType queueType, std::wstring name = L"") const;
 		GraphicsPipelineHandle	CreateGraphicsPipeline(std::wstring name, const GraphicsDesc& desc) const;
 		GuiHandle				CreateGui(const HWND& hwnd) const;

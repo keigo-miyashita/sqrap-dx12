@@ -351,6 +351,12 @@ namespace sqrp
 		return shared_ptr<DescriptorManager>(new DescriptorManager(*this, descManagerDesc, descLayout),
 			[this](DescriptorManager* p) { DeferredReleaser(p); });
 	}
+
+	DescriptorManagerHandle Device::CreateDescriptorManager(initializer_list<D3D12_SAMPLER_DESC> samplerDescs, DescriptorLayout descLayout) const
+	{
+		return shared_ptr<DescriptorManager>(new DescriptorManager(*this, samplerDescs, descLayout),
+			[this](DescriptorManager* p) { DeferredReleaser(p); });
+	}
 	
 	FenceHandle Device::CreateFence(QueueType queueType, wstring name) const
 	{

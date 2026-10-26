@@ -77,9 +77,9 @@ bool SampleApplication::OnStart()
 	DescriptorLayout sphere0Layout(DescriptorLayoutType::Resource, { {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2} });
 	sphere0DescManager_ = device_.CreateDescriptorManager(
 		{
-			{ .resource_ = cameraBuffer_, .regIndex_ = 0},
-			{ .resource_ = light0Buffer_, .regIndex_ = 1},
-			{ .resource_ = sphere0Buffer_, .regIndex_ = 2}
+			{ .resource_ = cameraBuffer_},
+			{ .resource_ = light0Buffer_},
+			{ .resource_ = sphere0Buffer_}
 		},
 		sphere0Layout
 	);

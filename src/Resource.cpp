@@ -11,6 +11,17 @@ using namespace DirectX;
 
 namespace sqrp
 {
+	namespace {
+		// For CanCreateView: writes the reason when the caller wants it, and returns false
+		bool CannotCreate(string* reason, const char* message)
+		{
+			if (reason) {
+				*reason = message;
+			}
+			return false;
+		}
+	}
+
 	Resource::Resource(const Device& device, ResourceType rscType, wstring name)
 		: device_(device), name_(name), rscType_(rscType)
 	{
@@ -195,6 +206,22 @@ namespace sqrp
 		Unmap();
 	}
 
+	bool Buffer::CanCreateView(ViewType view, string* reason) const
+	{
+		switch (view) {
+		case ViewType::CBV:
+		case ViewType::SRV:
+			return true;
+		case ViewType::UAV:
+			if (!(rscFlag_ & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)) {
+				return CannotCreate(reason, "a UAV cannot be created for a buffer without D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS");
+			}
+			return true;
+		default:
+			return CannotCreate(reason, "a buffer can only have a CBV, SRV or UAV");
+		}
+	}
+
 	D3D12_CONSTANT_BUFFER_VIEW_DESC Buffer::MakeCBV() const
 	{
 		D3D12_CONSTANT_BUFFER_VIEW_DESC viewDesc = {};
@@ -218,6 +245,10 @@ namespace sqrp
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC Buffer::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
+		string reason;
+		if (!CanCreateView(ViewType::UAV, &reason)) {
+			throw runtime_error("[Buffer::MakeUAV] " + reason);
+		}
 		if (mipSlice > 0) {
 			throw runtime_error("[Buffer::MakeUAV] mipSlice must be 0 for a buffer UAV");
 		}
@@ -357,8 +388,30 @@ namespace sqrp
 		resource_.Reset();
 	}
 
+	bool Texture::CanCreateView(ViewType view, string* reason) const
+	{
+		switch (view) {
+		case ViewType::SRV:
+			if (rscFlag_ & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) {
+				return CannotCreate(reason, "an SRV cannot be created for a texture with D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE");
+			}
+			return true;
+		case ViewType::UAV:
+			if (!(rscFlag_ & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS)) {
+				return CannotCreate(reason, "a UAV cannot be created for a texture without D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS");
+			}
+			return true;
+		default:
+			return CannotCreate(reason, "a texture can only have an SRV or UAV");
+		}
+	}
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC Texture::MakeSRV() const
 	{
+		string reason;
+		if (!CanCreateView(ViewType::SRV, &reason)) {
+			throw runtime_error("[Texture::MakeSRV] " + reason);
+		}
 		D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
 		viewDesc.Format = format_;
 		if (texDim_ == TextureDim::Tex1D) {
@@ -392,6 +445,10 @@ namespace sqrp
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC Texture::MakeUAV(bool isCounter, UINT mipSlice) const
 	{
+		string reason;
+		if (!CanCreateView(ViewType::UAV, &reason)) {
+			throw runtime_error("[Texture::MakeUAV] " + reason);
+		}
 		if (isCounter) {
 			throw runtime_error("[Texture::MakeUAV] a texture UAV cannot have a counter");
 		}
@@ -420,6 +477,32 @@ namespace sqrp
 			viewDesc.Texture2DArray.ArraySize = 6;
 			viewDesc.Texture2DArray.PlaneSlice = 0;
 		}
+		return viewDesc;
+	}
+
+	D3D12_RENDER_TARGET_VIEW_DESC Texture::MakeRTV(DXGI_FORMAT format) const
+	{
+		if (texDim_ != TextureDim::Tex2D) {
+			throw runtime_error("[Texture::MakeRTV] only Tex2D is supported");
+		}
+		D3D12_RENDER_TARGET_VIEW_DESC viewDesc = {};
+		viewDesc.Format = format;
+		viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+		viewDesc.Texture2D.MipSlice = 0;
+		viewDesc.Texture2D.PlaneSlice = 0;
+		return viewDesc;
+	}
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC Texture::MakeDSV() const
+	{
+		if (texDim_ != TextureDim::Tex2D) {
+			throw runtime_error("[Texture::MakeDSV] only Tex2D is supported");
+		}
+		D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc = {};
+		viewDesc.Format = format_;
+		viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		viewDesc.Flags = D3D12_DSV_FLAG_NONE;
+		viewDesc.Texture2D.MipSlice = 0;
 		return viewDesc;
 	}
 
@@ -462,6 +545,14 @@ namespace sqrp
 			throw runtime_error("[AS::AS] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_AS").c_str());
+	}
+
+	bool AS::CanCreateView(ViewType view, string* reason) const
+	{
+		if (view != ViewType::SRV) {
+			return CannotCreate(reason, "an acceleration structure can only have an SRV");
+		}
+		return true;
 	}
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC AS::MakeSRV() const

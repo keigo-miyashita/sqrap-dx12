@@ -77,11 +77,11 @@ bool WorkGraphApp::OnStart()
 	DescriptorLayout sphere0Layout(DescriptorLayoutType::Resource, { {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::CBV, 2}, {ViewType::SRV, 0}, {ViewType::SRV, 1} });
 	sphere0DescManager_ = device_.CreateDescriptorManager(
 		{
-			{ .resource_ = cameraBuffer_,				.regIndex_ = 0},
-			{ .resource_ = light0Buffer_,				.regIndex_ = 1},
-			{ .resource_ = sphere0Buffer_,				.regIndex_ = 2},
-			{ .resource_ = sphere_->GetVertexBuffer(),	.regIndex_ = 0 },
-			{ .resource_ = sphere_->GetIndexBuffer(),	.regIndex_ = 1 }
+			{ .resource_ = cameraBuffer_},
+			{ .resource_ = light0Buffer_},
+			{ .resource_ = sphere0Buffer_},
+			{ .resource_ = sphere_->GetVertexBuffer() },
+			{ .resource_ = sphere_->GetIndexBuffer() }
 		},
 		sphere0Layout
 	);

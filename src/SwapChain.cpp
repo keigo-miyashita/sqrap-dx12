@@ -80,10 +80,6 @@ namespace sqrp
 
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
 
-		D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
-		rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-		rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-
 		rtvHandles_.reserve(swapChainDesc1.BufferCount);
 		unormRtvHandles_.reserve(swapChainDesc1.BufferCount);
 		const UINT rtvIncrement = device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -98,15 +94,15 @@ namespace sqrp
 			// バックバッファは PRESENT の状態で渡される
 			backBuffers_[i] = make_shared<Texture>(device_, name_ + L"_BackBuffer" + to_wstring(i), resource, D3D12_RESOURCE_STATE_PRESENT);
 			//rtvDesc.Format = backBuffers_[i]->GetResource()->GetDesc().Format;
+			auto rtvDesc = backBuffers_[i]->MakeRTV(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
 			device_.GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &rtvDesc, handle);
 			rtvHandles_.push_back(handle);
 			handle.ptr += rtvIncrement;
 		}
 
 		// ImGui 用の UNORM の RTV。sRGB の分の後ろに並べる（先頭 N 個の並びは変えない）
-		D3D12_RENDER_TARGET_VIEW_DESC unormRtvDesc = rtvDesc;
-		unormRtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		for (UINT i = 0; i < swapChainDesc1.BufferCount; i++) {
+			auto unormRtvDesc = backBuffers_[i]->MakeRTV(DXGI_FORMAT_R8G8B8A8_UNORM);
 			device_.GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &unormRtvDesc, handle);
 			unormRtvHandles_.push_back(handle);
 			handle.ptr += rtvIncrement;
@@ -125,14 +121,15 @@ namespace sqrp
 
 		CD3DX12_CLEAR_VALUE depthClearValue(DXGI_FORMAT_D32_FLOAT, 1.0f, 0);
 
+		ComPtr<ID3D12Resource> depthResource;
 		HRESULT result = device_.GetDevice()->CreateCommittedResource(
 			&depthHeapProp, D3D12_HEAP_FLAG_NONE,
 			&depthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
-			&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf()));
+			&depthClearValue, IID_PPV_ARGS(depthResource.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[SwapChain::CreateDepthStencilBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
-		depthStencilBuffer_->SetName((name_ + L"DepthStencilBuffer").c_str());
+		depthStencilBuffer_ = make_shared<Texture>(device_, name_ + L"DepthStencilBuffer", depthResource, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
 		// The DSV heap does not depend on the size, so create it once and reuse it on Resize
 		if (!dsvHeap_) {
@@ -148,12 +145,8 @@ namespace sqrp
 			dsvHeap_->SetName((name_ + L"DepthStencilHeap").c_str());
 		}
 
-		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-		dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-
-		device_.GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
+		auto dsvDesc = depthStencilBuffer_->MakeDSV();
+		device_.GetDevice()->CreateDepthStencilView(depthStencilBuffer_->GetResource().Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
 	SwapChain::SwapChain(const Device& device, wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount)
@@ -182,7 +175,7 @@ namespace sqrp
 
 		// ResizeBuffers fails while any reference to a back buffer remains
 		backBuffers_.clear();
-		depthStencilBuffer_.Reset();
+		depthStencilBuffer_.reset();
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc1 = {};
 		HRESULT result = swapChain_->GetDesc1(&swapChainDesc1);
@@ -224,7 +217,7 @@ namespace sqrp
 		return scissorsRect_;
 	}
 
-	const ComPtr<ID3D12Resource>& SwapChain::GetDepthStencilBuffer() const
+	const TextureHandle& SwapChain::GetDepthStencilBuffer() const
 	{
 		return depthStencilBuffer_;
 	}

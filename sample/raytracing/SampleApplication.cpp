@@ -177,13 +177,13 @@ void SampleApplication::CreateOutputResources()
 
 	suzanneDescManager_ = device_.CreateDescriptorManager(
 		{
-			{ .resource_ = cameraBuffer_,					.regIndex_ = 0},
-			{ .resource_ = light0Buffer_,					.regIndex_ = 1},
-			{ .resource_ = sceneTLAS_->GetASBuffer(),		.regIndex_ = 0},
-			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.regIndex_ = 1},
-			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.regIndex_ = 2},
+			{ .resource_ = cameraBuffer_},
+			{ .resource_ = light0Buffer_},
+			{ .resource_ = sceneTLAS_->GetASBuffer()},
+			{ .resource_ = suzanneMesh_->GetVertexBuffer()},
+			{ .resource_ = suzanneMesh_->GetIndexBuffer()},
 			// NOTE : Need output UAV
-			{ .resource_ = outputTexture_,					.regIndex_ = 0}
+			{ .resource_ = outputTexture_}
 		},
 		suzanneLayout_
 	);

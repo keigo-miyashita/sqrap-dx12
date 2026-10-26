@@ -27,7 +27,7 @@ namespace sqrp
 		// そのものなので、符号化すると白っぽくなる）
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles_ = {};
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> unormRtvHandles_ = {};
-		ComPtr<ID3D12Resource> depthStencilBuffer_ = nullptr;
+		TextureHandle depthStencilBuffer_ = nullptr;
 		ComPtr<ID3D12DescriptorHeap> dsvHeap_ = nullptr;
 		D3D12_VIEWPORT viewport_ = {};
 		D3D12_RECT scissorsRect_ = {};
@@ -48,7 +48,7 @@ namespace sqrp
 		const ComPtr<ID3D12DescriptorHeap>& GetRtvHeap() const;
 		D3D12_VIEWPORT GetViewPort() const;
 		D3D12_RECT GetRect() const;
-		const ComPtr<ID3D12Resource>& GetDepthStencilBuffer() const;
+		const TextureHandle& GetDepthStencilBuffer() const;
 		const ComPtr<ID3D12DescriptorHeap>& GetDsvHeap() const;
 		D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle(UINT bufferIndex) const;
 		D3D12_CPU_DESCRIPTOR_HANDLE GetUnormRtvHandle(UINT bufferIndex) const;

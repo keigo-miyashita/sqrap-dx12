@@ -4,8 +4,8 @@
 
 namespace sqrp
 {
-	class DescriptorManager;
 	class Device;
+	enum class ViewType;
 
 	enum class ResourceType
 	{
@@ -34,6 +34,10 @@ namespace sqrp
 		Resource(const Resource&) = delete;
 		Resource& operator=(const Resource&) = delete;
 
+		// Whether a view of this type can be created, judged from the class and the resource flags.
+		// When it cannot, reason (if given) receives why
+		virtual bool CanCreateView(ViewType view, std::string* reason = nullptr) const = 0;
+		// Call only when CanCreateView returns true. The throw in the base is a safety net
 		virtual D3D12_CONSTANT_BUFFER_VIEW_DESC MakeCBV() const;
 		virtual D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const;
 		virtual D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const;
@@ -135,6 +139,7 @@ namespace sqrp
 			Unmap();
 		}
 
+		bool CanCreateView(ViewType view, std::string* reason = nullptr) const override;
 		D3D12_CONSTANT_BUFFER_VIEW_DESC MakeCBV() const override;
 		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
 		D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const override;
@@ -177,8 +182,12 @@ namespace sqrp
 		void Unmap();
 		void Reset();
 
+		bool CanCreateView(ViewType view, std::string* reason = nullptr) const override;
 		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
 		D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const override;
+		// format lets one texture have views of different formats (e.g. sRGB and UNORM for a back buffer)
+		D3D12_RENDER_TARGET_VIEW_DESC MakeRTV(DXGI_FORMAT format) const;
+		D3D12_DEPTH_STENCIL_VIEW_DESC MakeDSV() const;
 
 		UINT GetStrideSize() const;
 		UINT GetWidth() const;
@@ -199,6 +208,7 @@ namespace sqrp
 	public:
 		AS(const Device& device, std::wstring name, UINT64 size);
 
+		bool CanCreateView(ViewType view, std::string* reason = nullptr) const override;
 		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
 	};
 
