@@ -74,9 +74,9 @@ namespace sqrp
 		return static_cast<UINT>(descLayoutDesc_.size());
 	}
 
-	const CD3DX12_DESCRIPTOR_RANGE1* DescriptorLayout::GetPDescRanges() const
+	std::span<const CD3DX12_DESCRIPTOR_RANGE1> DescriptorLayout::GetDescRanges() const
 	{
-		return descRanges_.data();
+		return descRanges_;
 	}
 
 	const std::set<std::pair<ViewType, UINT>>& DescriptorLayout::GetUsedRegs() const

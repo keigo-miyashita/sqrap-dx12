@@ -10,42 +10,28 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	GraphicsDesc::GraphicsDesc(vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts) : inputLayouts_(inputLayouts)
+	Pipeline::Pipeline(wstring name, PipelineBindPoint bindPoint)
+		: name_(name), bindPoint_(bindPoint)
 	{
-
 	}
 
-	GraphicsDesc& GraphicsDesc::SetRootSignature(const RootSignatureHandle& rootSignature)
+	const ComPtr<ID3D12PipelineState>& Pipeline::GetPipelineState() const
 	{
-		rootSignature_ = rootSignature;
-		return *this;
+		return pipeline_;
 	}
 
-	GraphicsDesc& GraphicsDesc::SetVS(const ShaderHandle& VS)
+	PipelineBindPoint Pipeline::GetBindPoint() const
 	{
-		VS_ = VS;
-		return *this;
-	}
-
-	GraphicsDesc& GraphicsDesc::SetPS(const ShaderHandle& PS)
-	{
-		PS_ = PS;
-		return *this;
-	}
-
-	GraphicsDesc& GraphicsDesc::SetTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType)
-	{
-		renderState_.topologyType_ = topologyType;
-		return *this;
+		return bindPoint_;
 	}
 
 	GraphicsPipeline::GraphicsPipeline(const Device& device, wstring name, const GraphicsDesc& desc)
-		: name_(name)
+		: Pipeline(name, PipelineBindPoint::Graphics)
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPSDesc = {};
 
 		graphicsPSDesc.InputLayout.pInputElementDescs = desc.inputLayouts_.data();
-		graphicsPSDesc.InputLayout.NumElements = desc.inputLayouts_.size();
+		graphicsPSDesc.InputLayout.NumElements = static_cast<UINT>(desc.inputLayouts_.size());
 		graphicsPSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
 		if (desc.VS_) {
 			graphicsPSDesc.VS = CD3DX12_SHADER_BYTECODE(desc.VS_->GetBlob()->GetBufferPointer(), desc.VS_->GetBlob()->GetBufferSize());
@@ -62,21 +48,8 @@ namespace sqrp
 		if (desc.GS_) {
 			graphicsPSDesc.GS = CD3DX12_SHADER_BYTECODE(desc.GS_->GetBlob()->GetBufferPointer(), desc.GS_->GetBlob()->GetBufferSize());
 		}
-		graphicsPSDesc.BlendState = desc.renderState_.blendState_;
-		graphicsPSDesc.SampleMask = desc.renderState_.sampleMask_;
-		graphicsPSDesc.RasterizerState = desc.renderState_.rasterizerDesc_;
-		graphicsPSDesc.DepthStencilState = desc.renderState_.depthStencilDesc_;
-		graphicsPSDesc.DSVFormat = desc.renderState_.dsvFormat_;
+		SetRenderState(graphicsPSDesc, desc.renderState_);
 		graphicsPSDesc.IBStripCutValue = desc.IBStripCutValue_;
-		graphicsPSDesc.PrimitiveTopologyType = desc.renderState_.topologyType_;
-		if (desc.renderState_.rtvFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
-			throw runtime_error("[GraphicsPipeline::GraphicsPipeline] rtvFormats_ has more than 8 formats");
-		}
-		graphicsPSDesc.NumRenderTargets = desc.renderState_.rtvFormats_.size();
-		for (int i = 0; i < desc.renderState_.rtvFormats_.size(); i++) {
-			graphicsPSDesc.RTVFormats[i] = desc.renderState_.rtvFormats_[i];
-		}
-		graphicsPSDesc.SampleDesc = desc.renderState_.sampleDesc_;
 
 		auto result = device.GetDevice()->CreateGraphicsPipelineState(&graphicsPSDesc, IID_PPV_ARGS(pipeline_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
@@ -85,13 +58,8 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	const ComPtr<ID3D12PipelineState>& GraphicsPipeline::GetPipelineState() const
-	{
-		return pipeline_;
-	}
-
 	MeshPipeline::MeshPipeline(const Device& device, wstring name, const MeshDesc& desc)
-		: name_(name)
+		: Pipeline(name, PipelineBindPoint::Graphics)
 	{
 		D3DX12_MESH_SHADER_PIPELINE_STATE_DESC meshPSDesc = {};
 
@@ -105,20 +73,7 @@ namespace sqrp
 		if (desc.PS_) {
 			meshPSDesc.PS = CD3DX12_SHADER_BYTECODE(desc.PS_->GetBlob()->GetBufferPointer(), desc.PS_->GetBlob()->GetBufferSize());
 		}
-		meshPSDesc.BlendState = desc.renderState_.blendState_;
-		meshPSDesc.SampleMask = desc.renderState_.sampleMask_;
-		meshPSDesc.RasterizerState = desc.renderState_.rasterizerDesc_;
-		meshPSDesc.DepthStencilState = desc.renderState_.depthStencilDesc_;
-		meshPSDesc.DSVFormat = desc.renderState_.dsvFormat_;
-		meshPSDesc.PrimitiveTopologyType = desc.renderState_.topologyType_;
-		if (desc.renderState_.rtvFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
-			throw runtime_error("[MeshPipeline::MeshPipeline] rtvFormats_ has more than 8 formats");
-		}
-		meshPSDesc.NumRenderTargets = desc.renderState_.rtvFormats_.size();
-		for (int i = 0; i < desc.renderState_.rtvFormats_.size(); i++) {
-			meshPSDesc.RTVFormats[i] = desc.renderState_.rtvFormats_[i];
-		}
-		meshPSDesc.SampleDesc = desc.renderState_.sampleDesc_;
+		SetRenderState(meshPSDesc, desc.renderState_);
 
 		CD3DX12_PIPELINE_MESH_STATE_STREAM meshStateStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(meshPSDesc);
 
@@ -133,13 +88,8 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	const ComPtr<ID3D12PipelineState>& MeshPipeline::GetPipelineState() const
-	{
-		return pipeline_;
-	}
-
 	ComputePipeline::ComputePipeline(const Device& device, wstring name, const ComputeDesc& desc)
-		: name_(name)
+		: Pipeline(name, PipelineBindPoint::Compute)
 	{
 		D3D12_COMPUTE_PIPELINE_STATE_DESC computePSDesc = {};
 		computePSDesc.pRootSignature = desc.rootSignature_->GetRootSignature().Get();
@@ -153,11 +103,6 @@ namespace sqrp
 		pipeline_->SetName(name_.c_str());
 	}
 
-	const ComPtr<ID3D12PipelineState>& ComputePipeline::GetPipelineState() const
-	{
-		return pipeline_;
-	}
-
 	void StateObject::CreateStateObject(const Device& device, const StateObjectDesc::RaytracingDesc& rtDesc)
 	{
 		soType_ = StateObjectType::Raytracing;
@@ -166,13 +111,13 @@ namespace sqrp
 
 		globalRootSig_ = rtDesc.globalRootSig_;
 		stateObjectDesc.SetStateObjectType(D3D12_STATE_OBJECT_TYPE_RAYTRACING_PIPELINE);
-		auto pSoConfig = stateObjectDesc.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
+		stateObjectDesc.CreateSubobject<CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT>();
 		if (rtDesc.globalRootSig_) {
 			auto pGlobalRootSig = stateObjectDesc.CreateSubobject<CD3DX12_GLOBAL_ROOT_SIGNATURE_SUBOBJECT>();
 			pGlobalRootSig->SetRootSignature(rtDesc.globalRootSig_->GetRootSignature().Get());
 		}
 
-		for (auto raygen : rtDesc.rayGens_) {
+		for (const auto& raygen : rtDesc.rayGens_) {
 			auto pLib = stateObjectDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 			CD3DX12_SHADER_BYTECODE bcLib(raygen.shader_->GetBlob()->GetBufferPointer(), raygen.shader_->GetBlob()->GetBufferSize());
 			pLib->SetDXILLibrary(&bcLib);
@@ -191,7 +136,7 @@ namespace sqrp
 			}
 		}
 
-		for (auto miss : rtDesc.misses_) {
+		for (const auto& miss : rtDesc.misses_) {
 			auto pLib = stateObjectDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 			CD3DX12_SHADER_BYTECODE bcLib(miss.shader_->GetBlob()->GetBufferPointer(), miss.shader_->GetBlob()->GetBufferSize());
 			pLib->SetDXILLibrary(&bcLib);
@@ -208,7 +153,7 @@ namespace sqrp
 			}
 		}
 
-		for (auto hitGroup : rtDesc.hitGroups_) {
+		for (const auto& hitGroup : rtDesc.hitGroups_) {
 			auto pClosestLib = stateObjectDesc.CreateSubobject<CD3DX12_DXIL_LIBRARY_SUBOBJECT>();
 			CD3DX12_SHADER_BYTECODE closestBcLib(hitGroup.closestHit_->GetBlob()->GetBufferPointer(), hitGroup.closestHit_->GetBlob()->GetBufferSize());
 			pClosestLib->SetDXILLibrary(&closestBcLib);
@@ -290,7 +235,7 @@ namespace sqrp
 				auto it = exportedShaders.find(shader->GetEntryName());
 				if (it != exportedShaders.end()) {
 					if (it->second != localRootSignature) {
-						throw runtime_error("[StateObject::CreateStateObject] a shader shared by multiple nodes must have the same local root signature");
+						throw runtime_error("[StateObject::CreateStateObject] a shader shared by multiple nodes must have the same local root signature: " + WStringToString(shader->GetEntryName()));
 					}
 					return;
 				}
@@ -315,13 +260,13 @@ namespace sqrp
 			setNodeToStateObject(computeNodeDesc.shader_, computeNodeDesc.localRootSignature_);
 		}
 
-		for (const auto& graphicsProgramDescs : wgDesc.graphicsProgramDescs_) {
-			graphicsNodes_.push_back(graphicsProgramDescs);
-			setNodeToStateObject(graphicsProgramDescs.meshShader_, graphicsProgramDescs.localRootSignature_);
-			if (graphicsProgramDescs.pixelShader_ == nullptr) {
+		for (const auto& graphicsProgramDesc : wgDesc.graphicsProgramDescs_) {
+			graphicsNodes_.push_back(graphicsProgramDesc);
+			setNodeToStateObject(graphicsProgramDesc.meshShader_, graphicsProgramDesc.localRootSignature_);
+			if (graphicsProgramDesc.pixelShader_ == nullptr) {
 				throw runtime_error("[StateObject::CreateStateObject] pixelShader_ of a graphics program must not be nullptr");
 			}
-			setNodeToStateObject(graphicsProgramDescs.pixelShader_, graphicsProgramDescs.localRootSignature_);
+			setNodeToStateObject(graphicsProgramDesc.pixelShader_, graphicsProgramDesc.localRootSignature_);
 		}
 
 		// 描画の設定はプログラムごとに RenderState からサブオブジェクトを作り、
@@ -407,10 +352,10 @@ namespace sqrp
 
 		if (hasGraphicsNodes_) {
 			for (const auto& computeNodeDesc : wgDesc.computeNodeDescs_) {
-				auto pComputeNode = pWorkGraph->CreateShaderNode(computeNodeDesc.shader_->GetEntryName().c_str());
+				pWorkGraph->CreateShaderNode(computeNodeDesc.shader_->GetEntryName().c_str());
 			}
 			for (const auto& programDesc : wgDesc.graphicsProgramDescs_) {
-				auto pGraphicsNode = pWorkGraph->CreateProgramNode(programDesc.programName_.c_str());
+				pWorkGraph->CreateProgramNode(programDesc.programName_.c_str());
 			}
 		}
 

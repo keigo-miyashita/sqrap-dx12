@@ -57,6 +57,8 @@ namespace sqrp
 
 	public:
 		static UINT AlignRootArgument(UINT size);
+		// ローカルルート引数を pRecord から並べて書く（SBT のレコードなら、シェーダ識別子の後ろを渡す）
+		static void WriteLocalRootArguments(uint8_t* pRecord, const std::vector<LocalRootArguments>& localRootArguments);
 		template<typename T>
 		void ValidateRootArgument(UINT index, const T& rootArgument) const
 		{
@@ -98,28 +100,5 @@ namespace sqrp
 		UINT GetSize() const;
 		const std::vector<CD3DX12_ROOT_PARAMETER1>& GetRootParameters() const;
 		const std::vector<RootParameter>& GetRootParametersVec() const;
-	};
-
-	struct ResourceSetDesc
-	{
-		std::variant<DescriptorManagerHandle, BufferHandle, ConstantsHandle> bindResource;
-	};
-
-	class ResourceSet
-	{
-	private:
-		template<typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-		const RootSignatureHandle rootSignature_;
-		std::vector<ResourceSetDesc> resourceSetDescs_;
-
-	public:
-		ResourceSet(const RootSignatureHandle& rootSignature, const std::vector<ResourceSetDesc>& resourceSetDescs);
-		ResourceSet(const ResourceSet&) = delete;
-		ResourceSet& operator=(const ResourceSet&) = delete;
-
-		RootSignatureHandle GetRootSignature() const;
-		const std::vector<ResourceSetDesc>& GetResourceSetDescs() const;
 	};
 }

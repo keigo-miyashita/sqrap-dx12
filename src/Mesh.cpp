@@ -26,12 +26,27 @@ namespace sqrp
 		return result;
 	}
 
+	string WStringToString(const wstring& str)
+	{
+		int size_needed = WideCharToMultiByte(CP_UTF8, 0,
+			str.c_str(), (int)str.size(),
+			nullptr, 0, nullptr, nullptr);
+
+		string result(size_needed, 0);
+
+		WideCharToMultiByte(CP_UTF8, 0,
+			str.c_str(), (int)str.size(),
+			&result[0], size_needed, nullptr, nullptr);
+
+		return result;
+	}
+
 	void Mesh::CreateVertexBuffer(const Device& device, const CommandHandle& command, const std::vector<Vertex>& vertices)
 	{
 		vertexCount_ = static_cast<UINT>(vertices.size());
 
 		shared_ptr<Buffer> vertexUploadBuffer;
-		vertexUploadBuffer = device.CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), vertices.size());
+		vertexUploadBuffer = device.CreateBuffer(name_ + L"_upload_Vertex", BufferType::Upload, sizeof(Vertex), static_cast<UINT>(vertices.size()));
 		void* rawPtr = vertexUploadBuffer->Map();
 		if (rawPtr) {
 			Vertex* pVertex = static_cast<Vertex*>(rawPtr);
@@ -39,12 +54,12 @@ namespace sqrp
 			vertexUploadBuffer->Unmap();
 		}
 
-		vertexBuffer_ = device.CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), vertices.size());
+		vertexBuffer_ = device.CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), static_cast<UINT>(vertices.size()));
 
 		command->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
 		command->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
-		vbView_.SizeInBytes = vertices.size() * sizeof(Vertex);
+		vbView_.SizeInBytes = static_cast<UINT>(vertices.size() * sizeof(Vertex));
 		vbView_.StrideInBytes = sizeof(Vertex);
 	}
 
@@ -53,7 +68,7 @@ namespace sqrp
 		indexCount_ = static_cast<UINT>(indices.size());
 
 		shared_ptr<Buffer> indexUploadBuffer;
-		indexUploadBuffer = device.CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), indices.size());
+		indexUploadBuffer = device.CreateBuffer(name_ + L"_upload_Index", BufferType::Upload, sizeof(uint32_t), static_cast<UINT>(indices.size()));
 		void* rawPtr = indexUploadBuffer->Map();
 		if (rawPtr) {
 			uint32_t* pIndex = static_cast<uint32_t*>(rawPtr);
@@ -61,12 +76,12 @@ namespace sqrp
 			indexUploadBuffer->Unmap();
 		}
 
-		indexBuffer_ = device.CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), indices.size());
+		indexBuffer_ = device.CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), static_cast<UINT>(indices.size()));
 
 		command->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
 		command->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
-		ibView_.SizeInBytes = indices.size() * sizeof(uint32_t);
+		ibView_.SizeInBytes = static_cast<UINT>(indices.size() * sizeof(uint32_t));
 		ibView_.Format = DXGI_FORMAT_R32_UINT;
 	}
 

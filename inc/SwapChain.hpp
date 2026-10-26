@@ -17,7 +17,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
+		const Device& device_;
 
 		ComPtr<IDXGISwapChain4> swapChain_ = nullptr;
 		std::vector<TextureHandle> backBuffers_;
@@ -34,12 +34,14 @@ namespace sqrp
 		std::wstring name_;
 		UINT bufferCount_ = 2;
 		void CreateSwapChain(const HWND& hwnd, SIZE winSize);
+		void CreateBackBuffers();
 		void CreateDepthStencilBuffer(SIZE winSize);
 
 	public:
 		SwapChain(const Device& device, std::wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount = 2);
 		SwapChain(const SwapChain&) = delete;
 		SwapChain& operator=(const SwapChain&) = delete;
+		void Resize(UINT width, UINT height);
 
 		const ComPtr<IDXGISwapChain4>& GetSwapChain() const;
 		TextureHandle GetCurrentBackBuffer() const;

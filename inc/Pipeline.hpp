@@ -35,9 +35,59 @@ namespace sqrp
 		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
 	};
 
+	// ルート引数をどちらの枠（Graphics / Compute）に設定するか。
+	// D3D12 のパイプラインの枠はコマンドリストに1つだけで、枠が分かれているのはルートシグネチャとルート引数
+	enum class PipelineBindPoint
+	{
+		Graphics, Compute
+	};
+
+	// ID3D12PipelineState を持つパイプライン（GraphicsPipeline / MeshPipeline / ComputePipeline）の共通部分。
+	// 派生クラスの違いはコンストラクタ（PSO の作り方）だけ
+	class Pipeline
+	{
+	protected:
+		template<typename T>
+		using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+		std::wstring name_;
+		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
+		PipelineBindPoint bindPoint_ = PipelineBindPoint::Graphics;
+
+		Pipeline(std::wstring name, PipelineBindPoint bindPoint);
+
+		// RenderState を PSO の desc に写す。D3D12_GRAPHICS_PIPELINE_STATE_DESC と
+		// D3DX12_MESH_SHADER_PIPELINE_STATE_DESC はフィールド名が同じなので1つで書ける
+		template<typename PipelineStateDesc>
+		static void SetRenderState(PipelineStateDesc& psDesc, const RenderState& renderState)
+		{
+			psDesc.BlendState = renderState.blendState_;
+			psDesc.SampleMask = renderState.sampleMask_;
+			psDesc.RasterizerState = renderState.rasterizerDesc_;
+			psDesc.DepthStencilState = renderState.depthStencilDesc_;
+			psDesc.DSVFormat = renderState.dsvFormat_;
+			psDesc.PrimitiveTopologyType = renderState.topologyType_;
+			if (renderState.rtvFormats_.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
+				throw std::runtime_error("[Pipeline::SetRenderState] rtvFormats_ has more than 8 formats");
+			}
+			psDesc.NumRenderTargets = static_cast<UINT>(renderState.rtvFormats_.size());
+			for (UINT i = 0; i < renderState.rtvFormats_.size(); i++) {
+				psDesc.RTVFormats[i] = renderState.rtvFormats_[i];
+			}
+			psDesc.SampleDesc = renderState.sampleDesc_;
+		}
+
+	public:
+		virtual ~Pipeline() = default;
+		Pipeline(const Pipeline&) = delete;
+		Pipeline& operator=(const Pipeline&) = delete;
+		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
+		PipelineBindPoint GetBindPoint() const;
+	};
+
 	struct GraphicsDesc
 	{
-		std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts_;
+		std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts_ = DEFAULT_INPUT_LAYOUT;
 		RootSignatureHandle rootSignature_;
 		ShaderHandle VS_ = nullptr;
 		ShaderHandle PS_ = nullptr;
@@ -46,29 +96,12 @@ namespace sqrp
 		ShaderHandle GS_ = nullptr;
 		RenderState renderState_;
 		D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBStripCutValue_ = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-
-		GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts = DEFAULT_INPUT_LAYOUT);
-
-		GraphicsDesc& SetRootSignature(const RootSignatureHandle& rootSignature);
-		GraphicsDesc& SetVS(const ShaderHandle& VS);
-		GraphicsDesc& SetPS(const ShaderHandle& PS);
-		GraphicsDesc& SetTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType);
 	};
 
-	class GraphicsPipeline
+	class GraphicsPipeline : public Pipeline
 	{
-	private:
-		template<typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-		std::wstring name_;
-		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
-
 	public:
 		GraphicsPipeline(const Device& device, std::wstring name, const GraphicsDesc& desc);
-		GraphicsPipeline(const GraphicsPipeline&) = delete;
-		GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
-		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
 	struct MeshDesc
@@ -78,24 +111,12 @@ namespace sqrp
 		ShaderHandle MS_ = nullptr;
 		ShaderHandle PS_ = nullptr;
 		RenderState renderState_;
-
-		MeshDesc() = default;
 	};
 
-	class MeshPipeline
+	class MeshPipeline : public Pipeline
 	{
-	private:
-		template<typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-		std::wstring name_;
-		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
-
 	public:
 		MeshPipeline(const Device& device, std::wstring name, const MeshDesc& desc);
-		MeshPipeline(const MeshPipeline&) = delete;
-		MeshPipeline& operator=(const MeshPipeline&) = delete;
-		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
 	struct ComputeDesc
@@ -105,20 +126,10 @@ namespace sqrp
 		UINT nodeMask_ = 0;
 	};
 
-	class ComputePipeline
+	class ComputePipeline : public Pipeline
 	{
-	private:
-		template<typename T>
-		using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-		std::wstring name_;
-		ComPtr<ID3D12PipelineState> pipeline_ = nullptr;
-
 	public:
 		ComputePipeline(const Device& device, std::wstring name, const ComputeDesc& desc);
-		ComputePipeline(const ComputePipeline&) = delete;
-		ComputePipeline& operator=(const ComputePipeline&) = delete;
-		const ComPtr<ID3D12PipelineState>& GetPipelineState() const;
 	};
 
 	enum class NodeType

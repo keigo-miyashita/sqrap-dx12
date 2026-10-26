@@ -75,6 +75,7 @@ namespace sqrp
 		HWND hwnd_ = 0;
 		unsigned int windowWidth_ = 1280;
 		unsigned int windowHeight_ = 720;
+		bool isResized_ = false;
 
 	public:
 		Application();
@@ -83,11 +84,13 @@ namespace sqrp
 		Application(const Application&) = delete;
 		Application& operator=(const Application&) = delete;
 		bool ProcessInput(UINT msg, WPARAM wparam, LPARAM lparam);
+		void ProcessResize(UINT width, UINT height);
 		bool Init();
 		void Run();
 		virtual bool OnStart();
 		virtual void OnUpdate();
 		virtual void OnTerminate();
+		virtual void OnResize(UINT width, UINT height);
 		HWND GetWindowHWND() const;
 		UINT GetWindowWidth() const;
 		UINT GetWindowHeight() const;

@@ -147,8 +147,6 @@ namespace sqrp
 	namespace {
 		LRESULT WindowProcedure(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
-			int x, y, wheelDelta;
-			int delta = GET_WHEEL_DELTA_WPARAM(wparam);
 			if (msg == WM_NCCREATE) {
 				auto* cs = reinterpret_cast<CREATESTRUCT*>(lparam);
 				SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(cs->lpCreateParams));
@@ -162,6 +160,11 @@ namespace sqrp
 				return 0;
 			case WM_NCDESTROY:
 				SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
+				break;
+			case WM_SIZE:
+				if (app) {
+					app->ProcessResize(LOWORD(lparam), HIWORD(lparam));
+				}
 				break;
 			}
 
@@ -232,6 +235,19 @@ namespace sqrp
 		return true;
 	}
 
+	void Application::ProcessResize(UINT width, UINT height)
+	{
+		if (width == 0 || height == 0) {
+			return;
+		}
+		if (width == windowWidth_ && height == windowHeight_) {
+			return;
+		}
+		windowWidth_ = width;
+		windowHeight_ = height;
+		isResized_ = true;
+	}
+
 	bool Application::Init()
 	{
 		// Comポインタを使う準備
@@ -268,6 +284,11 @@ namespace sqrp
 			Input::Update();
 
 			if (isRunning) {
+				// WM_SIZE arrives many times while dragging, so resize at most once per frame
+				if (isResized_) {
+					isResized_ = false;
+					OnResize(windowWidth_, windowHeight_);
+				}
 				OnUpdate();
 			}
 		}
@@ -287,6 +308,11 @@ namespace sqrp
 	}
 
 	void Application::OnTerminate()
+	{
+
+	}
+
+	void Application::OnResize(UINT width, UINT height)
 	{
 
 	}

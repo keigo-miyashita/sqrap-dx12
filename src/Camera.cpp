@@ -156,7 +156,7 @@ namespace sqrp
 			UpdateOrbital();
 	}
 
-	XMFLOAT4 Camera::GetPos()
+	XMFLOAT4 Camera::GetPos() const
 	{
 		if (mode_ == CameraMode::Orbital) {
 			XMFLOAT3 pos = ComputeOrbitalPosition();
@@ -165,12 +165,12 @@ namespace sqrp
 		return position_;
 	}
 
-	XMFLOAT3 Camera::GetRotation()
+	XMFLOAT3 Camera::GetRotation() const
 	{
 		return rotation_;
 	}
 
-	XMFLOAT3 Camera::GetFront()
+	XMFLOAT3 Camera::GetFront() const
 	{
 		XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 		XMMATRIX rotationX = XMMatrixRotationAxis(XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f), XMConvertToRadians(rotation_.x));
@@ -182,7 +182,7 @@ namespace sqrp
 		return frontDir;
 	}
 
-	XMFLOAT3 Camera::GetUp()
+	XMFLOAT3 Camera::GetUp() const
 	{
 		XMFLOAT3 frontDir = GetFront();
 		XMFLOAT3 rightDir = GetRight();
@@ -192,7 +192,7 @@ namespace sqrp
 		return upDir;
 	}
 
-	XMFLOAT3 Camera::GetRight()
+	XMFLOAT3 Camera::GetRight() const
 	{
 		XMFLOAT3 frontDir = GetFront();
 		XMFLOAT3 yPlusDir = XMFLOAT3(0.0f, 1.0f, 0.0f);
@@ -222,12 +222,12 @@ namespace sqrp
 		return rightDir;
 	}
 
-	XMFLOAT3 Camera::GetTarget()
+	XMFLOAT3 Camera::GetTarget() const
 	{
 		return target_;
 	}
 
-	XMMATRIX Camera::GetView()
+	XMMATRIX Camera::GetView() const
 	{
 		if (mode_ == CameraMode::Orbital) {
 			XMFLOAT3 pos = ComputeOrbitalPosition();
@@ -243,59 +243,39 @@ namespace sqrp
 		return XMMatrixLookAtLH(XMLoadFloat4(&cameraPos), XMLoadFloat4(&targetPos), XMLoadFloat3(&upDir));
 	}
 
-	XMMATRIX Camera::GetProj()
+	XMMATRIX Camera::GetProj() const
 	{
 		return XMMatrixPerspectiveFovLH(XMConvertToRadians(fovYAngle_), aspectRatio_, nearZ_, farZ_);
 	}
 
-	XMMATRIX Camera::GetInvViewProj()
+	XMMATRIX Camera::GetInvViewProj() const
 	{
 		return XMMatrixInverse(nullptr, XMMatrixMultiply(GetView(), GetProj()));
 	}
 
-	XMMATRIX Camera::GetInvView()
+	XMMATRIX Camera::GetInvView() const
 	{
 		return XMMatrixInverse(nullptr, GetView());
 	}
 
-	float Camera::GetMoveScale()
+	float Camera::GetMoveScale() const
 	{
 		return moveScale_;
 	}
 
-	float Camera::GetRotateScale()
+	float Camera::GetRotateScale() const
 	{
 		return rotateScale_;
 	}
 
-	float Camera::GetZoomScale()
+	float Camera::GetZoomScale() const
 	{
 		return zoomScale_;
 	}
 
-	float Camera::GetPanScale()
+	float Camera::GetPanScale() const
 	{
 		return panScale_;
-	}
-
-	float* Camera::GetMoveScalePtr()
-	{
-		return &moveScale_;
-	}
-
-	float* Camera::GetRotateScalePtr()
-	{
-		return &rotateScale_;
-	}
-
-	float* Camera::GetZoomScalePtr()
-	{
-		return &zoomScale_;
-	}
-
-	float* Camera::GetPanScalePtr()
-	{
-		return &panScale_;
 	}
 
 	void Camera::SetMoveScale(float scale)
@@ -306,6 +286,16 @@ namespace sqrp
 	void Camera::SetRotateScale(float scale)
 	{
 		rotateScale_ = scale;
+	}
+
+	void Camera::SetZoomScale(float scale)
+	{
+		zoomScale_ = scale;
+	}
+
+	void Camera::SetPanScale(float scale)
+	{
+		panScale_ = scale;
 	}
 
 	void Camera::SetPosition(XMFLOAT3 position)
@@ -326,5 +316,10 @@ namespace sqrp
 	void Camera::SetRadius(float radius)
 	{
 		radius_ = clamp(radius, minRadius_, maxRadius_);
+	}
+
+	void Camera::SetAspectRatio(float aspectRatio)
+	{
+		aspectRatio_ = aspectRatio;
 	}
 }

@@ -22,7 +22,7 @@ namespace sqrp
 		for (UINT i = 0; i < frameCount_; i++)
 		{
 			ComPtr<ID3D12CommandAllocator> commandAllocator = nullptr;
-			HRESULT result = pDevice_->GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator.ReleaseAndGetAddressOf()));
+			HRESULT result = device_.GetDevice()->CreateCommandAllocator(commandType_, IID_PPV_ARGS(commandAllocator.ReleaseAndGetAddressOf()));
 			if (FAILED(result)) {
 				throw runtime_error("[Command::CreateCommandList] CreateCommandAllocator failed\nHRESULT = " + to_string(result));
 			}
@@ -30,7 +30,7 @@ namespace sqrp
 			commandAllocator->SetName((cmdAllocName + name_ + to_wstring(i)).c_str());
 			commandAllocators_.push_back(commandAllocator);
 		}
-		HRESULT result = pDevice_->GetDevice()->CreateCommandList(0, commandType_, commandAllocators_[0].Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommandList(0, commandType_, commandAllocators_[0].Get(), nullptr, IID_PPV_ARGS(commandList_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Command::CreateCommandList] CreateCommandList failed\nHRESULT = " + to_string(result));
 		}
@@ -57,7 +57,7 @@ namespace sqrp
 	}
 
 	Command::Command(const Device& device, wstring name, D3D12_COMMAND_LIST_TYPE commandType, UINT frameCount)
-		: pDevice_(&device), name_(name), commandType_(commandType), frameCount_(frameCount)
+		: device_(device), name_(name), commandType_(commandType), frameCount_(frameCount)
 	{
 		switch (commandType_) {
 			case D3D12_COMMAND_LIST_TYPE_DIRECT:
@@ -133,7 +133,7 @@ namespace sqrp
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
-		commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), 1, 0, 0, 0);
+		commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), numInstances, 0, 0, 0);
 	}
 
 	void Command::AddDrawIndexedLine(const MeshHandle& mesh, UINT numInstances)
@@ -141,7 +141,7 @@ namespace sqrp
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 		commandList_->IASetVertexBuffers(0, 1, mesh->GetVBViewPtr());
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
-		commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), 1, 0, 0, 0);
+		commandList_->DrawIndexedInstanced(mesh->GetNumIndices(), numInstances, 0, 0, 0);
 	}
 
 	void Command::Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers)
@@ -151,7 +151,7 @@ namespace sqrp
 
 	void Command::Barrier(vector<D3D12_RESOURCE_BARRIER> barriers)
 	{
-		commandList_->ResourceBarrier(barriers.size(), barriers.data());
+		commandList_->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 	}
 
 	void Command::CopyBuffer(const ResourceHandle& srcResource, D3D12_RESOURCE_STATES srcCurrentState, const ResourceHandle& destResource, D3D12_RESOURCE_STATES destCurrentState)
@@ -167,7 +167,7 @@ namespace sqrp
 		}
 
 		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
+			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
 		}
 		commandList_->CopyResource(destResource->GetResource().Get(), srcResource->GetResource().Get());
 
@@ -181,7 +181,7 @@ namespace sqrp
 			rscBarriers.push_back(destbarrier);
 		}
 		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
+			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
 		}
 	}
 
@@ -198,7 +198,7 @@ namespace sqrp
 		}
 
 		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
+			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
 		}
 		commandList_->CopyBufferRegion(destBuffer->GetResource().Get(), destOffset, srcBuffer->GetResource().Get(), srcOffset, numBytes);
 
@@ -212,7 +212,7 @@ namespace sqrp
 			rscBarriers.push_back(destbarrier);
 		}
 		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(rscBarriers.size(), rscBarriers.data());
+			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
 		}
 	}
 
@@ -273,27 +273,26 @@ namespace sqrp
 		commandList_->Close();
 	}
 
-	void Command::SetResource(BindingPiplineType type, const RootSignatureHandle& rootSig, std::initializer_list<RootArguments> bindingResources)
+	void Command::SetResource(PipelineBindPoint type, const RootSignatureHandle& rootSig, std::initializer_list<RootArguments> bindingResources)
 	{
 		const auto& rootParams = rootSig->GetRootParametersVec();
 		if (bindingResources.size() != rootParams.size()) {
 			throw runtime_error("[Command::SetResource] the number of binding resources does not match the number of root parameters");
 		}
-		if (type == BindingPiplineType::Graphics) {
+		if (type == PipelineBindPoint::Graphics) {
 			commandList_->SetGraphicsRootSignature(rootSig->GetRootSignature().Get());
 		}
-		else if (type == BindingPiplineType::Compute) {
+		else if (type == PipelineBindPoint::Compute) {
 			commandList_->SetComputeRootSignature(rootSig->GetRootSignature().Get());
 		}
 
-		const bool isGraphics = (type == BindingPiplineType::Graphics);
+		const bool isGraphics = (type == PipelineBindPoint::Graphics);
 		auto setDescriptorTable = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable : &ID3D12GraphicsCommandList::SetComputeRootDescriptorTable;
 		auto setCBV = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootConstantBufferView : &ID3D12GraphicsCommandList::SetComputeRootConstantBufferView;
 		auto setSRV = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootShaderResourceView : &ID3D12GraphicsCommandList::SetComputeRootShaderResourceView;
 		auto setUAV = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootUnorderedAccessView : &ID3D12GraphicsCommandList::SetComputeRootUnorderedAccessView;
 		auto setConstants = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRoot32BitConstants : &ID3D12GraphicsCommandList::SetComputeRoot32BitConstants;
 
-		auto bindingResourceIt = bindingResources.begin();
 		for (UINT i = 0; i < rootParams.size(); i++) {
 			const auto& rootArgument = *(bindingResources.begin() + i);
 			if (holds_alternative<SetByIndirect>(rootArgument)) {
@@ -331,33 +330,23 @@ namespace sqrp
 
 	void Command::SetComputeResource(const RootSignatureHandle& computeRootSig, initializer_list<RootArguments> bindingResources)
 	{
-		SetResource(BindingPiplineType::Compute, computeRootSig, bindingResources);
+		SetResource(PipelineBindPoint::Compute, computeRootSig, bindingResources);
 	}
 
 	void Command::SetDescriptorHeap()
 	{
-		ID3D12DescriptorHeap* const heaps[] = { pDevice_->GetResourceDescriptorHeap().Get(), pDevice_->GetSamplerDescriptorHeap().Get()};
+		ID3D12DescriptorHeap* const heaps[] = { device_.GetResourceDescriptorHeap().Get(), device_.GetSamplerDescriptorHeap().Get()};
 		commandList_->SetDescriptorHeaps(2, heaps);
 	}
 
 	void Command::SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, initializer_list<RootArguments> bindingResources)
 	{
-		SetResource(BindingPiplineType::Graphics, graphicsRootSig, bindingResources);
+		SetResource(PipelineBindPoint::Graphics, graphicsRootSig, bindingResources);
 	}
 
-	void Command::SetPipeline(const GraphicsPipelineHandle& graphicsPipeline)
+	void Command::SetPipeline(const PipelineHandle& pipeline)
 	{
-		commandList_->SetPipelineState(graphicsPipeline->GetPipelineState().Get());
-	}
-
-	void Command::SetPipeline(const ComputePipelineHandle& computePipeline)
-	{
-		commandList_->SetPipelineState(computePipeline->GetPipelineState().Get());
-	}
-
-	void Command::SetPipeline(const MeshPipelineHandle& meshPipeline)
-	{
-		commandList_->SetPipelineState(meshPipeline->GetPipelineState().Get());
+		commandList_->SetPipelineState(pipeline->GetPipelineState().Get());
 	}
 
 	void Command::SetRaytracingState(const StateObjectHandle& stateObject)
@@ -376,16 +365,16 @@ namespace sqrp
 		Close();
 
 		ID3D12CommandList* cmdLists[] = { commandList_.Get() };
-		pDevice_->GetCommandQueue(queueType_)->ExecuteCommandLists(1, cmdLists);
+		device_.GetCommandQueue(queueType_)->ExecuteCommandLists(1, cmdLists);
 
-		FenceHandle fence = pDevice_->GetFence(queueType_);
+		FenceHandle fence = device_.GetFence(queueType_);
 		const UINT64 fenceVal = fence->Signal();
 		fenceValues_[frameIndex_] = fenceVal;
 
 		frameIndex_ = (frameIndex_ + 1) % frameCount_;
 		fence->WaitSignal(fenceValues_[frameIndex_]);
 
-		pDevice_->ReleaseCompleted();
+		device_.ReleaseCompleted();
 
 		commandAllocators_[frameIndex_]->Reset();
 		commandList_->Reset(commandAllocators_[frameIndex_].Get(), nullptr);
@@ -395,12 +384,12 @@ namespace sqrp
 
 	void Command::WaitCommand()
 	{
-		pDevice_->WaitOnCPU(Submit());
+		device_.WaitOnCPU(Submit());
 	}
 
 	void Command::InitDataToBuffer(const BufferHandle& buffer, void* pData, UINT strideSize, UINT numElement)
 	{
-		BufferHandle uploadBuffer = pDevice_->CreateBuffer(L"Upload", BufferType::Upload, strideSize, numElement);
+		BufferHandle uploadBuffer = device_.CreateBuffer(L"Upload", BufferType::Upload, strideSize, numElement);
 
 		uploadBuffer->Upload(pData, strideSize, numElement);
 
@@ -415,9 +404,9 @@ namespace sqrp
 		D3D12_PLACED_SUBRESOURCE_FOOTPRINT footprint;
 		UINT numRows;
 		UINT64 rowSizeInBytes, totalBytes;
-		pDevice_->GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, &numRows, &rowSizeInBytes, &totalBytes);
+		device_.GetDevice()->GetCopyableFootprints(&desc, 0, 1, 0, &footprint, &numRows, &rowSizeInBytes, &totalBytes);
 
-		BufferHandle uploadBuffer = pDevice_->CreateBuffer(L"TextureUpload", BufferType::Upload, 1, static_cast<UINT>(totalBytes));
+		BufferHandle uploadBuffer = device_.CreateBuffer(L"TextureUpload", BufferType::Upload, 1, static_cast<UINT>(totalBytes));
 
 		void* pMapped = uploadBuffer->Map();
 		if (pMapped) {

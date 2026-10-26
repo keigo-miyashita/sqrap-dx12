@@ -14,7 +14,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
+		const Device& device_;
 		std::wstring name_;
 		ComPtr<ID3D12Fence> fence_ = nullptr;
 		std::atomic<UINT64> fenceVal_ = 0;
@@ -29,7 +29,7 @@ namespace sqrp
 		UINT64 Signal();
 		void WaitSignal(); // Stop CPU until GPU reaches the fence value.
 		void WaitSignal(UINT64 fenceVal); // Stop CPU until GPU reaches the fence value.
-		bool CheckSignal();// Query the fence value (CPU does not stop)
+		bool CheckSignal() const;// Query the fence value (CPU does not stop)
 
 		const ComPtr<ID3D12Fence>& GetFence() const;
 		UINT64 GetFenceVal() const;

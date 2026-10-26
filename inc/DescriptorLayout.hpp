@@ -39,7 +39,7 @@ namespace sqrp
 		static D3D12_DESCRIPTOR_RANGE_TYPE ConvertDescriptorRangeType(ViewType type);
 		UINT GetRangeNum() const;
 		UINT GetViewNum() const;
-		const CD3DX12_DESCRIPTOR_RANGE1* GetPDescRanges() const;
+		std::span<const CD3DX12_DESCRIPTOR_RANGE1> GetDescRanges() const;
 		const std::set<std::pair<ViewType, UINT>>& GetUsedRegs() const;
 		const std::vector<std::pair<ViewType, UINT>>& GetDescLayoutDesc() const;
 		DescriptorLayoutType GetDescriptorLayoutType() const;

@@ -46,6 +46,6 @@ namespace sqrp
 		D3D12_GPU_VIRTUAL_ADDRESS_RANGE GetBackingMemoryAddressRange() const;
 		const ComPtr<ID3D12Resource>& GetBackingMemory() const;
 		D3D12_PROGRAM_IDENTIFIER GetProgramID() const;
-		D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE GetLocalSigSize() const;
+		D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE GetLocalRootArgumentsTable() const;
 	};
 }

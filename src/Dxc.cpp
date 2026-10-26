@@ -72,7 +72,7 @@ namespace sqrp
 		if (!includePath.empty()) {
 			DWORD attrib = GetFileAttributesW(includePath.c_str());
 			if (attrib == INVALID_FILE_ATTRIBUTES || !(attrib & FILE_ATTRIBUTE_DIRECTORY)) {
-				throw runtime_error("[Dxc::CompileShader] include directory not found");
+				throw runtime_error("[Dxc::CompileShader] include directory not found: " + WStringToString(includePath));
 			}
 		}
 

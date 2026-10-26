@@ -46,7 +46,7 @@ namespace sqrp
 
 	void Device::EnableFeatures(vector<UUID>& features) const
 	{
-		auto result = D3D12EnableExperimentalFeatures(features.size(), features.data(), nullptr, nullptr);
+		auto result = D3D12EnableExperimentalFeatures(static_cast<UINT>(features.size()), features.data(), nullptr, nullptr);
 		if (FAILED(result)) {
 			throw runtime_error("[Device::EnableFeatures] D3D12EnableExperimentalFeatures failed\nHRESULT = " + to_string(result));
 		}
@@ -73,7 +73,7 @@ namespace sqrp
 		for (int i = 0; dxgiFactory_->EnumAdapters(i, optionalAdapter.ReleaseAndGetAddressOf()) != DXGI_ERROR_NOT_FOUND; i++) {
 			allAdapters.push_back(optionalAdapter);
 		}
-		for (auto adapter : allAdapters) {
+		for (const auto& adapter : allAdapters) {
 			DXGI_ADAPTER_DESC adpDesc = {};
 			adapter->GetDesc(&adpDesc);
 			wstring strDesc = adpDesc.Description;

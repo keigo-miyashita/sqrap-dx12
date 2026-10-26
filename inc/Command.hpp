@@ -24,7 +24,6 @@ namespace sqrp
 	class Indirect;
 	class Mesh;
 	class Resource;
-	class ResourceSet;
 	class RootSignature;
 	class SwapChain;
 
@@ -33,12 +32,8 @@ namespace sqrp
 	private:
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
-		enum class BindingPiplineType
-		{
-			Graphics, Compute
-		};
 
-		const Device* pDevice_ = nullptr;
+		const Device& device_;
 		std::wstring name_;
 		D3D12_COMMAND_LIST_TYPE commandType_ = D3D12_COMMAND_LIST_TYPE_DIRECT;
 		QueueType queueType_ = QueueType::Graphics;
@@ -54,7 +49,7 @@ namespace sqrp
 		void InitializeStableCommandList();
 		void InitializeLatestCommandList();
 		void Close();
-		void SetResource(BindingPiplineType type, const RootSignatureHandle& graphicsRootSig, std::initializer_list<RootArguments> bindingResources);
+		void SetResource(PipelineBindPoint type, const RootSignatureHandle& rootSig, std::initializer_list<RootArguments> bindingResources);
 		const ComPtr<ID3D12CommandAllocator>& GetCurrentCommandAllocator() const;
 
 	public:
@@ -77,9 +72,7 @@ namespace sqrp
 		void SetComputeResource(const RootSignatureHandle& computeRootSig, std::initializer_list<RootArguments> bindingResources);
 		void SetDescriptorHeap();
 		void SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, std::initializer_list<RootArguments> bindingResources);
-		void SetPipeline(const GraphicsPipelineHandle& graphicsPipeline);
-		void SetPipeline(const ComputePipelineHandle& computePipeline);
-		void SetPipeline(const MeshPipelineHandle& meshPipeline);
+		void SetPipeline(const PipelineHandle& pipeline);
 		void SetRaytracingState(const StateObjectHandle& stateObject);
 		void SetProgram(const WorkGraphHandle& workGraph, bool isInitialize = true);
 		TimelinePoint Submit();

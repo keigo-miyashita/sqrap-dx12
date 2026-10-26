@@ -162,3 +162,9 @@ void WorkGraphApp::OnTerminate()
 {
 	command_->WaitCommand();   // Present 完了まで待つ (WaitSignal だけでは Present 前のシグナルしか待てない)
 };
+
+void WorkGraphApp::OnResize(UINT width, UINT height)
+{
+	swapChain_->Resize(width, height);
+	camera_.SetAspectRatio((float)width / (float)height);
+}

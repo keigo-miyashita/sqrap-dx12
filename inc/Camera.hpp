@@ -64,31 +64,30 @@ namespace sqrp
 		CameraMode GetMode() const;
 
 		void Update();
-		DirectX::XMFLOAT4 GetPos();
-		DirectX::XMFLOAT3 GetRotation();
-		DirectX::XMFLOAT3 GetFront();
-		DirectX::XMFLOAT3 GetUp();
-		DirectX::XMFLOAT3 GetRight();
-		DirectX::XMFLOAT3 GetTarget();
-		DirectX::XMMATRIX GetView();
-		DirectX::XMMATRIX GetProj();
-		DirectX::XMMATRIX GetInvViewProj();
-		DirectX::XMMATRIX GetInvView();
+		DirectX::XMFLOAT4 GetPos() const;
+		DirectX::XMFLOAT3 GetRotation() const;
+		DirectX::XMFLOAT3 GetFront() const;
+		DirectX::XMFLOAT3 GetUp() const;
+		DirectX::XMFLOAT3 GetRight() const;
+		DirectX::XMFLOAT3 GetTarget() const;
+		DirectX::XMMATRIX GetView() const;
+		DirectX::XMMATRIX GetProj() const;
+		DirectX::XMMATRIX GetInvViewProj() const;
+		DirectX::XMMATRIX GetInvView() const;
 
-		float GetMoveScale();
-		float GetRotateScale();
-		float GetZoomScale();
-		float GetPanScale();
-		float* GetMoveScalePtr();
-		float* GetRotateScalePtr();
-		float* GetZoomScalePtr();
-		float* GetPanScalePtr();
+		float GetMoveScale() const;
+		float GetRotateScale() const;
+		float GetZoomScale() const;
+		float GetPanScale() const;
 
 		void SetMoveScale(float scale);
 		void SetRotateScale(float scale);
+		void SetZoomScale(float scale);
+		void SetPanScale(float scale);
 		void SetPosition(DirectX::XMFLOAT3 position);
 		void SetRotation(DirectX::XMFLOAT3 rotation);
 		void SetTarget(DirectX::XMFLOAT3 target);
 		void SetRadius(float radius);
+		void SetAspectRatio(float aspectRatio);
 	};
 }

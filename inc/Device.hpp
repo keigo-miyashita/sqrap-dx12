@@ -34,6 +34,10 @@ namespace sqrp
 		Graphics, Compute
 	};
 
+	// Device はこれから作るすべてのハンドル（Create* が返すもの）より長く生きる必要がある。
+	// Create* が付ける遅延破棄のデリータが Device を覚えており、Command / Fence / Gui / Resource / SwapChain は
+	// const Device& をメンバに持つため。利用側は Device を値メンバとして、ハンドルより先に宣言する
+	// （C++ のメンバは宣言と逆の順に壊れるので、先に宣言した Device が最後に壊れる）
 	class Device
 	{
 	private:

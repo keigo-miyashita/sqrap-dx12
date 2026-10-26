@@ -31,7 +31,7 @@ namespace sqrp
 		BLAS(const BLAS&) = delete;
 		BLAS& operator=(const BLAS&) = delete;
 
-		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
+		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress() const;
 	};
 
 	struct TLASDesc
@@ -61,6 +61,6 @@ namespace sqrp
 		TLAS(const TLAS&) = delete;
 		TLAS& operator=(const TLAS&) = delete;
 		ASHandle GetASBuffer() const;
-		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress();
+		D3D12_GPU_VIRTUAL_ADDRESS GetASAddress() const;
 	};
 }

@@ -2,6 +2,7 @@
 
 #include "Command.hpp"
 #include "Device.hpp"
+#include "Fence.hpp"
 #include "Resource.hpp"
 
 using namespace Microsoft::WRL;
@@ -30,7 +31,7 @@ namespace sqrp
 		swapChainDesc1.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 		ComPtr<IDXGISwapChain1> swapChain1 = nullptr;
-		HRESULT result = pDevice_->GetDXGIFactory()->CreateSwapChainForHwnd(pDevice_->GetCommandQueue(QueueType::Graphics).Get(),
+		HRESULT result = device_.GetDXGIFactory()->CreateSwapChainForHwnd(device_.GetCommandQueue(QueueType::Graphics).Get(),
 			hwnd,
 			&swapChainDesc1,
 			nullptr,
@@ -54,12 +55,27 @@ namespace sqrp
 		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		heapDesc.NodeMask = 0;
 		heapDesc.NumDescriptors = swapChainDesc1.BufferCount * 2;   // sRGB と UNORM の2つずつ
-		result = pDevice_->GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf()));
+		result = device_.GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(rtvHeap_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[SwapChain::CreateSwapChain] CreateDescriptorHeap for RTV failed\nHRESULT = " + to_string(result));
 		}
 		rtvHeap_->SetName((name_ + L"RenderTargetViewHeap").c_str());
 
+		CreateBackBuffers();
+	}
+
+	void SwapChain::CreateBackBuffers()
+	{
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc1 = {};
+		HRESULT result = swapChain_->GetDesc1(&swapChainDesc1);
+		if (FAILED(result)) {
+			throw runtime_error("[SwapChain::CreateBackBuffers] GetDesc1 failed\nHRESULT = " + to_string(result));
+		}
+
+		// Clear old entries left by a previous call (from Resize)
+		backBuffers_.clear();
+		rtvHandles_.clear();
+		unormRtvHandles_.clear();
 		backBuffers_.resize(swapChainDesc1.BufferCount);
 
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
@@ -70,21 +86,19 @@ namespace sqrp
 
 		rtvHandles_.reserve(swapChainDesc1.BufferCount);
 		unormRtvHandles_.reserve(swapChainDesc1.BufferCount);
-		const UINT rtvIncrement = pDevice_->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		const UINT rtvIncrement = device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 		for (UINT i = 0; i < swapChainDesc1.BufferCount; i++) {
-			backBuffers_[i] = make_shared<Texture>();
 			ComPtr<ID3D12Resource> resource;
 			result = swapChain_->GetBuffer(i, IID_PPV_ARGS(resource.ReleaseAndGetAddressOf()));
 			//backBuffers_[i]->SetResourceState(D3D12_RESOURCE_STATE_RENDER_TARGET);
 			if (FAILED(result)) {
-				throw runtime_error("[SwapChain::CreateSwapChain] GetBuffer failed\nHRESULT = " + to_string(result));
+				throw runtime_error("[SwapChain::CreateBackBuffers] GetBuffer failed\nHRESULT = " + to_string(result));
 			}
-			backBuffers_[i]->SetResource(resource);
-			wstring nameBackBuffer = L"backBuffers" + to_wstring(i);
-			backBuffers_[i]->SetName(nameBackBuffer.c_str());
+			// バックバッファは PRESENT の状態で渡される
+			backBuffers_[i] = make_shared<Texture>(device_, name_ + L"_BackBuffer" + to_wstring(i), resource, D3D12_RESOURCE_STATE_PRESENT);
 			//rtvDesc.Format = backBuffers_[i]->GetResource()->GetDesc().Format;
-			pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &rtvDesc, handle);
+			device_.GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &rtvDesc, handle);
 			rtvHandles_.push_back(handle);
 			handle.ptr += rtvIncrement;
 		}
@@ -93,7 +107,7 @@ namespace sqrp
 		D3D12_RENDER_TARGET_VIEW_DESC unormRtvDesc = rtvDesc;
 		unormRtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		for (UINT i = 0; i < swapChainDesc1.BufferCount; i++) {
-			pDevice_->GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &unormRtvDesc, handle);
+			device_.GetDevice()->CreateRenderTargetView(backBuffers_[i]->GetResource().Get(), &unormRtvDesc, handle);
 			unormRtvHandles_.push_back(handle);
 			handle.ptr += rtvIncrement;
 		}
@@ -111,7 +125,7 @@ namespace sqrp
 
 		CD3DX12_CLEAR_VALUE depthClearValue(DXGI_FORMAT_D32_FLOAT, 1.0f, 0);
 
-		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(
 			&depthHeapProp, D3D12_HEAP_FLAG_NONE,
 			&depthResDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
 			&depthClearValue, IID_PPV_ARGS(depthStencilBuffer_.ReleaseAndGetAddressOf()));
@@ -120,27 +134,30 @@ namespace sqrp
 		}
 		depthStencilBuffer_->SetName((name_ + L"DepthStencilBuffer").c_str());
 
-		D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-		dsvHeapDesc.NumDescriptors = 1;
-		dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-		dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		// The DSV heap does not depend on the size, so create it once and reuse it on Resize
+		if (!dsvHeap_) {
+			D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+			dsvHeapDesc.NumDescriptors = 1;
+			dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+			dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-		result = pDevice_->GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf()));
-		if (FAILED(result)) {
-			throw runtime_error("[SwapChain::CreateDepthStencilBuffer] CreateDescriptorHeap for DSV failed\nHRESULT = " + to_string(result));
+			result = device_.GetDevice()->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(dsvHeap_.ReleaseAndGetAddressOf()));
+			if (FAILED(result)) {
+				throw runtime_error("[SwapChain::CreateDepthStencilBuffer] CreateDescriptorHeap for DSV failed\nHRESULT = " + to_string(result));
+			}
+			dsvHeap_->SetName((name_ + L"DepthStencilHeap").c_str());
 		}
-		dsvHeap_->SetName((name_ + L"DepthStencilHeap").c_str());
 
 		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 		dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 		dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 
-		pDevice_->GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
+		device_.GetDevice()->CreateDepthStencilView(depthStencilBuffer_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
 	}
 
 	SwapChain::SwapChain(const Device& device, wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount)
-		: pDevice_(&device), name_(name), bufferCount_(bufferCount)
+		: device_(device), name_(name), bufferCount_(bufferCount)
 	{
 		if (bufferCount_ < 2 || bufferCount_ > DXGI_MAX_SWAP_CHAIN_BUFFERS) {
 			throw runtime_error("[SwapChain::SwapChain] bufferCount must be between 2 and " + to_string(DXGI_MAX_SWAP_CHAIN_BUFFERS));
@@ -149,6 +166,36 @@ namespace sqrp
 		CreateSwapChain(hwnd, winSize);
 
 		CreateDepthStencilBuffer(winSize);
+	}
+
+	void SwapChain::Resize(UINT width, UINT height)
+	{
+		// Minimizing gives 0. Keep the current buffers until the window is restored
+		if (width == 0 || height == 0) {
+			return;
+		}
+
+		// Wait until the GPU is done with the buffers, including Present.
+		// The Signal in EndRender comes before Present, so signal again here and wait for it
+		FenceHandle fence = device_.GetFence(QueueType::Graphics);
+		device_.WaitOnCPU(TimelinePoint(QueueType::Graphics, fence->Signal()));
+
+		// ResizeBuffers fails while any reference to a back buffer remains
+		backBuffers_.clear();
+		depthStencilBuffer_.Reset();
+
+		DXGI_SWAP_CHAIN_DESC1 swapChainDesc1 = {};
+		HRESULT result = swapChain_->GetDesc1(&swapChainDesc1);
+		if (FAILED(result)) {
+			throw runtime_error("[SwapChain::Resize] GetDesc1 failed\nHRESULT = " + to_string(result));
+		}
+		result = swapChain_->ResizeBuffers(0, width, height, DXGI_FORMAT_UNKNOWN, swapChainDesc1.Flags);
+		if (FAILED(result)) {
+			throw runtime_error("[SwapChain::Resize] ResizeBuffers failed (a TextureHandle from GetCurrentBackBuffer() may still be held)\nHRESULT = " + to_string(result));
+		}
+
+		CreateBackBuffers();
+		CreateDepthStencilBuffer({ static_cast<LONG>(width), static_cast<LONG>(height) });
 	}
 
 	const ComPtr<IDXGISwapChain4>& SwapChain::GetSwapChain() const

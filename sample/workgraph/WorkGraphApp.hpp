@@ -21,6 +21,7 @@ private:
 	using ComPtr = Microsoft::WRL::ComPtr<T>;
 	//WorkGraphScene sampleScene_;
 
+	// Device はハンドルより先に宣言する（メンバは宣言と逆の順に壊れるので、Device が最後に壊れる）
 	sqrp::Device device_;
 	sqrp::Dxc dxc_;
 	sqrp::CommandHandle command_;
@@ -62,4 +63,5 @@ public:
 	virtual bool OnStart() override;
 	virtual void OnUpdate() override;
 	virtual void OnTerminate() override;
+	virtual void OnResize(UINT width, UINT height) override;
 };

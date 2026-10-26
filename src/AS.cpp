@@ -66,7 +66,7 @@ namespace sqrp
 		CreateBLAS(device, mesh, command);
 	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASAddress()
+	D3D12_GPU_VIRTUAL_ADDRESS BLAS::GetASAddress() const
 	{
 		return ASBuffer_->GetResource()->GetGPUVirtualAddress();
 	}
@@ -90,7 +90,7 @@ namespace sqrp
 		}
 
 		shared_ptr<Buffer> uploadBuffer;
-		uploadBuffer = device.CreateBuffer(L"_upload", BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
+		uploadBuffer = device.CreateBuffer(L"_upload", BufferType::Upload, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), static_cast<UINT>(instanceDesc.size()));
 		void* rawPtr = uploadBuffer->Map();
 		if (rawPtr) {
 			D3D12_RAYTRACING_INSTANCE_DESC* pDesc = static_cast<D3D12_RAYTRACING_INSTANCE_DESC*>(rawPtr);
@@ -98,7 +98,7 @@ namespace sqrp
 			uploadBuffer->Unmap();
 		}
 		cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
-		instanceDescBuffer_ = device.CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), instanceDesc.size());
+		instanceDescBuffer_ = device.CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), static_cast<UINT>(instanceDesc.size()));
 
 		command->CopyBuffer(uploadBuffer, uploadBuffer->GetInitialState(), instanceDescBuffer_, instanceDescBuffer_->GetInitialState());
 		command->WaitCommand();
@@ -106,7 +106,7 @@ namespace sqrp
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = {};
 		buildInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 		buildInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
-		buildInputs.NumDescs = instanceDesc.size();
+		buildInputs.NumDescs = static_cast<UINT>(instanceDesc.size());
 		buildInputs.InstanceDescs = instanceDescBuffer_->GetResource()->GetGPUVirtualAddress();
 		buildInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 
@@ -148,7 +148,7 @@ namespace sqrp
 		return ASBuffer_;
 	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS TLAS::GetASAddress()
+	D3D12_GPU_VIRTUAL_ADDRESS TLAS::GetASAddress() const
 	{
 		return ASBuffer_->GetResource()->GetGPUVirtualAddress();
 	}

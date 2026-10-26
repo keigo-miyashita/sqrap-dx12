@@ -18,7 +18,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
+		const Device& device_;
 		ComPtr<ID3D12Resource> resource_ = nullptr;
 		std::wstring name_;
 		ResourceType rscType_ = ResourceType::Buffer;
@@ -26,9 +26,10 @@ namespace sqrp
 		D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
 		D3D12_RESOURCE_STATES initialState_ = D3D12_RESOURCE_STATE_COMMON;
 
-	public:
+		// 基底としてだけ使う（Buffer / Texture / AS から呼ぶ）
 		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
-		Resource() = default;
+
+	public:
 		virtual ~Resource() = default;
 		Resource(const Resource&) = delete;
 		Resource& operator=(const Resource&) = delete;
@@ -170,7 +171,8 @@ namespace sqrp
 
 	public:
 		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1);
-		Texture() = default;
+		// 既にあるリソース（スワップチェーンのバックバッファなど）を包む。幅・高さ・形式などは resource の desc から読む
+		Texture(const Device& device, std::wstring name, ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES initialState);
 		void* Map();
 		void Unmap();
 		void Reset();
@@ -184,8 +186,6 @@ namespace sqrp
 		UINT GetDepth() const;
 		UINT GetMipLevels() const;
 
-		void SetName(std::wstring name);
-		void SetResource(ComPtr<ID3D12Resource> resource);
 	};
 
 	class AS : public Resource

@@ -9,9 +9,9 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	Fence::Fence(const Device& device, QueueType queueType, std::wstring name) : pDevice_(&device), name_(name), queueType_(queueType)
+	Fence::Fence(const Device& device, QueueType queueType, std::wstring name) : device_(device), name_(name), queueType_(queueType)
 	{
-		HRESULT result = pDevice_->GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateFence(fenceVal_, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(fence_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Fence::Fence] CreateFence failed\nHRESULT = " + to_string(result));
 		}
@@ -31,7 +31,7 @@ namespace sqrp
 	UINT64 Fence::Signal()
 	{
 		ID3D12CommandQueue* queue = nullptr;
-		queue = pDevice_->GetCommandQueue(queueType_).Get();
+		queue = device_.GetCommandQueue(queueType_).Get();
 
 		// fenceVal is atomic, so write and read at the same time
 		// so var = ++fenceVal_
@@ -60,7 +60,7 @@ namespace sqrp
 		}
 	}
 
-	bool Fence::CheckSignal()
+	bool Fence::CheckSignal() const
 	{
 		return !(fence_->GetCompletedValue() < fenceVal_.load());
 	}

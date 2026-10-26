@@ -12,7 +12,6 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Dxc* pDxc_ = nullptr;
 		ShaderType shaderType_ = ShaderType::Vertex;
 		// ShaderのByte codeを格納
 		ComPtr<IDxcBlob> blob_ = nullptr;
@@ -25,7 +24,7 @@ namespace sqrp
 		// HLSL->DXILのコンパイルは巨大なヘッダをエントリごとに舐め直すので、
 		// エントリ数が多いと起動が数十秒になる(実測: 35本で約70秒)。
 		// ソースが同じなら結果は毎回同じなのでキャッシュが素直に効く
-		Shader(const Dxc& dxc, ShaderType shaderType, ComPtr<IDxcBlob> blob, const std::wstring& entry);
+		Shader(ShaderType shaderType, ComPtr<IDxcBlob> blob, const std::wstring& entry);
 		Shader(const Shader&) = delete;
 		Shader& operator=(const Shader&) = delete;
 		const ComPtr<IDxcBlob>& GetBlob() const;

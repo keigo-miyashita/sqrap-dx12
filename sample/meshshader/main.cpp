@@ -19,7 +19,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 		app.Run();
 	}
 	catch (const std::exception& e) {
-		std::cerr << "例外が発生しました: " << e.what() << std::endl;
+		std::cerr << "例外が発生しました:\n" << e.what() << std::endl;
 	}
 
 	return 0;

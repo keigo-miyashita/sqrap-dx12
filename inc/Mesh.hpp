@@ -6,6 +6,7 @@
 namespace sqrp
 {
 	std::wstring StringToWString(const std::string& str);
+	std::string WStringToString(const std::wstring& str);
 
 	class Buffer;
 	class Command;

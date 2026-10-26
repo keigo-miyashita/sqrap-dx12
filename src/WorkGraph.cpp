@@ -168,7 +168,6 @@ namespace sqrp
 				if (computeCandidate != computeNodeLRSNames.end() && graphicsCandidate != graphicsNodeLRSNames.end()) {
 					throw runtime_error("[WorkGraph::WorkGraph] a node matches both a compute node and a graphics node in the work graph desc");
 				}
-				UINT offset = 0;
 				if (computeCandidate != computeNodeLRSNames.end()) {
 					const UINT indexInWorkGraphDesc = computeCandidate->second;
 					const auto& localRootArguments = computeLocalRootArguments[indexInWorkGraphDesc];
@@ -179,25 +178,7 @@ namespace sqrp
 					for (UINT j = 0; j < localRootArguments.size(); j++) {
 						localRootSignature->ValidateRootArgument(j, localRootArguments[j]);
 					}
-					for (const auto& localRootArgument : localRootArguments) {
-						if (holds_alternative<DescriptorManagerHandle>(localRootArgument)) {
-							offset = RootSignature::AlignRootArgument(offset);
-							auto descriptorManagerHandle = get<DescriptorManagerHandle>(localRootArgument);
-							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
-							offset += CopyMem(pThisLocalSig + offset, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-						}
-						else if (holds_alternative<BufferHandle>(localRootArgument)) {
-							offset = RootSignature::AlignRootArgument(offset);
-							auto bufferHandle = get<BufferHandle>(localRootArgument);
-							auto add = bufferHandle->GetGPUAddress();
-							offset += CopyMem(pThisLocalSig + offset, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
-						}
-						else if (holds_alternative<ConstantsHandle>(localRootArgument)) {
-							auto constants = get<ConstantsHandle>(localRootArgument);
-							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							offset += CopyMem(pThisLocalSig + offset, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
-						}
-					}
+					RootSignature::WriteLocalRootArguments(pThisLocalSig, localRootArguments);
 				}
 				if (graphicsCandidate != graphicsNodeLRSNames.end()) {
 					const UINT indexInWorkGraphDesc = graphicsCandidate->second;
@@ -209,25 +190,7 @@ namespace sqrp
 					for (UINT j = 0; j < localRootArguments.size(); j++) {
 						localRootSignature->ValidateRootArgument(j, localRootArguments[j]);
 					}
-					for (const auto& localRootArgument : localRootArguments) {
-						if (holds_alternative<DescriptorManagerHandle>(localRootArgument)) {
-							offset = RootSignature::AlignRootArgument(offset);
-							auto descriptorManagerHandle = get<DescriptorManagerHandle>(localRootArgument);
-							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
-							offset += CopyMem(pThisLocalSig + offset, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-						}
-						else if (holds_alternative<BufferHandle>(localRootArgument)) {
-							offset = RootSignature::AlignRootArgument(offset);
-							auto bufferHandle = get<BufferHandle>(localRootArgument);
-							auto add = bufferHandle->GetGPUAddress();
-							offset += CopyMem(pThisLocalSig + offset, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
-						}
-						else if (holds_alternative<ConstantsHandle>(localRootArgument)) {
-							auto constants = get<ConstantsHandle>(localRootArgument);
-							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							offset += CopyMem(pThisLocalSig + offset, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
-						}
-					}
+					RootSignature::WriteLocalRootArguments(pThisLocalSig, localRootArguments);
 				}
 				
 			}
@@ -255,7 +218,7 @@ namespace sqrp
 		return workGraphProgramID_;
 	}
 
-	D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE WorkGraph::GetLocalSigSize() const
+	D3D12_GPU_VIRTUAL_ADDRESS_RANGE_AND_STRIDE WorkGraph::GetLocalRootArgumentsTable() const
 	{
 		return localRootArgumentsTableAddress_;
 	}

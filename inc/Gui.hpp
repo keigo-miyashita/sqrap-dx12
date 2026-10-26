@@ -13,7 +13,7 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const Device* pDevice_ = nullptr;
+		const Device& device_;
 		ComPtr<ID3D12DescriptorHeap> imguiDescHeap_ = nullptr;
 
 		// slot 0: ImGui font texture (reserved)

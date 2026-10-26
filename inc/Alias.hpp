@@ -17,9 +17,9 @@ namespace sqrp
 	class Indirect;
 	class Mesh;
 	class MeshPipeline;
+	class Pipeline;
 	class Raytracing;
 	class Resource;
-	class ResourceSet;
 	class RootSignature;
 	class Shader;
 	class StateObject;
@@ -41,9 +41,9 @@ namespace sqrp
 	using IndirectHandle = std::shared_ptr<Indirect>;
 	using MeshHandle = std::shared_ptr<Mesh>;
 	using MeshPipelineHandle = std::shared_ptr<MeshPipeline>;
+	using PipelineHandle = std::shared_ptr<Pipeline>;
 	using RaytracingHandle = std::shared_ptr<Raytracing>;
 	using ResourceHandle = std::shared_ptr<Resource>;
-	using ResourceSetHandle = std::shared_ptr<ResourceSet>;
 	using RootSignatureHandle = std::shared_ptr<RootSignature>;
 	using ShaderHandle = std::shared_ptr<Shader>;
 	using StateObjectHandle = std::shared_ptr<StateObject>;

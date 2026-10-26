@@ -12,7 +12,7 @@ using namespace DirectX;
 namespace sqrp
 {
 	Resource::Resource(const Device& device, ResourceType rscType, wstring name)
-		: pDevice_(&device), name_(name), rscType_(rscType)
+		: device_(device), name_(name), rscType_(rscType)
 	{
 
 	}
@@ -71,7 +71,7 @@ namespace sqrp
 	{
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(strideSize_) * numElement_, rscFlag_);
-		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Buffer::CreateBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
@@ -87,7 +87,7 @@ namespace sqrp
 		const UINT64 dataSize = static_cast<UINT64>(strideSize_) * numElement_;
 		offsetCounter_ = AlignForUAVCounter(dataSize);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(offsetCounter_ + sizeof(UINT), rscFlag_);
-		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Buffer::CreateCounterBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
@@ -290,10 +290,49 @@ namespace sqrp
 			rscDesc.MipLevels = mipLevels_;
 		}
 		rscDesc.Flags = rscFlag_;
-		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Texture::Texture] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
+		resource_->SetName((name_ + L"_Texture").c_str());
+	}
+
+	Texture::Texture(const Device& device, wstring name, ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES initialState)
+		: Resource(device, ResourceType::Texture, name)
+	{
+		if (!resource) {
+			throw runtime_error("[Texture::Texture] resource must not be nullptr");
+		}
+		resource_ = resource;
+		initialState_ = initialState;
+
+		const D3D12_RESOURCE_DESC desc = resource_->GetDesc();
+		if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE1D) {
+			texDim_ = TextureDim::Tex1D;
+		}
+		else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D) {
+			texDim_ = TextureDim::Tex2D;
+		}
+		else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D) {
+			texDim_ = TextureDim::Tex3D;
+		}
+		else {
+			throw runtime_error("[Texture::Texture] resource is not a texture");
+		}
+		width_ = static_cast<UINT>(desc.Width);
+		height_ = desc.Height;
+		depth_ = (texDim_ == TextureDim::Tex3D) ? desc.DepthOrArraySize : 1;
+		mipLevels_ = desc.MipLevels;
+		format_ = desc.Format;
+		strideSize_ = static_cast<UINT>(BitsPerPixel(format_) / 8);
+		rscFlag_ = desc.Flags;
+		type_ = (rscFlag_ & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS) ? TextureType::Unordered : TextureType::Default;
+
+		D3D12_HEAP_PROPERTIES heapProp = {};
+		if (SUCCEEDED(resource_->GetHeapProperties(&heapProp, nullptr))) {
+			heapType_ = heapProp.Type;
+		}
+
 		resource_->SetName((name_ + L"_Texture").c_str());
 	}
 
@@ -409,16 +448,6 @@ namespace sqrp
 		return mipLevels_;
 	}
 
-	void Texture::SetName(wstring name)
-	{
-		name_ = name;
-	}
-
-	void Texture::SetResource(ComPtr<ID3D12Resource> resource)
-	{
-		resource_ = resource;
-	}
-
 	AS::AS(const Device& device, wstring name, UINT64 size)
 		: Resource(device, ResourceType::AS, name), size_(size)
 	{
@@ -428,7 +457,7 @@ namespace sqrp
 
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(size_, rscFlag_);
-		HRESULT result = pDevice_->GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[AS::AS] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}

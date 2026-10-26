@@ -66,13 +66,6 @@ bool SampleApplication::OnStart()
 	light0Buffer_ = device_.CreateBuffer(L"light0", BufferType::Upload, Buffer::AlignForConstantBuffer(sizeof(Light)), 1);
 	light0Buffer_->Write(light0_);
 
-	outputTexture_ = device_.CreateTexture(
-		L"output",
-		TextureDim::Tex2D,
-		TextureType::Unordered,
-		0, DXGI_FORMAT_R8G8B8A8_UNORM, GetWindowWidth(), GetWindowHeight(), 1
-	);
-
 	diffuseColor_ = { {1.0f, 0.0f, 0.0f, 1.0f} };
 	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
@@ -82,41 +75,19 @@ bool SampleApplication::OnStart()
 	closestHit_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"closestHit");
 	miss_ = dxc_.CreateShader(ShaderType::Raytracing, shaderPath, L"miss");
 
-	// Descriptor Manager
-	DescriptorLayout suzanneLayout(DescriptorLayoutType::Resource, { {ViewType::CBV, 0}, {ViewType::CBV, 1}, {ViewType::SRV, 0}, {ViewType::SRV, 1}, {ViewType::SRV, 2}, {ViewType::UAV, 0} });
-	suzanneDescManager_ = device_.CreateDescriptorManager(
-		{
-			{ .resource_ = cameraBuffer_,					.regIndex_ = 0},
-			{ .resource_ = light0Buffer_,					.regIndex_ = 1},
-			{ .resource_ = sceneTLAS_->GetASBuffer(),		.regIndex_ = 0},
-			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.regIndex_ = 1},
-			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.regIndex_ = 2},
-			// NOTE : Need output UAV
-			{ .resource_ = outputTexture_,					.regIndex_ = 0}
-		},
-		suzanneLayout
-	);
+	// Output Texture, Descriptor Manager
+	CreateOutputResources();
 	// RootSignature
 	suzanneRootSignature_ = device_.CreateRootSignature(
 		L"suzanne",
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT,
 		{
-			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = suzanneLayout},
+			{.rootParamType_ = RootParamType::DescTable,	.rootParamDesc_ = suzanneLayout_},
 			{.rootParamType_ = RootParamType::Constant,	.rootParamDesc_ = DirectRootParamDesc{.numReg_ = 2, .numConstant_ = 4}}
 		}
 	);
 
 	//ColorConstants_ = std::make_shared<Constants>(static_cast<void*>(&diffuseColor_), 4);
-
-	// NOTE : ResourceSet create example
-	// This samples does not use local rootsignature, so it is not necessaliry
-	suzanneResourceSet_ = std::make_shared<ResourceSet>(
-		suzanneRootSignature_,
-		std::vector<ResourceSetDesc>{
-			{suzanneDescManager_},
-			{ ColorConstants_ }
-	}
-	);
 
 	// StateObject
 	rayTracingStates_ = device_.CreateStateObject(
@@ -186,3 +157,34 @@ void SampleApplication::OnTerminate()
 {
 	command_->WaitCommand();   // Present 完了まで待つ (WaitSignal だけでは Present 前のシグナルしか待てない)
 };
+
+void SampleApplication::OnResize(UINT width, UINT height)
+{
+	// swapChain_->Resize waits for the GPU, so the old output texture can be released after it
+	swapChain_->Resize(width, height);
+	camera_.SetAspectRatio((float)width / (float)height);
+	CreateOutputResources();
+}
+
+void SampleApplication::CreateOutputResources()
+{
+	outputTexture_ = device_.CreateTexture(
+		L"output",
+		TextureDim::Tex2D,
+		TextureType::Unordered,
+		0, DXGI_FORMAT_R8G8B8A8_UNORM, GetWindowWidth(), GetWindowHeight(), 1
+	);
+
+	suzanneDescManager_ = device_.CreateDescriptorManager(
+		{
+			{ .resource_ = cameraBuffer_,					.regIndex_ = 0},
+			{ .resource_ = light0Buffer_,					.regIndex_ = 1},
+			{ .resource_ = sceneTLAS_->GetASBuffer(),		.regIndex_ = 0},
+			{ .resource_ = suzanneMesh_->GetVertexBuffer(),	.regIndex_ = 1},
+			{ .resource_ = suzanneMesh_->GetIndexBuffer(),	.regIndex_ = 2},
+			// NOTE : Need output UAV
+			{ .resource_ = outputTexture_,					.regIndex_ = 0}
+		},
+		suzanneLayout_
+	);
+}

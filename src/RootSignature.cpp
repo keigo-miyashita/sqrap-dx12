@@ -17,6 +17,31 @@ namespace sqrp
 		return size;
 	}
 
+	void RootSignature::WriteLocalRootArguments(uint8_t* pRecord, const vector<LocalRootArguments>& localRootArguments)
+	{
+		UINT offset = 0;
+		for (const auto& localRootArgument : localRootArguments) {
+			if (holds_alternative<DescriptorManagerHandle>(localRootArgument)) {
+				offset = AlignRootArgument(offset);
+				auto add = get<DescriptorManagerHandle>(localRootArgument)->GetDescHeapGPUHandle();
+				memcpy(pRecord + offset, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+				offset += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
+			}
+			else if (holds_alternative<BufferHandle>(localRootArgument)) {
+				offset = AlignRootArgument(offset);
+				auto add = get<BufferHandle>(localRootArgument)->GetGPUAddress();
+				memcpy(pRecord + offset, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
+				offset += sizeof(D3D12_GPU_VIRTUAL_ADDRESS);
+			}
+			else if (holds_alternative<ConstantsHandle>(localRootArgument)) {
+				const auto& constants = get<ConstantsHandle>(localRootArgument);
+				// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
+				memcpy(pRecord + offset, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
+				offset += sizeof(float) * constants->GetNumConstants();
+			}
+		}
+	}
+
 	RootSignature::RootSignature(const Device& device, wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams)
 		: flag_(flag), rootParams_(rootParams), name_(name)
 	{
@@ -33,14 +58,15 @@ namespace sqrp
 					}
 				}
 				if (descLayout.GetRangeNum() != 0) {
-					rp.InitAsDescriptorTable(descLayout.GetRangeNum(), descLayout.GetPDescRanges(), rootParam_.shaderVisibility_);
+					const auto descRanges = descLayout.GetDescRanges();
+					rp.InitAsDescriptorTable(static_cast<UINT>(descRanges.size()), descRanges.data(), rootParam_.shaderVisibility_);
 					rps_.push_back(rp);
 					size_ = AlignRootArgument(size_);
 					size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 				}
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::CBV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				const DirectRootParamDesc& directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::CBV, directDesc.numReg_ }).second) {
 					throw runtime_error("[RootSignature::RootSignature] duplicate register index for a root CBV");
 				}
@@ -50,7 +76,7 @@ namespace sqrp
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				const DirectRootParamDesc& directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::SRV, directDesc.numReg_ }).second) {
 					throw runtime_error("[RootSignature::RootSignature] duplicate register index for a root SRV");
 				}
@@ -60,7 +86,7 @@ namespace sqrp
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				const DirectRootParamDesc& directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::UAV, directDesc.numReg_ }).second) {
 					throw runtime_error("[RootSignature::RootSignature] duplicate register index for a root UAV");
 				}
@@ -70,7 +96,7 @@ namespace sqrp
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
-				DirectRootParamDesc directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
+				const DirectRootParamDesc& directDesc = get<DirectRootParamDesc>(rootParam_.rootParamDesc_);
 				if (!usedRegs_.insert({ ViewType::CBV, directDesc.numReg_ }).second) {
 					throw runtime_error("[RootSignature::RootSignature] duplicate register index for root constants");
 				}
@@ -86,7 +112,7 @@ namespace sqrp
 		// TODO :
 		// Support static samplers
 		// The third and fourth arguments are the number of static samplers and their descs
-		rootSignatureDesc.Init_1_1(rps_.size(), rps_.data(), 0, nullptr, flag_);
+		rootSignatureDesc.Init_1_1(static_cast<UINT>(rps_.size()), rps_.data(), 0, nullptr, flag_);
 
 		ComPtr<ID3DBlob> rootSigBlob = nullptr;
 		ComPtr<ID3DBlob> errBlob = nullptr;
@@ -94,10 +120,11 @@ namespace sqrp
 			rootSigBlob.ReleaseAndGetAddressOf(),
 			errBlob.ReleaseAndGetAddressOf());
 		if (FAILED(result)) {
+			string errorMsg = "[RootSignature::RootSignature] D3D12SerializeVersionedRootSignature failed\nHRESULT = " + to_string(result);
 			if (errBlob) {
-				OutputDebugStringA((char*)errBlob->GetBufferPointer());
+				errorMsg += "\n" + string(static_cast<const char*>(errBlob->GetBufferPointer()));
 			}
-			throw runtime_error("[RootSignature::RootSignature] D3D12SerializeVersionedRootSignature failed\nHRESULT = " + to_string(result));
+			throw runtime_error(errorMsg);
 		}
 
 		result = device.GetDevice()->CreateRootSignature(0, rootSigBlob->GetBufferPointer(), rootSigBlob->GetBufferSize(), IID_PPV_ARGS(rootSig_.ReleaseAndGetAddressOf()));
@@ -126,20 +153,5 @@ namespace sqrp
 	const vector<RootParameter>& RootSignature::GetRootParametersVec() const
 	{
 		return rootParams_;
-	}
-
-	ResourceSet::ResourceSet(const RootSignatureHandle& rootSignature, const vector<ResourceSetDesc>& resourceSetDescs)
-		: rootSignature_(rootSignature), resourceSetDescs_(resourceSetDescs)
-	{
-	}
-
-	RootSignatureHandle ResourceSet::GetRootSignature() const
-	{
-		return rootSignature_;
-	}
-
-	const vector<ResourceSetDesc>& ResourceSet::GetResourceSetDescs() const
-	{
-		return resourceSetDescs_;
 	}
 }
