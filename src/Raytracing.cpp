@@ -1,7 +1,10 @@
 #include "Raytracing.hpp"
 
+#include "Command.hpp"
+#include "DescriptorManager.hpp"
 #include "Device.hpp"
 #include "Resource.hpp"
+#include "RootSignature.hpp"
 #include "Shader.hpp"
 #include "Pipeline.hpp"
 
@@ -11,219 +14,283 @@ using namespace DirectX;
 
 namespace sqrp
 {
-	UINT CreateSBTBuffer(UINT numRecords, UINT localRootSigSize)
+	UINT64 Raytracing::AlignForSBTRecord(UINT64 size)
 	{
-		UINT shaderIDSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
-		UINT recordSize = shaderIDSize + localRootSigSize;
-		UINT bufferSize = recordSize * numRecords;
-
-		return bufferSize;
-	}
-
-	UINT Raytracing::AlignForSBTRecord(UINT size)
-	{
-		const UINT alignment = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
+		const UINT64 alignment = D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT;
 		return (size + (alignment - 1)) & ~(alignment - 1);
 	}
 
-	UINT Raytracing::AlignForSBT(UINT size)
+	UINT64 Raytracing::AlignForSBT(UINT64 size)
 	{
-		const UINT alignment = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+		const UINT64 alignment = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
 		return (size + (alignment - 1)) & ~(alignment - 1);
 	}
 
-	UINT Raytracing::CopyMem(void* dest, const void* data, UINT size)
+	UINT64 Raytracing::CopyMem(void* dest, const void* data, UINT64 size)
 	{
 		memcpy(dest, data, size);
 
 		return size;
 	}
 
-	Raytracing::Raytracing(const Device& device, wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth)
+	D3D12_DISPATCH_RAYS_DESC Raytracing::MakeDispatchRaysDesc(UINT rayGenIndex, UINT width, UINT height, UINT depth) const
+	{
+		if (rayGenIndex >= rayGenNum_) {
+			throw runtime_error("[Raytracing::MakeDispatchRaysDesc] rayGenIndex is out of range");
+		}
+
+		auto startAddress = sbtBuffer_->GetGPUAddress();
+		D3D12_DISPATCH_RAYS_DESC raysDesc = {};
+		raysDesc.RayGenerationShaderRecord.StartAddress = startAddress + eachRayGenSize_ * rayGenIndex;
+		raysDesc.RayGenerationShaderRecord.SizeInBytes = eachRayGenSize_;
+		startAddress += sumRayGenRegionSize_;
+
+		raysDesc.MissShaderTable.StartAddress = startAddress;
+		raysDesc.MissShaderTable.SizeInBytes = sumMissRegionSize_;
+		raysDesc.MissShaderTable.StrideInBytes = eachMissSize_;
+		startAddress += sumMissRegionSize_;
+
+		raysDesc.HitGroupTable.StartAddress = startAddress;
+		raysDesc.HitGroupTable.SizeInBytes = sumHitGroupRegionSize_;
+		raysDesc.HitGroupTable.StrideInBytes = eachHitGroupSize_;
+		startAddress += sumHitGroupRegionSize_;
+
+		raysDesc.Width = width;
+		raysDesc.Height = height;
+		raysDesc.Depth = depth;
+
+		return raysDesc;
+	}
+
+	Raytracing::Raytracing(const Device& device, std::wstring name, const StateObjectHandle& stateObject,
+		std::vector<std::vector<LocalRootArguments>> rayGenLocalRootArguments,
+		std::vector<std::vector<LocalRootArguments>> missLocalRootArguments,
+		std::vector<std::vector<LocalRootArguments>> hitGroupLocalRootArguments
+	)
 		: name_(name)
 	{
 		stateObject->GetStateObject()->QueryInterface(IID_PPV_ARGS(soProp_.ReleaseAndGetAddressOf()));
 
-		vector<void*> rayGenIDs;
-		vector<void*> missIDs;
-		vector<void*> hitGroupIDs;
-
-		if (holds_alternative<StateObjectDesc::RaytracingDesc>(stateObject->GetStateObjectDesc().typeDesc_)) {
-			StateObjectDesc::RaytracingDesc rtDesc = get<StateObjectDesc::RaytracingDesc>(stateObject->GetStateObjectDesc().typeDesc_);
-
-			// All record aligned max record size
-			UINT maxRayGenSize = 0;
-			for (auto rayGen : rtDesc.rayGens_) {
-				UINT shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
-				UINT localRootSigSize = 0;
-				if (rayGen.localResourceSet_) {
-					localRootSigSize = rayGen.localResourceSet_->GetRootSignature()->GetSize();
-				}
-				UINT rayGenSize = shaderSize + localRootSigSize;
-				maxRayGenSize = max(maxRayGenSize, rayGenSize);
-			}
-			UINT eachRayGenSize = AlignForSBTRecord(maxRayGenSize);
-			UINT sumRayGenRegionSize = AlignForSBT(eachRayGenSize * rtDesc.rayGens_.size());
-
-			UINT maxMissSize = 0;
-			for (auto miss : rtDesc.misses_) {
-				UINT shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
-				UINT localRootSigSize = 0;
-				if (miss.localResourceSet_) {
-					localRootSigSize = miss.localResourceSet_->GetRootSignature()->GetSize();
-				}
-				UINT missSize = shaderSize + localRootSigSize;
-				maxMissSize = max(maxMissSize, missSize);
-			}
-			UINT eachMissSize = AlignForSBTRecord(maxMissSize);
-			UINT sumMissRegionSize = AlignForSBT(eachMissSize * rtDesc.misses_.size());
-
-			UINT maxHitGroupSize = 0;
-			for (auto hitGroup : rtDesc.hitGroups_) {
-				UINT shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
-				UINT localRootSigSize = 0;
-				if (hitGroup.localResourceSet_) {
-					localRootSigSize = hitGroup.localResourceSet_->GetRootSignature()->GetSize();
-				}
-				UINT hitGroupSize = shaderSize + localRootSigSize;
-				maxHitGroupSize = max(maxHitGroupSize, hitGroupSize);
-			}
-			UINT eachHitGroupSize = AlignForSBTRecord(maxHitGroupSize);
-			UINT sumHitGroupRegionSize = AlignForSBT(eachHitGroupSize * rtDesc.hitGroups_.size());
-
-			UINT allRegionSize = sumRayGenRegionSize + sumMissRegionSize + sumHitGroupRegionSize;
-
-			sbtBuffer_ = device.CreateBuffer(name_ + L"_sbt", BufferType::Upload, allRegionSize, 1);
-
-			void* rawPtr = sbtBuffer_->Map();
-			// uint8_t is 8 bit = 1 byte data
-			// This is suitable for data which is per byte
-			if (rawPtr) {
-				uint8_t* pSBT = static_cast<uint8_t*>(rawPtr);
-
-				auto pRayGen = pSBT + 0;
-				int idRayGen = 0;
-				for (auto rayGen : rtDesc.rayGens_) {
-					auto pThisRayGen = pRayGen + idRayGen * eachRayGenSize;
-					// NOTE : If you use index, you may be ought to use vector not initializer
-					void* id = soProp_->GetShaderIdentifier(rayGen.shader_->GetEntryName().c_str());
-					pThisRayGen += CopyMem(pThisRayGen, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
-					// local root descriptor pointer
-					if (!rayGen.localResourceSet_)
-						continue;
-					const auto resourceSetDescs = rayGen.localResourceSet_->GetResourceSetDescs();
-					for (const auto& resourceSetDesc : resourceSetDescs) {
-						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
-							pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-						}
-						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
-							auto add = bufferHandle->GetGPUAddress();
-							pThisRayGen += CopyMem(pThisRayGen, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
-						}
-						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
-							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							pThisRayGen += CopyMem(pThisRayGen, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
-						}
-					}
-					idRayGen++;
-				}
-
-				auto pMiss = pSBT + sumRayGenRegionSize;
-				int idMiss = 0;
-				for (auto miss : rtDesc.misses_) {
-					auto pThisMiss = pMiss + idMiss * eachMissSize;
-
-					// NOTE : If you use index, you may be ought to use vector not initializer ?
-					void* id = soProp_->GetShaderIdentifier(miss.shader_->GetEntryName().c_str());
-					pThisMiss += CopyMem(pThisMiss, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
-					// local root descriptor pointer
-					if (!miss.localResourceSet_)
-						continue;
-					const auto resourceSetDescs = miss.localResourceSet_->GetResourceSetDescs();
-					for (const auto& resourceSetDesc : resourceSetDescs) {
-						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
-							pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-						}
-						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
-							auto add = bufferHandle->GetGPUAddress();
-							pThisMiss += CopyMem(pThisMiss, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
-						}
-						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
-							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							pThisMiss += CopyMem(pThisMiss, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
-						}
-					}
-					idMiss++;
-				}
-
-				auto pHitGroup = pSBT + sumRayGenRegionSize + sumMissRegionSize;
-				int idHitGroup = 0;
-				for (auto hitGroup : rtDesc.hitGroups_) {
-					auto pThisHitGroup = pHitGroup + idHitGroup * eachHitGroupSize;
-
-					// NOTE : If you use index, you may be ought to use vector not initializer ?
-					void* id = soProp_->GetShaderIdentifier(hitGroup.groupName_.c_str());
-					pThisHitGroup += CopyMem(pThisHitGroup, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
-					// local root descriptor pointer
-					if (!hitGroup.localResourceSet_)
-						continue;
-					const auto resourceSetDescs = hitGroup.localResourceSet_->GetResourceSetDescs();
-					for (const auto& resourceSetDesc : resourceSetDescs) {
-						if (holds_alternative<DescriptorManagerHandle>(resourceSetDesc.bindResource)) {
-							auto descriptorManagerHandle = get<DescriptorManagerHandle>(resourceSetDesc.bindResource);
-							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
-							pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
-						}
-						else if (holds_alternative<BufferHandle>(resourceSetDesc.bindResource)) {
-							auto bufferHandle = get<BufferHandle>(resourceSetDesc.bindResource);
-							auto add = bufferHandle->GetGPUAddress();
-							pThisHitGroup += CopyMem(pThisHitGroup, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
-						}
-						else if (holds_alternative<ConstantsHandle>(resourceSetDesc.bindResource)) {
-							auto constants = get<ConstantsHandle>(resourceSetDesc.bindResource);
-							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
-							pThisHitGroup += CopyMem(pThisHitGroup, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
-						}
-					}
-					idHitGroup++;
-				}
-
-				auto startAddress = sbtBuffer_->GetGPUAddress();
-				raysDesc_.RayGenerationShaderRecord.StartAddress = startAddress;
-				raysDesc_.RayGenerationShaderRecord.SizeInBytes = sumRayGenRegionSize;
-				startAddress += sumRayGenRegionSize;
-
-				raysDesc_.MissShaderTable.StartAddress = startAddress;
-				raysDesc_.MissShaderTable.SizeInBytes = sumMissRegionSize;
-				raysDesc_.MissShaderTable.StrideInBytes = eachMissSize;
-				startAddress += sumMissRegionSize;
-
-				raysDesc_.HitGroupTable.StartAddress = startAddress;
-				raysDesc_.HitGroupTable.SizeInBytes = sumHitGroupRegionSize;
-				raysDesc_.HitGroupTable.StrideInBytes = eachHitGroupSize;
-				startAddress += sumHitGroupRegionSize;
-
-				raysDesc_.Width = width;
-				raysDesc_.Height = height;
-				raysDesc_.Depth = depth;
-			}
-		}
-		else
-		{
+		if (stateObject->GetStateObjectType() == StateObjectType::WorkGraph) {
 			throw runtime_error("[Raytracing::Raytracing] stateObject is not a raytracing state object");
 		}
-	}
+		
+		const auto& rayGens = stateObject->GetRayGens();
+		rayGenNum_ = static_cast<UINT>(rayGens.size());
+		const auto& misses = stateObject->GetMisses();
+		const auto& hitGroups = stateObject->GetHitGroups();
 
-	D3D12_DISPATCH_RAYS_DESC Raytracing::GetDispatchRayDesc() const
-	{
-		return raysDesc_;
+		if (rayGenLocalRootArguments.empty())
+		{
+			rayGenLocalRootArguments.resize(rayGens.size());
+		}
+		if (missLocalRootArguments.empty())
+		{
+			missLocalRootArguments.resize(misses.size());
+		}
+		if (hitGroupLocalRootArguments.empty())
+		{
+			hitGroupLocalRootArguments.resize(hitGroups.size());
+		}
+
+		if (rayGenLocalRootArguments.size() != rayGens.size()) {
+			throw runtime_error("[Raytracing::Raytracing] rayGenLocalRootArguments size does not match rayGens size (pass {} if no ray generation shader uses local root arguments)");
+		}
+		if (misses.size() != missLocalRootArguments.size()) {
+			throw runtime_error("[Raytracing::Raytracing] missLocalRootArguments size does not match misses size (pass {} if no miss shader uses local root arguments)");
+		}
+		if (hitGroups.size() != hitGroupLocalRootArguments.size()) {
+			throw runtime_error("[Raytracing::Raytracing] hitGroupLocalRootArguments size does not match hitGroups size (pass {} if no hit group uses local root arguments)");
+		}
+
+		// All record aligned max record size
+		UINT64 maxRayGenSize = 0;
+		for (const auto& rayGen : rayGens) {
+			UINT64 shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+			UINT64 localRootSigSize = 0;
+			if (rayGen.localRootSignature_) {
+				localRootSigSize = rayGen.localRootSignature_->GetSize();
+			}
+			UINT64 rayGenSize = shaderSize + localRootSigSize;
+			maxRayGenSize = max(maxRayGenSize, rayGenSize);
+		}
+		// RayGen record size must be aligned to 64 (= D3D12_RAYTRACING_SHADER_RECORD_BYTE_ALIGNMENT)
+		eachRayGenSize_ = AlignForSBT(maxRayGenSize);
+		sumRayGenRegionSize_ = AlignForSBT(eachRayGenSize_ * rayGens.size());
+
+		UINT64 maxMissSize = 0;
+		for (const auto& miss : misses) {
+			UINT64 shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+			UINT64 localRootSigSize = 0;
+			if (miss.localRootSignature_) {
+				localRootSigSize = miss.localRootSignature_->GetSize();
+			}
+			UINT64 missSize = shaderSize + localRootSigSize;
+			maxMissSize = max(maxMissSize, missSize);
+		}
+		eachMissSize_ = AlignForSBTRecord(maxMissSize);
+		sumMissRegionSize_ = AlignForSBT(eachMissSize_ * misses.size());
+
+		UINT64 maxHitGroupSize = 0;
+		for (const auto&  hitGroup : hitGroups) {
+			UINT64 shaderSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+			UINT64 localRootSigSize = 0;
+			if (hitGroup.localRootSignature_) {
+				localRootSigSize = hitGroup.localRootSignature_->GetSize();
+			}
+			UINT64 hitGroupSize = shaderSize + localRootSigSize;
+			maxHitGroupSize = max(maxHitGroupSize, hitGroupSize);
+		}
+		eachHitGroupSize_ = AlignForSBTRecord(maxHitGroupSize);
+		sumHitGroupRegionSize_ = AlignForSBT(eachHitGroupSize_ * hitGroups.size());
+
+		UINT64 allRegionSize = sumRayGenRegionSize_ + sumMissRegionSize_ + sumHitGroupRegionSize_;
+
+		sbtBuffer_ = device.CreateBuffer(name_ + L"_sbt", BufferType::Upload, allRegionSize, 1);
+
+		void* rawPtr = sbtBuffer_->Map();
+		// uint8_t is 8 bit = 1 byte data
+		// This is suitable for data which is per byte
+		if (rawPtr) {
+			uint8_t* pSBT = static_cast<uint8_t*>(rawPtr);
+
+			auto pRayGen = pSBT + 0;
+			int idRayGen = 0;
+			for (int i = 0; i < rayGens.size(); i++) {
+				auto pThisRayGen = pRayGen + idRayGen * eachRayGenSize_;
+				// NOTE : If you use index, you may be ought to use vector not initializer
+				void* id = soProp_->GetShaderIdentifier(rayGens[i].shader_->GetEntryName().c_str());
+				CopyMem(pThisRayGen, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+				UINT offset = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+				// local root descriptor pointer
+				if (rayGens[i].localRootSignature_) {
+					const auto& localBindingResources = rayGenLocalRootArguments[i];
+					const auto& localRootSignature = rayGens[i].localRootSignature_;
+					if (localBindingResources.size() != localRootSignature->GetRootParametersVec().size()) {
+						throw runtime_error("[Raytracing::Raytracing] rayGenLocalRootArguments[" + to_string(i) + "] size does not match the number of root parameters of its local root signature");
+					}
+					for (UINT j = 0; j < localBindingResources.size(); j++) {
+						localRootSignature->ValidateRootArgument(j, localBindingResources[j]);
+					}
+					for (const auto& bindingResource : localBindingResources) {
+						if (holds_alternative<DescriptorManagerHandle>(bindingResource)) {
+							offset = RootSignature::AlignRootArgument(offset);
+							auto descriptorManagerHandle = get<DescriptorManagerHandle>(bindingResource);
+							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
+							offset += CopyMem(pThisRayGen + offset, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+						}
+						else if (holds_alternative<BufferHandle>(bindingResource)) {
+							offset = RootSignature::AlignRootArgument(offset);
+							auto bufferHandle = get<BufferHandle>(bindingResource);
+							auto add = bufferHandle->GetGPUAddress();
+							offset += CopyMem(pThisRayGen + offset, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
+						}
+						else if (holds_alternative<ConstantsHandle>(bindingResource)) {
+							auto constants = get<ConstantsHandle>(bindingResource);
+							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
+							offset += CopyMem(pThisRayGen + offset, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
+						}
+					}
+				}
+				else {
+					if (rayGenLocalRootArguments[i].size() > 0) {
+						throw runtime_error("[Raytracing::Raytracing] rayGenLocalRootArguments[" + to_string(i) + "] is not empty, but rayGens[" + to_string(i) + "] does not have a local root signature");
+					}
+				}
+				idRayGen++;
+			}
+
+			auto pMiss = pSBT + sumRayGenRegionSize_;
+			int idMiss = 0;
+			for (int i = 0; i < misses.size(); i++) {
+				auto pThisMiss = pMiss + idMiss * eachMissSize_;
+
+				// NOTE : If you use index, you may be ought to use vector not initializer ?
+				void* id = soProp_->GetShaderIdentifier(misses[i].shader_->GetEntryName().c_str());
+				CopyMem(pThisMiss, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+				UINT offset = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+				// local root descriptor pointer
+				if (misses[i].localRootSignature_)
+				{
+					const auto& localBindingResources = missLocalRootArguments[i];
+					const auto& localRootSignature = misses[i].localRootSignature_;
+					if (localBindingResources.size() != localRootSignature->GetRootParametersVec().size()) {
+						throw runtime_error("[Raytracing::Raytracing] missLocalRootArguments[" + to_string(i) + "] size does not match the number of root parameters of its local root signature");
+					}
+					for (UINT j = 0; j < localBindingResources.size(); j++) {
+						localRootSignature->ValidateRootArgument(j, localBindingResources[j]);
+					}
+					for (const auto& bindingResource : localBindingResources) {
+						if (holds_alternative<DescriptorManagerHandle>(bindingResource)) {
+							auto descriptorManagerHandle = get<DescriptorManagerHandle>(bindingResource);
+							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
+							offset += CopyMem(pThisMiss + offset, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+						}
+						else if (holds_alternative<BufferHandle>(bindingResource)) {
+							auto bufferHandle = get<BufferHandle>(bindingResource);
+							auto add = bufferHandle->GetGPUAddress();
+							offset += CopyMem(pThisMiss + offset, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
+						}
+						else if (holds_alternative<ConstantsHandle>(bindingResource)) {
+							auto constants = get<ConstantsHandle>(bindingResource);
+							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
+							offset += CopyMem(pThisMiss + offset, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
+						}
+					}
+				}
+				else {
+					if (missLocalRootArguments[i].size() > 0) {
+						throw runtime_error("[Raytracing::Raytracing] missLocalRootArguments[" + to_string(i) + "] is not empty, but misses[" + to_string(i) + "] does not have a local root signature");
+					}
+				}
+				idMiss++;
+			}
+
+			auto pHitGroup = pSBT + sumRayGenRegionSize_ + sumMissRegionSize_;
+			int idHitGroup = 0;
+			for (int i = 0; i < hitGroups.size(); i++) {
+				auto pThisHitGroup = pHitGroup + idHitGroup * eachHitGroupSize_;
+
+				// NOTE : If you use index, you may be ought to use vector not initializer ?
+				void* id = soProp_->GetShaderIdentifier(hitGroups[i].groupName_.c_str());
+				CopyMem(pThisHitGroup, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+				UINT offset = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+				// local root descriptor pointer
+				if (hitGroups[i].localRootSignature_)
+				{
+					const auto& localBindingResources = hitGroupLocalRootArguments[i];
+					const auto& localRootSignature = hitGroups[i].localRootSignature_;
+					if (localBindingResources.size() != localRootSignature->GetRootParametersVec().size()) {
+						throw runtime_error("[Raytracing::Raytracing] hitGroupLocalRootArguments[" + to_string(i) + "] size does not match the number of root parameters of its local root signature");
+					}
+					for (UINT j = 0; j < localBindingResources.size(); j++) {
+						localRootSignature->ValidateRootArgument(j, localBindingResources[j]);
+					}
+					for (const auto& bindingResource : localBindingResources) {
+						if (holds_alternative<DescriptorManagerHandle>(bindingResource)) {
+							auto descriptorManagerHandle = get<DescriptorManagerHandle>(bindingResource);
+							auto add = descriptorManagerHandle->GetDescHeapGPUHandle();
+							offset += CopyMem(pThisHitGroup + offset, &add, sizeof(D3D12_GPU_DESCRIPTOR_HANDLE));
+						}
+						else if (holds_alternative<BufferHandle>(bindingResource)) {
+							auto bufferHandle = get<BufferHandle>(bindingResource);
+							auto add = bufferHandle->GetGPUAddress();
+							offset += CopyMem(pThisHitGroup + offset, &add, sizeof(D3D12_GPU_VIRTUAL_ADDRESS));
+						}
+						else if (holds_alternative<ConstantsHandle>(bindingResource)) {
+							auto constants = get<ConstantsHandle>(bindingResource);
+							// sizeof(float) = sizeof(UINT) = sizeof(int) = 4 Bytes
+							offset += CopyMem(pThisHitGroup + offset, constants->GetConstants(), sizeof(float) * constants->GetNumConstants());
+						}
+					}
+				}
+				else {
+					if (hitGroupLocalRootArguments[i].size() > 0) {
+						throw runtime_error("[Raytracing::Raytracing] hitGroupLocalRootArguments[" + to_string(i) + "] is not empty, but hitGroups[" + to_string(i) + "] does not have a local root signature");
+					}
+				}
+				idHitGroup++;
+			}
+		}
 	}
 }

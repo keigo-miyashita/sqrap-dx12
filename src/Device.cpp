@@ -392,9 +392,9 @@ namespace sqrp
 			[this](MeshPipeline* p) { DeferredReleaser(p); });
 	}
 
-	RaytracingHandle Device::CreateRaytracing(wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const
+	RaytracingHandle Device::CreateRaytracing(wstring name, const StateObjectHandle& stateObject, vector<vector<LocalRootArguments>> rayGenLocalRootArguments, vector<vector<LocalRootArguments>> missLocalRootArguments, vector<vector<LocalRootArguments>> hitGroupLocalRootArguments) const
 	{
-		return shared_ptr<Raytracing>(new Raytracing(*this, name, stateObject, width, height, depth),
+		return shared_ptr<Raytracing>(new Raytracing(*this, name, stateObject, rayGenLocalRootArguments, missLocalRootArguments, hitGroupLocalRootArguments),
 			[this](Raytracing* p) { DeferredReleaser(p); });
 	}
 
@@ -428,9 +428,9 @@ namespace sqrp
 			[this](TLAS* p) { DeferredReleaser(p); });
 	}
 
-	WorkGraphHandle Device::CreateWorkGraph(wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords, UINT maxNodeInputs) const
+	WorkGraphHandle Device::CreateWorkGraph(wstring name, const StateObjectHandle& stateObject, vector<vector<LocalRootArguments>> computeLocalRootArguments, vector<vector<LocalRootArguments>> graphicsLocalRootArguments, UINT maxInputRecords, UINT maxNodeInputs) const
 	{
-		return shared_ptr<WorkGraph>(new WorkGraph(*this, name, stateObject, maxInputRecords, maxNodeInputs),
+		return shared_ptr<WorkGraph>(new WorkGraph(*this, name, stateObject, computeLocalRootArguments, graphicsLocalRootArguments, maxInputRecords, maxNodeInputs),
 			[this](WorkGraph* p) { DeferredReleaser(p); });
 	}
 

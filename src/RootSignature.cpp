@@ -8,6 +8,15 @@ using namespace DirectX;
 
 namespace sqrp
 {
+	UINT RootSignature::AlignRootArgument(UINT size)
+	{
+		if (size % 8 != 0) {
+			size += 4;
+		}
+
+		return size;
+	}
+
 	RootSignature::RootSignature(const Device& device, wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, initializer_list<RootParameter> rootParams)
 		: flag_(flag), rootParams_(rootParams), name_(name)
 	{
@@ -15,6 +24,9 @@ namespace sqrp
 			CD3DX12_ROOT_PARAMETER1 rp;
 			if (rootParam_.rootParamType_ == RootParamType::DescTable) {
 				const DescriptorLayout& descLayout = get<DescriptorLayout>(rootParam_.rootParamDesc_);
+				if (descLayout.GetRangeNum() == 0) {
+					throw runtime_error("[RootSignature::RootSignature] a descriptor table must have at least one range");
+				}
 				for (const auto& reg : descLayout.GetUsedRegs()) {
 					if (!usedRegs_.insert(reg).second) {
 						throw runtime_error("[RootSignature::RootSignature] duplicate register index in DescriptorLayout");
@@ -23,6 +35,7 @@ namespace sqrp
 				if (descLayout.GetRangeNum() != 0) {
 					rp.InitAsDescriptorTable(descLayout.GetRangeNum(), descLayout.GetPDescRanges(), rootParam_.shaderVisibility_);
 					rps_.push_back(rp);
+					size_ = AlignRootArgument(size_);
 					size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 				}
 			}
@@ -33,6 +46,7 @@ namespace sqrp
 				}
 				rp.InitAsConstantBufferView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
+				size_ = AlignRootArgument(size_);
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::SRV) {
@@ -42,6 +56,7 @@ namespace sqrp
 				}
 				rp.InitAsShaderResourceView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
+				size_ = AlignRootArgument(size_);
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::UAV) {
@@ -51,6 +66,7 @@ namespace sqrp
 				}
 				rp.InitAsUnorderedAccessView(directDesc.numReg_, rootParam_.shaderVisibility_);
 				rps_.push_back(rp);
+				size_ = AlignRootArgument(size_);
 				size_ += sizeof(D3D12_GPU_DESCRIPTOR_HANDLE);
 			}
 			else if (rootParam_.rootParamType_ == RootParamType::Constant) {
@@ -62,10 +78,7 @@ namespace sqrp
 				rps_.push_back(rp);
 				// For padding
 				// SBT needs 8 byte alignment for each parameter
-				if (size_ % 8 != 0) {
-					size_ += 4;
-				}
-				size_ += 4;
+				size_ += (4 * directDesc.numConstant_);
 			}
 		}
 

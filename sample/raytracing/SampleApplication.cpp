@@ -145,9 +145,9 @@ bool SampleApplication::OnStart()
 	rayTracing_ = device_.CreateRaytracing(
 		L"rayTracing",
 		rayTracingStates_,
-		GetWindowWidth(),
-		GetWindowHeight(),
-		1
+		{},		// ローカルルート引数なし（rayGens_）
+		{},		// misses_
+		{}		// hitGroups_
 	);
 
 	return true;
@@ -164,7 +164,7 @@ void SampleApplication::OnUpdate()
 
 	command_->SetComputeResource(suzanneRootSignature_, { suzanneDescManager_, make_shared<Constants>((void*)&gpuDiffuseColor, 4) });
 	command_->SetRaytracingState(rayTracingStates_);
-	command_->DispatchRays(rayTracing_);
+	command_->DispatchRays(rayTracing_, GetWindowWidth(), GetWindowHeight(), 1);
 
 	command_->CopyBuffer(outputTexture_, outputTexture_->GetInitialState(), (swapChain_->GetCurrentBackBuffer()), D3D12_RESOURCE_STATE_RENDER_TARGET);
 

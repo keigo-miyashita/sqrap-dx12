@@ -27,6 +27,13 @@ namespace sqrp
 		UINT numConstant_ = 0;
 	};
 
+	struct SetByIndirect
+	{
+	};
+
+	using RootArguments = std::variant<DescriptorManagerHandle, BufferHandle, ConstantsHandle, SetByIndirect>;
+	using LocalRootArguments = std::variant<DescriptorManagerHandle, BufferHandle, ConstantsHandle>;
+
 	struct RootParameter
 	{
 		RootParamType rootParamType_ = RootParamType::DescTable;
@@ -49,6 +56,41 @@ namespace sqrp
 		std::set<std::pair<ViewType, UINT>> usedRegs_;
 
 	public:
+		static UINT AlignRootArgument(UINT size);
+		template<typename T>
+		void ValidateRootArgument(UINT index, const T& rootArgument) const
+		{
+			if (index >= rootParams_.size())
+			{
+				throw std::runtime_error("[RootSignature::ValidateRootArgument] index " + std::to_string(index) + " is out of range of root parameters");
+			}
+			switch (rootParams_[index].rootParamType_)
+			{
+			case RootParamType::DescTable:
+			if (!std::holds_alternative<DescriptorManagerHandle>(rootArgument))
+			{
+				throw std::runtime_error("[RootSignature::ValidateRootArgument] expected a DescriptorManagerHandle for root parameter " + std::to_string(index));
+			}
+			break;
+			case RootParamType::CBV:
+			case RootParamType::SRV:
+			case RootParamType::UAV:
+				if (!std::holds_alternative<BufferHandle>(rootArgument))
+				{
+					throw std::runtime_error("[RootSignature::ValidateRootArgument] expected a BufferHandle for root parameter " + std::to_string(index));
+				}
+				break;
+			case RootParamType::Constant:
+				if (!std::holds_alternative<ConstantsHandle>(rootArgument))
+				{
+					throw std::runtime_error("[RootSignature::ValidateRootArgument] expected a ConstantsHandle for root parameter " + std::to_string(index));
+				}
+				if (std::get<ConstantsHandle>(rootArgument)->GetNumConstants() != std::get<DirectRootParamDesc>(rootParams_[index].rootParamDesc_).numConstant_) {
+					throw std::runtime_error("[RootSignature::ValidateRootArgument] the number of constants does not match numConstant_ of root parameter " + std::to_string(index));
+				}
+				break;
+			}
+		}
 		RootSignature(const Device& device, std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams);
 		RootSignature(const RootSignature&) = delete;
 		RootSignature& operator=(const RootSignature&) = delete;

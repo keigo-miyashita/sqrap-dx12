@@ -28,10 +28,6 @@ namespace sqrp
 	class RootSignature;
 	class SwapChain;
 
-	struct SetByIndirect
-	{
-	};
-
 	class Command
 	{
 	private:
@@ -58,7 +54,7 @@ namespace sqrp
 		void InitializeStableCommandList();
 		void InitializeLatestCommandList();
 		void Close();
-		void SetResource(BindingPiplineType type, const RootSignatureHandle& graphicsRootSig, std::initializer_list<std::variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle, SetByIndirect>> bindingResources);
+		void SetResource(BindingPiplineType type, const RootSignatureHandle& graphicsRootSig, std::initializer_list<RootArguments> bindingResources);
 		const ComPtr<ID3D12CommandAllocator>& GetCurrentCommandAllocator() const;
 
 	public:
@@ -74,17 +70,18 @@ namespace sqrp
 		void CopyBuffer(const ResourceHandle& srcResource, D3D12_RESOURCE_STATES srcCurrentState, const ResourceHandle& destResource, D3D12_RESOURCE_STATES destCurrentState);
 		void CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT64 destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT64 numBytes);
 		void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
-		void DispatchRays(const RaytracingHandle& raytracing);
+		void DispatchRays(const RaytracingHandle& raytracing, UINT width, UINT height, UINT depth, UINT rayGenIndex = 0);
 		void DrawGui(const GuiHandle& gui, const SwapChainHandle& swapChain);
 		void ExecuteIndirect(const IndirectHandle& indirect, const BufferHandle& argumentBuffer, const BufferHandle& counterBuffer, UINT maxCommandCount);
 		void SetMesh(const MeshHandle& mesh);
-		void SetComputeResource(const RootSignatureHandle& computeRootSig, std::initializer_list<std::variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle, SetByIndirect>> bindingResources);
+		void SetComputeResource(const RootSignatureHandle& computeRootSig, std::initializer_list<RootArguments> bindingResources);
 		void SetDescriptorHeap();
-		void SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, std::initializer_list<std::variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle, SetByIndirect>> bindingResources);
+		void SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, std::initializer_list<RootArguments> bindingResources);
 		void SetPipeline(const GraphicsPipelineHandle& graphicsPipeline);
 		void SetPipeline(const ComputePipelineHandle& computePipeline);
 		void SetPipeline(const MeshPipelineHandle& meshPipeline);
 		void SetRaytracingState(const StateObjectHandle& stateObject);
+		void SetProgram(const WorkGraphHandle& workGraph, bool isInitialize = true);
 		TimelinePoint Submit();
 		void WaitCommand();
 		// "init" prefixed methods perform initialization and internally invoke WaitCommand to ensure readiness.

@@ -90,13 +90,13 @@ namespace sqrp
 		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, std::string modelPath) const;
 		MeshHandle				CreateMesh(std::wstring name, const CommandHandle& command, const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices) const;
 		MeshPipelineHandle		CreateMeshPipeline(std::wstring name, const MeshDesc& desc) const;
-		RaytracingHandle		CreateRaytracing(std::wstring name, const StateObjectHandle& stateObject, UINT width, UINT height, UINT depth) const;
+		RaytracingHandle		CreateRaytracing(std::wstring name, const StateObjectHandle& stateObject, std::vector<std::vector<LocalRootArguments>> rayGenLocalRootArguments, std::vector<std::vector<LocalRootArguments>> missLocalRootArguments, std::vector<std::vector<LocalRootArguments>> hitGroupLocalRootArguments) const;
 		RootSignatureHandle		CreateRootSignature(std::wstring name, D3D12_ROOT_SIGNATURE_FLAGS flag, std::initializer_list<RootParameter> rootParams) const;
 		StateObjectHandle		CreateStateObject(std::wstring name, const StateObjectDesc soDesc) const;
 		SwapChainHandle			CreateSwapChain(std::wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount = 2) const;
 		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1) const;
 		TLASHandle				CreateTLAS(std::wstring name, const CommandHandle& command, const std::vector<TLASDesc>& tlasDescs) const;
-		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
+		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, std::vector<std::vector<LocalRootArguments>> computeLocalRootArguments, std::vector<std::vector<LocalRootArguments>> graphicsLocalRootArguments, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
 
 		void ReleaseCompleted() const;
 		void WaitOnCPU(const TimelinePoint& timelinePoint) const;

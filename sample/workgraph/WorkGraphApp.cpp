@@ -101,18 +101,14 @@ bool WorkGraphApp::OnStart()
 			.typeDesc_ = StateObjectDesc::WorkGraphDesc
 			{
 				.globalRootSig_ = sphere0RootSignature_,
-				.exportDescs_ = {
-					{.shader_ = meshNode_},
-					{.shader_ = lambertPS_},
-				},
-				.programDescs_ = {
-					{.nodeType_ = NodeType::Graphics, .programName_ = L"MeshProgram", .shaders_ = {meshNode_, lambertPS_}}
+				.graphicsProgramDescs_ = {
+					{.programName_ = L"MeshProgram", .meshShader_ = meshNode_, .pixelShader_ = lambertPS_}
 				}
 			}
 		}
 	);
 
-	workGraph_ = device_.CreateWorkGraph(L"", workGraphStateObject_, 1, 1);
+	workGraph_ = device_.CreateWorkGraph(L"", workGraphStateObject_, {}, {}, 1, 1);
 
 	return true;
 };
@@ -126,13 +122,7 @@ void WorkGraphApp::OnUpdate()
 	cameraBuffer_->Write(CameraMatrix{ camera_.GetView(), camera_.GetProj() });
 	gpuDiffuseColor = SrgbToLinear(diffuseColor_);
 
-	D3D12_SET_PROGRAM_DESC pgDesc;
-	pgDesc.Type = D3D12_PROGRAM_TYPE_WORK_GRAPH;
-	pgDesc.WorkGraph.BackingMemory = workGraph_->GetBackingMemoryAddressRange();
-	pgDesc.WorkGraph.Flags = D3D12_SET_WORK_GRAPH_FLAG_INITIALIZE;
-	pgDesc.WorkGraph.ProgramIdentifier = workGraph_->GetProgramID();
-	pgDesc.WorkGraph.NodeLocalRootArgumentsTable = workGraph_->GetLocalSigSize();
-	command_->GetLatestCommandList()->SetProgram(&pgDesc);
+	command_->SetProgram(workGraph_);
 
 	struct MeshRecord
 	{
@@ -150,7 +140,7 @@ void WorkGraphApp::OnUpdate()
 	graphDesc.NodeCPUInput.pRecords = meshRecord.data();
 	graphDesc.NodeCPUInput.RecordStrideInBytes = sizeof(MeshRecord);
 
-	command_->GetLatestCommandList()->SetProgram(&pgDesc);
+	command_->SetProgram(workGraph_);
 	command_->SetGraphicsResource(sphere0RootSignature_, { sphere0DescManager_, make_shared<Constants>((void*)&gpuDiffuseColor, 4) });
 	command_->GetLatestCommandList()->DispatchGraph(&graphDesc);
 

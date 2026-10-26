@@ -221,9 +221,9 @@ namespace sqrp
 		commandList_->Dispatch(threadX, threadY, threadZ);
 	}
 
-	void Command::DispatchRays(const RaytracingHandle& rayTracing)
+	void Command::DispatchRays(const RaytracingHandle& rayTracing, UINT width, UINT height, UINT depth, UINT rayGenIndex)
 	{
-		D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing->GetDispatchRayDesc();
+		D3D12_DISPATCH_RAYS_DESC dispatchRaysDesc = rayTracing->MakeDispatchRaysDesc(rayGenIndex, width, height, depth);
 		stableCommandList_->DispatchRays(&dispatchRaysDesc);
 	}
 
@@ -273,7 +273,7 @@ namespace sqrp
 		commandList_->Close();
 	}
 
-	void Command::SetResource(BindingPiplineType type, const RootSignatureHandle& rootSig, std::initializer_list<std::variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle, SetByIndirect>> bindingResources)
+	void Command::SetResource(BindingPiplineType type, const RootSignatureHandle& rootSig, std::initializer_list<RootArguments> bindingResources)
 	{
 		const auto& rootParams = rootSig->GetRootParametersVec();
 		if (bindingResources.size() != rootParams.size()) {
@@ -286,96 +286,39 @@ namespace sqrp
 			commandList_->SetComputeRootSignature(rootSig->GetRootSignature().Get());
 		}
 
-		int rootParamIndex = 0;
+		const bool isGraphics = (type == BindingPiplineType::Graphics);
+		auto setDescriptorTable = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable : &ID3D12GraphicsCommandList::SetComputeRootDescriptorTable;
+		auto setCBV = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootConstantBufferView : &ID3D12GraphicsCommandList::SetComputeRootConstantBufferView;
+		auto setSRV = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootShaderResourceView : &ID3D12GraphicsCommandList::SetComputeRootShaderResourceView;
+		auto setUAV = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRootUnorderedAccessView : &ID3D12GraphicsCommandList::SetComputeRootUnorderedAccessView;
+		auto setConstants = isGraphics ? &ID3D12GraphicsCommandList::SetGraphicsRoot32BitConstants : &ID3D12GraphicsCommandList::SetComputeRoot32BitConstants;
+
 		auto bindingResourceIt = bindingResources.begin();
-		for (int i = 0; i < rootParams.size(); i++) {
-			if (rootParams[i].rootParamType_ == RootParamType::DescTable) {
-				if (holds_alternative<SetByIndirect>(bindingResourceIt[i])) {
-					throw runtime_error("[Command::SetResource] SetByIndirect cannot be used for root parameter " + to_string(i) + " because it is a descriptor table (ExecuteIndirect cannot change descriptor tables)");
+		for (UINT i = 0; i < rootParams.size(); i++) {
+			const auto& rootArgument = *(bindingResources.begin() + i);
+			if (holds_alternative<SetByIndirect>(rootArgument)) {
+				if (rootParams[i].rootParamType_ == RootParamType::DescTable) {
+					throw runtime_error("[Command::SetResource] SetByIndirect can only be used for root parameters of type DescTable");
 				}
-				if (!holds_alternative<DescriptorManagerHandle>(bindingResourceIt[i])) {
-					throw runtime_error("[Command::SetResource] expected a DescriptorManagerHandle for root parameter " + to_string(i));
-				}
-				DescriptorManagerHandle descManager = get<DescriptorManagerHandle>(bindingResourceIt[i]);
-				if (type == BindingPiplineType::Graphics) {
-					commandList_->SetGraphicsRootDescriptorTable(rootParamIndex, descManager->GetDescHeapGPUHandle());
-				}
-				else if (type == BindingPiplineType::Compute) {
-					commandList_->SetComputeRootDescriptorTable(rootParamIndex, descManager->GetDescHeapGPUHandle());
-				}
-				rootParamIndex++;
+				continue;
 			}
-			else if (rootParams[i].rootParamType_ == RootParamType::CBV) {
-				if (holds_alternative<SetByIndirect>(bindingResourceIt[i])) {
-					rootParamIndex++;
-					continue;
-				}
-				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
-					throw runtime_error("[Command::SetResource] expected a BufferHandle for root parameter " + to_string(i));
-				}
-				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
-				if (type == BindingPiplineType::Graphics) {
-					commandList_->SetGraphicsRootConstantBufferView(rootParamIndex, buffer->GetGPUAddress());
-				}
-				else if (type == BindingPiplineType::Compute) {
-					commandList_->SetComputeRootConstantBufferView(rootParamIndex, buffer->GetGPUAddress());
-				}
-				rootParamIndex++;
-			}
-			else if (rootParams[i].rootParamType_ == RootParamType::SRV) {
-				if (holds_alternative<SetByIndirect>(bindingResourceIt[i])) {
-					rootParamIndex++;
-					continue;
-				}
-				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
-					throw runtime_error("[Command::SetResource] expected a BufferHandle for root parameter " + to_string(i));
-				}
-				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
-				if (type == BindingPiplineType::Graphics) {
-					commandList_->SetGraphicsRootShaderResourceView(rootParamIndex, buffer->GetGPUAddress());
-				}
-				else if (type == BindingPiplineType::Compute) {
-					commandList_->SetComputeRootShaderResourceView(rootParamIndex, buffer->GetGPUAddress());
-				}
-				rootParamIndex++;
-			}
-			else if (rootParams[i].rootParamType_ == RootParamType::UAV) {
-				if (holds_alternative<SetByIndirect>(bindingResourceIt[i])) {
-					rootParamIndex++;
-					continue;
-				}
-				if (!holds_alternative<BufferHandle>(bindingResourceIt[i])) {
-					throw runtime_error("[Command::SetResource] expected a BufferHandle for root parameter " + to_string(i));
-				}
-				BufferHandle buffer = get<BufferHandle>(bindingResourceIt[i]);
-				if (type == BindingPiplineType::Graphics) {
-					commandList_->SetGraphicsRootUnorderedAccessView(rootParamIndex, buffer->GetGPUAddress());
-				}
-				else if (type == BindingPiplineType::Compute) {
-					commandList_->SetComputeRootUnorderedAccessView(rootParamIndex, buffer->GetGPUAddress());
-				}
-				rootParamIndex++;
-			}
-			else if (rootParams[i].rootParamType_ == RootParamType::Constant) {
-				if (holds_alternative<SetByIndirect>(bindingResourceIt[i])) {
-					rootParamIndex++;
-					continue;
-				}
-				if (!holds_alternative<ConstantsHandle>(bindingResourceIt[i])) {
-					throw runtime_error("[Command::SetResource] expected a ConstantsHandle for root parameter " + std::to_string(i));
-				}
-				ConstantsHandle constants = get<ConstantsHandle>(bindingResourceIt[i]);
-				auto directDesc = get<DirectRootParamDesc>(rootParams[i].rootParamDesc_);
-				if (constants->GetNumConstants() != directDesc.numConstant_) {
-					throw runtime_error("[Command::SetResource] the number of constants in ConstantsHandle does not match numConstant_ of root parameter " + std::to_string(i));
-				}
-				if (type == BindingPiplineType::Graphics) {
-					commandList_->SetGraphicsRoot32BitConstants(rootParamIndex, directDesc.numConstant_, constants->GetConstants(), 0);
-				}
-				else if (type == BindingPiplineType::Compute) {
-					commandList_->SetComputeRoot32BitConstants(rootParamIndex, directDesc.numConstant_, constants->GetConstants(), 0);
-				}
-				rootParamIndex++;
+			rootSig->ValidateRootArgument(i, rootArgument);
+			switch (rootParams[i].rootParamType_) {
+			case RootParamType::DescTable:
+				(commandList_.Get()->*setDescriptorTable)(i, get<DescriptorManagerHandle>(rootArgument)->GetDescHeapGPUHandle());
+				break;
+			case RootParamType::CBV:
+				(commandList_.Get()->*setCBV)(i, get<BufferHandle>(rootArgument)->GetGPUAddress());
+				break;
+			case RootParamType::SRV:
+				(commandList_.Get()->*setSRV)(i, get<BufferHandle>(rootArgument)->GetGPUAddress());
+				break;
+			case RootParamType::UAV:
+				(commandList_.Get()->*setUAV)(i, get<BufferHandle>(rootArgument)->GetGPUAddress());
+				break;
+			case RootParamType::Constant:
+				(commandList_.Get()->*setConstants)(i, get<ConstantsHandle>(rootArgument)->GetNumConstants(), get<ConstantsHandle>(rootArgument)->GetConstants(), 0);
+				break;
 			}
 		}
 	}
@@ -386,7 +329,7 @@ namespace sqrp
 		commandList_->IASetIndexBuffer(mesh->GetIBViewPtr());
 	}
 
-	void Command::SetComputeResource(const RootSignatureHandle& computeRootSig, initializer_list<variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle, SetByIndirect>> bindingResources)
+	void Command::SetComputeResource(const RootSignatureHandle& computeRootSig, initializer_list<RootArguments> bindingResources)
 	{
 		SetResource(BindingPiplineType::Compute, computeRootSig, bindingResources);
 	}
@@ -397,7 +340,7 @@ namespace sqrp
 		commandList_->SetDescriptorHeaps(2, heaps);
 	}
 
-	void Command::SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, initializer_list<variant<BufferHandle, ConstantsHandle, DescriptorManagerHandle, SetByIndirect>> bindingResources)
+	void Command::SetGraphicsResource(const RootSignatureHandle& graphicsRootSig, initializer_list<RootArguments> bindingResources)
 	{
 		SetResource(BindingPiplineType::Graphics, graphicsRootSig, bindingResources);
 	}
@@ -420,6 +363,12 @@ namespace sqrp
 	void Command::SetRaytracingState(const StateObjectHandle& stateObject)
 	{
 		stableCommandList_->SetPipelineState1(stateObject->GetStateObject().Get());
+	}
+
+	void Command::SetProgram(const WorkGraphHandle& workGraph, bool isInitialize)
+	{
+		D3D12_SET_PROGRAM_DESC setProgramDesc = workGraph->MakeSetProgramDesc(isInitialize);
+		latestCommandList_->SetProgram(&setProgramDesc);
 	}
 
 	TimelinePoint Command::Submit()

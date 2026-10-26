@@ -7,9 +7,13 @@
 namespace sqrp
 {
 	class Device;
-	class ResourceSet;
 	class RootSignature;
 	class Shader;
+
+	enum class StateObjectType
+	{
+		Raytracing, WorkGraph
+	};
 
 	inline const std::vector<D3D12_INPUT_ELEMENT_DESC> DEFAULT_INPUT_LAYOUT =
 	{
@@ -17,6 +21,18 @@ namespace sqrp
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"TANGENT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	};
+
+	struct RenderState
+	{
+		D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+		UINT sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
+		D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		std::vector<DXGI_FORMAT> rtvFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
+		D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+		DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
+		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
 	};
 
 	struct GraphicsDesc
@@ -28,22 +44,15 @@ namespace sqrp
 		ShaderHandle DS_ = nullptr;
 		ShaderHandle HS_ = nullptr;
 		ShaderHandle GS_ = nullptr;
-		D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		UINT sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
-		D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-		D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-		DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
+		RenderState renderState_;
 		D3D12_INDEX_BUFFER_STRIP_CUT_VALUE IBStripCutValue_ = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
-		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
 
 		GraphicsDesc(std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayouts = DEFAULT_INPUT_LAYOUT);
 
 		GraphicsDesc& SetRootSignature(const RootSignatureHandle& rootSignature);
 		GraphicsDesc& SetVS(const ShaderHandle& VS);
 		GraphicsDesc& SetPS(const ShaderHandle& PS);
-		GraphicsDesc& SetPrimitiveType(D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType);
+		GraphicsDesc& SetTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType);
 	};
 
 	class GraphicsPipeline
@@ -68,14 +77,7 @@ namespace sqrp
 		ShaderHandle AS_ = nullptr;
 		ShaderHandle MS_ = nullptr;
 		ShaderHandle PS_ = nullptr;
-		D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		UINT sampleMask_ = D3D12_DEFAULT_SAMPLE_MASK;
-		D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-		D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-		DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
-		DXGI_SAMPLE_DESC sampleDesc_ = { 1, 0 };
+		RenderState renderState_;
 
 		MeshDesc() = default;
 	};
@@ -126,21 +128,24 @@ namespace sqrp
 
 	struct StateObjectDesc
 	{
-		// Shader and binded resource for Ray tracing(Raygen, Miss, Callable), WorkGraph(Compute, Mesh, Pixel)
+		// Shader and its local root signature for Ray tracing(Raygen, Miss, Callable), WorkGraph(Compute node)
+		// Only the shape (root signature) is given here. The local root arguments are given to Raytracing / WorkGraph
 		struct ShaderExportDesc
 		{
 			ShaderHandle shader_;
-			ResourceSetHandle localResourceSet_;
+			RootSignatureHandle localRootSignature_;
+			std::wstring nodeName_; // compute node name (work graph only)
+			UINT nodeIndex_ = 0; // compute node index if it is node array (work graph only)
 		};
 
-		// Shader and binded resource for HitGroup(ClosestHit, Anyhit, Intersection)
+		// Shaders and the local root signature for HitGroup(ClosestHit, Anyhit, Intersection)
 		struct HitGroupExportDesc
 		{
 			std::wstring groupName_;
 			ShaderHandle closestHit_;
 			ShaderHandle anyHit_;
 			ShaderHandle intersection_;
-			ResourceSetHandle localResourceSet_;
+			RootSignatureHandle localRootSignature_;
 		};
 
 		// Ray tracing config
@@ -162,33 +167,28 @@ namespace sqrp
 		};
 
 		// Program setting for work graph
-		// blend / depthStencil / rasterizer / topology は指定した場合のみ
-		// WorkGraphDesc 側の既定値を上書きする
+		// 描画の設定（renderState_）はグラフィックスノードのプログラムだけが持つ
+		// （WorkGraphDesc には全プログラム共通の設定は無い）
 		struct ProgramDesc
 		{
-			NodeType nodeType_ = NodeType::Compute;
-			std::wstring programName_;
-			std::vector<ShaderHandle> shaders_;
-			ResourceSetHandle resourceSet_;
-			std::optional<D3D12_BLEND_DESC>              blendState_;
-			std::optional<D3D12_DEPTH_STENCIL_DESC>      depthStencilDesc_;
-			std::optional<D3D12_RASTERIZER_DESC>         rasterizerDesc_;
-			std::optional<D3D12_PRIMITIVE_TOPOLOGY_TYPE> topologyType_;
+			std::wstring programName_; // program name
+			std::wstring nodeName_; // mesh node name
+			UINT nodeIndex_ = 0; // mesh node index if it is node array
+			ShaderHandle meshShader_;
+			ShaderHandle pixelShader_;
+			RootSignatureHandle localRootSignature_;
+			RenderState renderState_;
 		};
 
 		// StateObject setting for work graph
 		struct WorkGraphDesc
 		{
 			RootSignatureHandle globalRootSig_;
-			std::vector<ShaderExportDesc> exportDescs_;
-			std::vector<ProgramDesc> programDescs_;
+			// Compute nodes
+			std::vector<ShaderExportDesc> computeNodeDescs_;
+			// Graphics nodes (one mesh node per program)
+			std::vector<ProgramDesc> graphicsProgramDescs_;
 			std::wstring workGraphProgramName_ = L"Program";
-			D3D12_BLEND_DESC blendState_ = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-			D3D12_DEPTH_STENCIL_DESC depthStencilDesc_ = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-			D3D12_RASTERIZER_DESC rasterizerDesc_ = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-			D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType_ = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-			std::vector<DXGI_FORMAT> RTVFormats_ = { DXGI_FORMAT_R8G8B8A8_UNORM_SRGB };   // SwapChain の RTV（sRGB）と揃える
-			DXGI_FORMAT dsvFormat_ = DXGI_FORMAT_D32_FLOAT;
 		};
 
 		std::variant<RaytracingDesc, WorkGraphDesc> typeDesc_;
@@ -200,14 +200,16 @@ namespace sqrp
 		template<typename T>
 		using ComPtr = Microsoft::WRL::ComPtr<T>;
 
-		const StateObjectDesc soDesc_;
 		std::wstring name_;
-		CD3DX12_STATE_OBJECT_DESC stateObjectDesc_;
 		ComPtr<ID3D12StateObject> stateObject_ = nullptr;
-		std::vector<std::wstring> rayGens;
-		std::vector<std::wstring> misses;
-		std::vector<std::wstring> hitGroups;
-		std::wstring programName_;
+		StateObjectType soType_ = StateObjectType::Raytracing;
+		RootSignatureHandle globalRootSig_ = nullptr;
+		std::vector<StateObjectDesc::ShaderExportDesc> rayGens_;
+		std::vector<StateObjectDesc::ShaderExportDesc> misses_;
+		std::vector<StateObjectDesc::HitGroupExportDesc> hitGroups_;
+		std::vector<StateObjectDesc::ShaderExportDesc> computeNodes_;
+		std::vector<StateObjectDesc::ProgramDesc> graphicsNodes_;
+		std::wstring workGraphProgramName_;
 		bool hasGraphicsNodes_ = false;
 
 		void CreateStateObject(const Device& device, const StateObjectDesc::RaytracingDesc& rtDesc);
@@ -218,11 +220,13 @@ namespace sqrp
 		StateObject(const StateObject&) = delete;
 		StateObject& operator=(const StateObject&) = delete;
 		const ComPtr<ID3D12StateObject>& GetStateObject() const;
-		const std::wstring& GetProgramName() const;
-		const StateObjectDesc& GetStateObjectDesc() const;
-		const std::vector<std::wstring>& GetRayGens() const;
-		const std::vector<std::wstring>& GetMisses() const;
-		const std::vector<std::wstring>& GetHitGroups() const;
+		StateObjectType GetStateObjectType() const;
+		const std::wstring& GetWorkGraphProgramName() const;
+		const std::vector<StateObjectDesc::ShaderExportDesc>& GetRayGens() const;
+		const std::vector<StateObjectDesc::ShaderExportDesc>& GetMisses() const;
+		const std::vector<StateObjectDesc::HitGroupExportDesc>& GetHitGroups() const;
+		const std::vector<StateObjectDesc::ShaderExportDesc>& GetComputeNodes() const;
+		const std::vector<StateObjectDesc::ProgramDesc>& GetGraphicsNodes() const;
 		bool HasGraphicsNodes() const;
 	};
 }
