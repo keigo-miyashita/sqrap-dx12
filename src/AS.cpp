@@ -100,7 +100,8 @@ namespace sqrp
 		cout << "TLAS instanceDescBuffer size = " << sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * instanceDesc.size() << endl;
 		instanceDescBuffer_ = device.CreateBuffer(name_ + L"_TLAS_instanceDesc", BufferType::Unordered, sizeof(D3D12_RAYTRACING_INSTANCE_DESC), static_cast<UINT>(instanceDesc.size()));
 
-		command->CopyBuffer(uploadBuffer, uploadBuffer->GetInitialState(), instanceDescBuffer_, instanceDescBuffer_->GetInitialState());
+		command->CopyBuffer(uploadBuffer, instanceDescBuffer_);
+		command->Transition(instanceDescBuffer_, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 		command->WaitCommand();
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS buildInputs = {};

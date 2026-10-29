@@ -137,7 +137,8 @@ void SampleApplication::OnUpdate()
 	command_->SetRaytracingState(rayTracingStates_);
 	command_->DispatchRays(rayTracing_, GetWindowWidth(), GetWindowHeight(), 1);
 
-	command_->CopyBuffer(outputTexture_, outputTexture_->GetInitialState(), (swapChain_->GetCurrentBackBuffer()), D3D12_RESOURCE_STATE_RENDER_TARGET);
+	command_->CopyBuffer(outputTexture_, swapChain_->GetCurrentBackBuffer());
+	command_->Transition({ {outputTexture_, D3D12_RESOURCE_STATE_UNORDERED_ACCESS}, {swapChain_->GetCurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET} });
 
 	// GUI
 	{

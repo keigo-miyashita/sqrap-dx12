@@ -56,7 +56,8 @@ namespace sqrp
 
 		vertexBuffer_ = device.CreateBuffer(name_ + L"_Vertex", BufferType::Default, sizeof(Vertex), static_cast<UINT>(vertices.size()));
 
-		command->CopyBuffer(vertexUploadBuffer, vertexUploadBuffer->GetInitialState(), vertexBuffer_, vertexBuffer_->GetInitialState());
+		command->CopyBuffer(vertexUploadBuffer, vertexBuffer_);
+		command->Transition(vertexBuffer_, D3D12_RESOURCE_STATE_COMMON);
 		command->WaitCommand();
 		vbView_.BufferLocation = vertexBuffer_->GetGPUAddress();
 		vbView_.SizeInBytes = static_cast<UINT>(vertices.size() * sizeof(Vertex));
@@ -78,7 +79,8 @@ namespace sqrp
 
 		indexBuffer_ = device.CreateBuffer(name_ + L"_Index", BufferType::Default, sizeof(uint32_t), static_cast<UINT>(indices.size()));
 
-		command->CopyBuffer(indexUploadBuffer, indexUploadBuffer->GetInitialState(), indexBuffer_, indexBuffer_->GetInitialState());
+		command->CopyBuffer(indexUploadBuffer, indexBuffer_);
+		command->Transition(indexBuffer_, D3D12_RESOURCE_STATE_COMMON);
 		command->WaitCommand();
 		ibView_.BufferLocation = indexBuffer_->GetGPUAddress();
 		ibView_.SizeInBytes = static_cast<UINT>(indices.size() * sizeof(uint32_t));

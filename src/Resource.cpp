@@ -58,9 +58,9 @@ namespace sqrp
 		return rscFlag_;
 	}
 
-	D3D12_RESOURCE_STATES Resource::GetInitialState() const
+	D3D12_RESOURCE_STATES Resource::GetState() const
 	{
-		return initialState_;
+		return state_;
 	}
 
 	const ComPtr<ID3D12Resource>& Resource::GetResource() const
@@ -73,16 +73,11 @@ namespace sqrp
 		return resource_->GetGPUVirtualAddress();
 	}
 
-	/*void Resource::SetResourceState(D3D12_RESOURCE_STATES rscState)
-	{
-		initialState_ = rscState;
-	}*/
-
 	void Buffer::CreateBuffer()
 	{
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(static_cast<UINT64>(strideSize_) * numElement_, rscFlag_);
-		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, state_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Buffer::CreateBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
@@ -93,12 +88,12 @@ namespace sqrp
 	{
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		initialState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		const UINT64 dataSize = static_cast<UINT64>(strideSize_) * numElement_;
 		offsetCounter_ = AlignForUAVCounter(dataSize);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(offsetCounter_ + sizeof(UINT), rscFlag_);
-		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, state_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Buffer::CreateCounterBuffer] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
@@ -127,34 +122,34 @@ namespace sqrp
 		if (type == BufferType::Counter) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 			rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
-			initialState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			CreateCounterBuffer();
 		}
 		else {
 			if (type == BufferType::Default) {
 				heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 				rscFlag_ = D3D12_RESOURCE_FLAG_NONE | resourceFlag;
-				initialState_ = D3D12_RESOURCE_STATE_COMMON;
+				state_ = D3D12_RESOURCE_STATE_COMMON;
 			}
 			else if (type == BufferType::Upload) {
 				heapType_ = D3D12_HEAP_TYPE_UPLOAD;
 				rscFlag_ = D3D12_RESOURCE_FLAG_NONE | resourceFlag;
-				initialState_ = D3D12_RESOURCE_STATE_COPY_SOURCE;
+				state_ = D3D12_RESOURCE_STATE_COPY_SOURCE;
 			}
 			else if (type == BufferType::Read) {
 				heapType_ = D3D12_HEAP_TYPE_READBACK;
 				rscFlag_ = D3D12_RESOURCE_FLAG_NONE | resourceFlag;
-				initialState_ = D3D12_RESOURCE_STATE_COPY_DEST;
+				state_ = D3D12_RESOURCE_STATE_COPY_DEST;
 			}
 			else if (type == BufferType::Unordered) {
 				heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 				rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
-				initialState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+				state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 			}
 			else if (type == BufferType::AS) {
 				heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 				rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | resourceFlag;
-				initialState_ = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+				state_ = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 			}
 			CreateBuffer();
 		}
@@ -284,22 +279,22 @@ namespace sqrp
 		if (type_ == TextureType::Default) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 			rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
-			initialState_ = D3D12_RESOURCE_STATE_COMMON;
+			state_ = D3D12_RESOURCE_STATE_COMMON;
 		}
 		else if (type_ == TextureType::Upload) {
 			heapType_ = D3D12_HEAP_TYPE_UPLOAD;
 			rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
-			initialState_ = D3D12_RESOURCE_STATE_COPY_SOURCE;
+			state_ = D3D12_RESOURCE_STATE_COPY_SOURCE;
 		}
 		else if (type_ == TextureType::Read) {
 			heapType_ = D3D12_HEAP_TYPE_READBACK;
 			rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
-			initialState_ = D3D12_RESOURCE_STATE_COPY_DEST;
+			state_ = D3D12_RESOURCE_STATE_COPY_DEST;
 		}
 		else if (type_ == TextureType::Unordered) {
 			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 			rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-			initialState_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		}
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		CD3DX12_RESOURCE_DESC rscDesc;
@@ -321,7 +316,7 @@ namespace sqrp
 			rscDesc.MipLevels = mipLevels_;
 		}
 		rscDesc.Flags = rscFlag_;
-		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, state_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Texture::Texture] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
@@ -335,7 +330,7 @@ namespace sqrp
 			throw runtime_error("[Texture::Texture] resource must not be nullptr");
 		}
 		resource_ = resource;
-		initialState_ = initialState;
+		state_ = initialState;
 
 		const D3D12_RESOURCE_DESC desc = resource_->GetDesc();
 		if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE1D) {
@@ -536,11 +531,11 @@ namespace sqrp
 	{
 		heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		initialState_ = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+		state_ = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
 
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		auto rscDesc = CD3DX12_RESOURCE_DESC::Buffer(size_, rscFlag_);
-		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, initialState_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, state_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[AS::AS] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}

@@ -62,8 +62,8 @@ namespace sqrp
 		void AddDrawIndexedLine(const MeshHandle& mesh, UINT numInstances);
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);
 		void Barrier(std::vector<D3D12_RESOURCE_BARRIER> barriers);
-		void CopyBuffer(const ResourceHandle& srcResource, D3D12_RESOURCE_STATES srcCurrentState, const ResourceHandle& destResource, D3D12_RESOURCE_STATES destCurrentState);
-		void CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT64 destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT64 numBytes);
+		void CopyBuffer(const ResourceHandle& srcResource, const ResourceHandle& destResource);
+		void CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, const BufferHandle& destBuffer, UINT64 destOffset, UINT64 numBytes);
 		void Dispatch(UINT threadX, UINT threadY, UINT threadZ);
 		void DispatchRays(const RaytracingHandle& raytracing, UINT width, UINT height, UINT depth, UINT rayGenIndex = 0);
 		void DrawGui(const GuiHandle& gui, const SwapChainHandle& swapChain);
@@ -75,6 +75,10 @@ namespace sqrp
 		void SetPipeline(const PipelineHandle& pipeline);
 		void SetRaytracingState(const StateObjectHandle& stateObject);
 		void SetProgram(const WorkGraphHandle& workGraph, bool isInitialize = true);
+		bool MakeTransition(const ResourceHandle& resource, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER& barrier);
+		void Transition(const ResourceHandle& resource, D3D12_RESOURCE_STATES after);
+		void Transition(std::initializer_list<std::pair<ResourceHandle, D3D12_RESOURCE_STATES>> transitions);
+		void UAVBarrier(const ResourceHandle& resource);
 		TimelinePoint Submit();
 		void WaitCommand();
 		// "init" prefixed methods perform initialization and internally invoke WaitCommand to ensure readiness.

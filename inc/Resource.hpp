@@ -4,6 +4,7 @@
 
 namespace sqrp
 {
+	class Command;
 	class Device;
 	enum class ViewType;
 
@@ -24,10 +25,12 @@ namespace sqrp
 		ResourceType rscType_ = ResourceType::Buffer;
 		D3D12_HEAP_TYPE heapType_ = D3D12_HEAP_TYPE_DEFAULT;
 		D3D12_RESOURCE_FLAGS rscFlag_ = D3D12_RESOURCE_FLAG_NONE;
-		D3D12_RESOURCE_STATES initialState_ = D3D12_RESOURCE_STATE_COMMON;
+		D3D12_RESOURCE_STATES state_ = D3D12_RESOURCE_STATE_COMMON;
 
 		// 基底としてだけ使う（Buffer / Texture / AS から呼ぶ）
 		Resource(const Device& device, ResourceType rscType, std::wstring name = L"");
+
+		friend class Command;
 
 	public:
 		virtual ~Resource() = default;
@@ -47,9 +50,7 @@ namespace sqrp
 		ResourceType GetResourceType() const;
 		D3D12_HEAP_TYPE GetHeapType() const;
 		D3D12_RESOURCE_FLAGS GetResourceFlag() const;
-		D3D12_RESOURCE_STATES GetInitialState() const;
-
-		//void SetResourceState(D3D12_RESOURCE_STATES rscState);
+		D3D12_RESOURCE_STATES GetState() const;
 	};
 
 	enum class BufferType

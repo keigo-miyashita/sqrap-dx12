@@ -91,9 +91,7 @@ namespace sqrp
 
 		auto bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
 
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-		commandList_->ResourceBarrier(1, &barrier);
+		Transition(swapChain->GetCurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		auto rtvHandle = swapChain->GetRtvHandle(bbIdx);
 		auto dsvHandle = swapChain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
@@ -120,8 +118,7 @@ namespace sqrp
 			throw runtime_error("[Command::EndRender] EndRender can only be called on a graphics command list");
 		}
 
-		auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(swapChain->GetCurrentBackBuffer()->GetResource().Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-		commandList_->ResourceBarrier(1, &barrier);
+		Transition(swapChain->GetCurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT);
 
 		Submit();
 
@@ -154,66 +151,16 @@ namespace sqrp
 		commandList_->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
 	}
 
-	void Command::CopyBuffer(const ResourceHandle& srcResource, D3D12_RESOURCE_STATES srcCurrentState, const ResourceHandle& destResource, D3D12_RESOURCE_STATES destCurrentState)
+	void Command::CopyBuffer(const ResourceHandle& srcResource, const ResourceHandle& destResource)
 	{
-		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
-		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), srcCurrentState, D3D12_RESOURCE_STATE_COPY_SOURCE);
-			rscBarriers.push_back(srcBarrier);
-		}
-		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), destCurrentState, D3D12_RESOURCE_STATE_COPY_DEST);
-			rscBarriers.push_back(destBarrier);
-		}
-
-		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
-		}
+		Transition({ {srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE}, {destResource, D3D12_RESOURCE_STATE_COPY_DEST} });
 		commandList_->CopyResource(destResource->GetResource().Get(), srcResource->GetResource().Get());
-
-		rscBarriers.clear();
-		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcCurrentState);
-			rscBarriers.push_back(srcbarrier);
-		}
-		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destResource->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destCurrentState);
-			rscBarriers.push_back(destbarrier);
-		}
-		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
-		}
 	}
 
-	void Command::CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, D3D12_RESOURCE_STATES srcCurrentState, const BufferHandle& destBuffer, UINT64 destOffset, D3D12_RESOURCE_STATES destCurrentState, UINT64 numBytes)
+	void Command::CopyBufferRegion(const BufferHandle& srcBuffer, UINT64 srcOffset, const BufferHandle& destBuffer, UINT64 destOffset, UINT64 numBytes)
 	{
-		vector<CD3DX12_RESOURCE_BARRIER> rscBarriers;
-		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcBarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), srcCurrentState, D3D12_RESOURCE_STATE_COPY_SOURCE);
-			rscBarriers.push_back(srcBarrier);
-		}
-		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destBarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), destCurrentState, D3D12_RESOURCE_STATE_COPY_DEST);
-			rscBarriers.push_back(destBarrier);
-		}
-
-		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
-		}
+		Transition({ {srcBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE}, {destBuffer, D3D12_RESOURCE_STATE_COPY_DEST} });
 		commandList_->CopyBufferRegion(destBuffer->GetResource().Get(), destOffset, srcBuffer->GetResource().Get(), srcOffset, numBytes);
-
-		rscBarriers.clear();
-		if (srcCurrentState != D3D12_RESOURCE_STATE_COPY_SOURCE) {
-			auto srcbarrier = CD3DX12_RESOURCE_BARRIER::Transition(srcBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, srcCurrentState);
-			rscBarriers.push_back(srcbarrier);
-		}
-		if (destCurrentState != D3D12_RESOURCE_STATE_COPY_DEST) {
-			auto destbarrier = CD3DX12_RESOURCE_BARRIER::Transition(destBuffer->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, destCurrentState);
-			rscBarriers.push_back(destbarrier);
-		}
-		if (rscBarriers.size() != 0) {
-			commandList_->ResourceBarrier(static_cast<UINT>(rscBarriers.size()), rscBarriers.data());
-		}
 	}
 
 	void Command::Dispatch(UINT threadX, UINT threadY, UINT threadZ)
@@ -382,6 +329,57 @@ namespace sqrp
 		return { queueType_, fenceVal };
 	}
 
+	bool Command::MakeTransition(const ResourceHandle& resource, D3D12_RESOURCE_STATES after, D3D12_RESOURCE_BARRIER& barrier)
+	{
+		if (!resource) {
+			throw runtime_error("[Command::Transition] resource is nullptr");
+		}
+		const D3D12_RESOURCE_STATES before = resource->state_;
+		// Upload / readback heaps and acceleration structures stay in the state they were created in
+		const bool isFixed = 
+				resource->GetHeapType() == D3D12_HEAP_TYPE_UPLOAD
+			|| resource->GetHeapType() == D3D12_HEAP_TYPE_READBACK
+			|| before == D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE
+			|| after == D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+		if (isFixed && after != before) {
+			throw runtime_error("[Command::Transition] the state of this resource cannot be changed");
+		}
+		if (after == before) {
+			return false;
+		}
+		barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource->GetResource().Get(), before, after);
+		resource->state_ = after;
+		return true;
+	}
+
+	void Command::Transition(const ResourceHandle& resource, D3D12_RESOURCE_STATES after)
+	{
+		D3D12_RESOURCE_BARRIER barrier;
+		if (MakeTransition(resource, after, barrier)) {
+			commandList_->ResourceBarrier(1, &barrier);
+		}
+	}
+
+	void Command::Transition(initializer_list<pair<ResourceHandle, D3D12_RESOURCE_STATES>> transitions)
+	{
+		vector<D3D12_RESOURCE_BARRIER> barriers;
+		for (const auto& transition : transitions) {
+			D3D12_RESOURCE_BARRIER barrier;
+			if (MakeTransition(transition.first, transition.second, barrier)) {
+				barriers.push_back(barrier);
+			}
+		}
+		if (!barriers.empty()) {
+			commandList_->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+		}
+	}
+
+	void Command::UAVBarrier(const ResourceHandle& resource)
+	{
+		auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(resource->GetResource().Get());
+		commandList_->ResourceBarrier(1, &barrier);
+	}
+
 	void Command::WaitCommand()
 	{
 		device_.WaitOnCPU(Submit());
@@ -393,7 +391,9 @@ namespace sqrp
 
 		uploadBuffer->Upload(pData, strideSize, numElement);
 
-		this->CopyBufferRegion(uploadBuffer, 0, uploadBuffer->GetInitialState(), buffer, 0, buffer->GetInitialState(), strideSize * numElement);
+		const D3D12_RESOURCE_STATES prevState = buffer->GetState();
+		this->CopyBufferRegion(uploadBuffer, 0, buffer, 0, strideSize * numElement);
+		Transition(buffer, prevState);
 
 		this->WaitCommand();
 	}
@@ -419,9 +419,8 @@ namespace sqrp
 			uploadBuffer->Unmap();
 		}
 
-		auto toDestBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			texture->GetResource().Get(), texture->GetInitialState(), D3D12_RESOURCE_STATE_COPY_DEST);
-		commandList_->ResourceBarrier(1, &toDestBarrier);
+		const D3D12_RESOURCE_STATES prevState = texture->GetState();
+		Transition(texture, D3D12_RESOURCE_STATE_COPY_DEST);
 
 		D3D12_TEXTURE_COPY_LOCATION srcLoc = {};
 		srcLoc.pResource = uploadBuffer->GetResource().Get();
@@ -435,9 +434,7 @@ namespace sqrp
 
 		commandList_->CopyTextureRegion(&dstLoc, 0, 0, 0, &srcLoc, nullptr);
 
-		auto toInitBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			texture->GetResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, texture->GetInitialState());
-		commandList_->ResourceBarrier(1, &toInitBarrier);
+		Transition(texture, prevState);
 
 		WaitCommand();
 	}
