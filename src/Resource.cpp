@@ -463,7 +463,7 @@ namespace sqrp
 			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
 			viewDesc.Texture3D.MipSlice = mipSlice;
 			viewDesc.Texture3D.FirstWSlice = 0;
-			viewDesc.Texture3D.WSize = 1;
+			viewDesc.Texture3D.WSize = static_cast<UINT>(-1);   // -1 = FirstWSlice から奥行きの全部
 		}
 		else if (texDim_ == TextureDim::TexCube) {
 			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
