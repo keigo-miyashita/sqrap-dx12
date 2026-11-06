@@ -150,14 +150,17 @@ namespace sqrp
 		UINT64 GetOffsetCounter() const;
 	};
 
+	// DepthStencil / RenderTarget: Tex2D or Tex2DArray only. The texture owns its DSV / RTV.
+	// Use a typeless depth format (e.g. R32_TYPELESS) to also read the depth through an SRV
 	enum class TextureType
 	{
-		Default, Upload, Read, Unordered
+		Default, Upload, Read, Unordered, DepthStencil, RenderTarget
 	};
 
+	// Tex2DArray uses depth as the number of slices
 	enum class TextureDim
 	{
-		Tex1D, Tex2D, Tex3D, TexCube,
+		Tex1D, Tex2D, Tex3D, TexCube, Tex2DArray,
 	};
 
 	class Texture : public Resource
@@ -174,6 +177,9 @@ namespace sqrp
 		UINT depth_ = 1;
 		UINT mipLevels_ = 1;
 		DXGI_FORMAT format_ = DXGI_FORMAT_UNKNOWN;
+		// View 0 covers the whole texture, view 1 + i covers slice i (Tex2DArray only)
+		ComPtr<ID3D12DescriptorHeap> dsvHeap_ = nullptr;
+		ComPtr<ID3D12DescriptorHeap> rtvHeap_ = nullptr;
 
 	public:
 		Texture(const Device& device, std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1);
@@ -187,13 +193,16 @@ namespace sqrp
 		D3D12_SHADER_RESOURCE_VIEW_DESC MakeSRV() const override;
 		D3D12_UNORDERED_ACCESS_VIEW_DESC MakeUAV(bool isCounter, UINT mipSlice) const override;
 		// format lets one texture have views of different formats (e.g. sRGB and UNORM for a back buffer)
-		D3D12_RENDER_TARGET_VIEW_DESC MakeRTV(DXGI_FORMAT format) const;
-		D3D12_DEPTH_STENCIL_VIEW_DESC MakeDSV() const;
+		// slice -1 = the whole texture, slice >= 0 = one slice of a Tex2DArray
+		D3D12_RENDER_TARGET_VIEW_DESC MakeRTV(DXGI_FORMAT format, int slice = -1) const;
+		D3D12_DEPTH_STENCIL_VIEW_DESC MakeDSV(int slice = -1) const;
+		D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle(int slice = -1) const;
+		D3D12_CPU_DESCRIPTOR_HANDLE GetRtvHandle(int slice = -1) const;
 
 		UINT GetStrideSize() const;
 		UINT GetWidth() const;
 		UINT GetHeight() const;
-		UINT GetDepth() const;
+		UINT GetDepth() const;   // number of slices for Tex2DArray
 		UINT GetMipLevels() const;
 
 	};

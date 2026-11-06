@@ -125,6 +125,138 @@ namespace sqrp
 		swapChain->GetSwapChain()->Present(1, 0);
 	}
 
+	void Command::BeginDepthRender(const TextureHandle& depthTexture, int slice)
+	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::BeginDepthRender] BeginDepthRender can only be called on a graphics command list");
+		}
+		const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthTexture->GetDsvHandle(slice);
+
+		Transition(depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+		// Use with a depth-only PSO (empty rtvFormats_)
+		commandList_->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
+		commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+		const D3D12_VIEWPORT viewPort = { 0.0f, 0.0f,
+			static_cast<float>(depthTexture->GetWidth()), static_cast<float>(depthTexture->GetHeight()), 0.0f, 1.0f };
+		const D3D12_RECT scissorRect = { 0, 0,
+			static_cast<LONG>(depthTexture->GetWidth()), static_cast<LONG>(depthTexture->GetHeight()) };
+		commandList_->RSSetViewports(1, &viewPort);
+		commandList_->RSSetScissorRects(1, &scissorRect);
+	}
+
+	void Command::EndDepthRender(const SwapChainHandle& swapChain)
+	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::EndDepthRender] EndDepthRender can only be called on a graphics command list");
+		}
+		const UINT bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
+		auto rtvHandle = swapChain->GetRtvHandle(bbIdx);
+		auto dsvHandle = swapChain->GetDsvHeap()->GetCPUDescriptorHandleForHeapStart();
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+
+		auto viewPort = swapChain->GetViewPort();
+		auto scissorRect = swapChain->GetRect();
+		commandList_->RSSetViewports(1, &viewPort);
+		commandList_->RSSetScissorRects(1, &scissorRect);
+	}
+
+	void Command::SetRenderTargets(initializer_list<TextureHandle> renderTargets, const TextureHandle& depth,
+	                               initializer_list<D3D12_VIEWPORT> viewports)
+	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::SetRenderTargets] SetRenderTargets can only be called on a graphics command list");
+		}
+		if (renderTargets.size() > D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT) {
+			throw runtime_error("[Command::SetRenderTargets] too many render targets");
+		}
+		if (viewports.size() > D3D12_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE) {
+			throw runtime_error("[Command::SetRenderTargets] too many viewports");
+		}
+		if (renderTargets.size() == 0 && !depth) {
+			throw runtime_error("[Command::SetRenderTargets] no render target and no depth");
+		}
+
+		vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
+		vector<D3D12_RESOURCE_BARRIER> barriers;
+		D3D12_RESOURCE_BARRIER barrier;
+		for (const auto& renderTarget : renderTargets) {
+			rtvHandles.push_back(renderTarget->GetRtvHandle());
+			if (MakeTransition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET, barrier)) {
+				barriers.push_back(barrier);
+			}
+		}
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = {};
+		if (depth) {
+			dsvHandle = depth->GetDsvHandle();
+			if (MakeTransition(depth, D3D12_RESOURCE_STATE_DEPTH_WRITE, barrier)) {
+				barriers.push_back(barrier);
+			}
+		}
+		if (!barriers.empty()) {
+			commandList_->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
+		}
+		commandList_->OMSetRenderTargets(static_cast<UINT>(rtvHandles.size()), rtvHandles.data(), false,
+			depth ? &dsvHandle : nullptr);
+
+		vector<D3D12_VIEWPORT> viewPorts(viewports);
+		if (viewPorts.empty()) {
+			const TextureHandle& first = (renderTargets.size() > 0) ? *renderTargets.begin() : depth;
+			viewPorts.push_back({ 0.0f, 0.0f,
+				static_cast<float>(first->GetWidth()), static_cast<float>(first->GetHeight()), 0.0f, 1.0f });
+		}
+		vector<D3D12_RECT> scissorRects;
+		for (const auto& viewPort : viewPorts) {
+			scissorRects.push_back({ static_cast<LONG>(viewPort.TopLeftX), static_cast<LONG>(viewPort.TopLeftY),
+				static_cast<LONG>(viewPort.TopLeftX + viewPort.Width), static_cast<LONG>(viewPort.TopLeftY + viewPort.Height) });
+		}
+		commandList_->RSSetViewports(static_cast<UINT>(viewPorts.size()), viewPorts.data());
+		commandList_->RSSetScissorRects(static_cast<UINT>(scissorRects.size()), scissorRects.data());
+	}
+
+	void Command::ClearRenderTarget(const TextureHandle& renderTarget)
+	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::ClearRenderTarget] ClearRenderTarget can only be called on a graphics command list");
+		}
+		const D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = renderTarget->GetRtvHandle();
+		Transition(renderTarget, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		commandList_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	}
+
+	void Command::ClearDepth(const TextureHandle& depthTexture)
+	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::ClearDepth] ClearDepth can only be called on a graphics command list");
+		}
+		const D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = depthTexture->GetDsvHandle();
+		Transition(depthTexture, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	}
+
+	void Command::SetSwapChainRenderTarget(const SwapChainHandle& swapChain, const TextureHandle& depth, int slice)
+	{
+		if (queueType_ != QueueType::Graphics) {
+			throw runtime_error("[Command::SetSwapChainRenderTarget] SetSwapChainRenderTarget can only be called on a graphics command list");
+		}
+		const UINT bbIdx = swapChain->GetSwapChain()->GetCurrentBackBufferIndex();
+		auto rtvHandle = swapChain->GetRtvHandle(bbIdx);
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = {};
+		if (depth) {
+			dsvHandle = depth->GetDsvHandle(slice);
+			Transition(depth, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		}
+		Transition(swapChain->GetCurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+		commandList_->OMSetRenderTargets(1, &rtvHandle, false, depth ? &dsvHandle : nullptr);
+
+		auto viewPort = swapChain->GetViewPort();
+		auto scissorRect = swapChain->GetRect();
+		commandList_->RSSetViewports(1, &viewPort);
+		commandList_->RSSetScissorRects(1, &scissorRect);
+	}
+
 	void Command::AddDrawIndexed(const MeshHandle& mesh, UINT numInstances)
 	{
 		commandList_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

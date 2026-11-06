@@ -263,10 +263,9 @@ namespace sqrp
 		for (const auto& graphicsProgramDesc : wgDesc.graphicsProgramDescs_) {
 			graphicsNodes_.push_back(graphicsProgramDesc);
 			setNodeToStateObject(graphicsProgramDesc.meshShader_, graphicsProgramDesc.localRootSignature_);
-			if (graphicsProgramDesc.pixelShader_ == nullptr) {
-				throw runtime_error("[StateObject::CreateStateObject] pixelShader_ of a graphics program must not be nullptr");
+			if (graphicsProgramDesc.pixelShader_) {
+				setNodeToStateObject(graphicsProgramDesc.pixelShader_, graphicsProgramDesc.localRootSignature_);
 			}
-			setNodeToStateObject(graphicsProgramDesc.pixelShader_, graphicsProgramDesc.localRootSignature_);
 		}
 
 		// 描画の設定はプログラムごとに RenderState からサブオブジェクトを作り、
@@ -275,7 +274,9 @@ namespace sqrp
 			auto pGenericProgram = stateObjectDesc.CreateSubobject<CD3DX12_GENERIC_PROGRAM_SUBOBJECT>();
 			pGenericProgram->SetProgramName(programDesc.programName_.c_str());
 			pGenericProgram->AddExport(programDesc.meshShader_->GetEntryName().c_str());
-			pGenericProgram->AddExport(programDesc.pixelShader_->GetEntryName().c_str());
+			if (programDesc.pixelShader_) {
+				pGenericProgram->AddExport(programDesc.pixelShader_->GetEntryName().c_str());
+			}
 
 			const auto& renderState = programDesc.renderState_;
 

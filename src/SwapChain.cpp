@@ -114,7 +114,9 @@ namespace sqrp
 
 	void SwapChain::CreateDepthStencilBuffer(SIZE winSize)
 	{
-		auto depthResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
+		// Typeless so that the depth can also be read through an SRV (R32_FLOAT, e.g. for HiZ).
+		// The DSV is still D32_FLOAT (Texture::MakeDSV picks the typed format)
+		auto depthResDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS,
 			winSize.cx, winSize.cy, 1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
 		auto depthHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);

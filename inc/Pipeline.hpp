@@ -186,7 +186,7 @@ namespace sqrp
 			std::wstring nodeName_; // mesh node name
 			UINT nodeIndex_ = 0; // mesh node index if it is node array
 			ShaderHandle meshShader_;
-			ShaderHandle pixelShader_;
+			ShaderHandle pixelShader_;   // optional (depth-only nodes)
 			RootSignatureHandle localRootSignature_;
 			RenderState renderState_;
 		};

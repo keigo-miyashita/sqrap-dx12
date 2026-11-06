@@ -58,6 +58,19 @@ namespace sqrp
 		Command& operator=(const Command&) = delete;
 		void BeginRender(const SwapChainHandle& swapchain);
 		void EndRender(const SwapChainHandle& swapchain);
+		// Binds only a depth target and clears it to 1.0. slice -1 = all slices
+		void BeginDepthRender(const TextureHandle& depthTexture, int slice = -1);
+		// Back to the swap chain's targets, without clearing. The depth texture stays in DEPTH_WRITE
+		void EndDepthRender(const SwapChainHandle& swapChain);
+		// Binds all slices, without clearing. No viewports = one covering the first texture
+		void SetRenderTargets(std::initializer_list<TextureHandle> renderTargets, const TextureHandle& depth,
+		                      std::initializer_list<D3D12_VIEWPORT> viewports = {});
+		// Clears all slices with the optimized clear value (0 for colors, 1.0 for depth)
+		void ClearRenderTarget(const TextureHandle& renderTarget);
+		void ClearDepth(const TextureHandle& depthTexture);
+		// Back buffer (sRGB) plus an optional depth slice, without clearing
+		void SetSwapChainRenderTarget(const SwapChainHandle& swapChain, const TextureHandle& depth = nullptr,
+		                              int slice = -1);
 		void AddDrawIndexed(const MeshHandle& mesh, UINT numInstances);
 		void AddDrawIndexedLine(const MeshHandle& mesh, UINT numInstances);
 		void Barrier(UINT numBarriers, D3D12_RESOURCE_BARRIER* pBarriers);

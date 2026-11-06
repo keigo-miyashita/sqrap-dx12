@@ -20,6 +20,30 @@ namespace sqrp
 			}
 			return false;
 		}
+
+		// A depth buffer created with a typeless format (so that it can also be read through an SRV)
+		// needs a typed format for each view. Formats that are already typed are returned as they are
+		DXGI_FORMAT DepthDsvFormat(DXGI_FORMAT format)
+		{
+			switch (format) {
+			case DXGI_FORMAT_R32_TYPELESS:      return DXGI_FORMAT_D32_FLOAT;
+			case DXGI_FORMAT_R24G8_TYPELESS:    return DXGI_FORMAT_D24_UNORM_S8_UINT;
+			case DXGI_FORMAT_R16_TYPELESS:      return DXGI_FORMAT_D16_UNORM;
+			case DXGI_FORMAT_R32G8X24_TYPELESS: return DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+			default:                            return format;
+			}
+		}
+
+		DXGI_FORMAT DepthSrvFormat(DXGI_FORMAT format)
+		{
+			switch (format) {
+			case DXGI_FORMAT_R32_TYPELESS:      return DXGI_FORMAT_R32_FLOAT;
+			case DXGI_FORMAT_R24G8_TYPELESS:    return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+			case DXGI_FORMAT_R16_TYPELESS:      return DXGI_FORMAT_R16_UNORM;
+			case DXGI_FORMAT_R32G8X24_TYPELESS: return DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+			default:                            return format;
+			}
+		}
 	}
 
 	Resource::Resource(const Device& device, ResourceType rscType, wstring name)
@@ -296,6 +320,15 @@ namespace sqrp
 			rscFlag_ = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 			state_ = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 		}
+		else if (type_ == TextureType::DepthStencil || type_ == TextureType::RenderTarget) {
+			if (texDim_ != TextureDim::Tex2D && texDim_ != TextureDim::Tex2DArray) {
+				throw runtime_error("[Texture::Texture] DepthStencil and RenderTarget support only Tex2D and Tex2DArray");
+			}
+			const bool isDepth = (type_ == TextureType::DepthStencil);
+			heapType_ = D3D12_HEAP_TYPE_DEFAULT;
+			rscFlag_ = isDepth ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL : D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+			state_ = isDepth ? D3D12_RESOURCE_STATE_DEPTH_WRITE : D3D12_RESOURCE_STATE_RENDER_TARGET;
+		}
 		auto heapProp = CD3DX12_HEAP_PROPERTIES(heapType_);
 		CD3DX12_RESOURCE_DESC rscDesc;
 		if (texDim_ == TextureDim::Tex1D) {
@@ -315,12 +348,50 @@ namespace sqrp
 			rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_, 6);
 			rscDesc.MipLevels = mipLevels_;
 		}
+		else if (texDim_ == TextureDim::Tex2DArray) {
+			rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(format_, width_, height_, static_cast<UINT16>(depth_));
+			rscDesc.MipLevels = mipLevels_;
+		}
 		rscDesc.Flags = rscFlag_;
-		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, state_, nullptr, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
+		// Command::ClearDepth / ClearRenderTarget clear with the same values
+		const CD3DX12_CLEAR_VALUE depthClearValue(DepthDsvFormat(format_), 1.0f, 0);
+		const float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		const CD3DX12_CLEAR_VALUE colorClearValue(format_, clearColor);
+		const D3D12_CLEAR_VALUE* pClearValue =
+			  (type_ == TextureType::DepthStencil) ? &depthClearValue
+			: (type_ == TextureType::RenderTarget) ? &colorClearValue
+			: nullptr;
+		HRESULT result = device_.GetDevice()->CreateCommittedResource(&heapProp, D3D12_HEAP_FLAG_NONE, &rscDesc, state_, pClearValue, IID_PPV_ARGS(resource_.ReleaseAndGetAddressOf()));
 		if (FAILED(result)) {
 			throw runtime_error("[Texture::Texture] CreateCommittedResource failed\nHRESULT = " + to_string(result));
 		}
 		resource_->SetName((name_ + L"_Texture").c_str());
+
+		if (type_ == TextureType::DepthStencil || type_ == TextureType::RenderTarget) {
+			const bool isDepth = (type_ == TextureType::DepthStencil);
+			const UINT numViews = (texDim_ == TextureDim::Tex2DArray) ? 1 + depth_ : 1;
+			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+			heapDesc.NumDescriptors = numViews;
+			heapDesc.Type = isDepth ? D3D12_DESCRIPTOR_HEAP_TYPE_DSV : D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+			ComPtr<ID3D12DescriptorHeap>& heap = isDepth ? dsvHeap_ : rtvHeap_;
+			result = device_.GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(heap.ReleaseAndGetAddressOf()));
+			if (FAILED(result)) {
+				throw runtime_error("[Texture::Texture] CreateDescriptorHeap for DSV / RTV failed\nHRESULT = " + to_string(result));
+			}
+			heap->SetName((name_ + (isDepth ? L"_DsvHeap" : L"_RtvHeap")).c_str());
+			for (UINT i = 0; i < numViews; i++) {
+				const int slice = static_cast<int>(i) - 1;
+				if (isDepth) {
+					auto dsvDesc = MakeDSV(slice);
+					device_.GetDevice()->CreateDepthStencilView(resource_.Get(), &dsvDesc, GetDsvHandle(slice));
+				}
+				else {
+					auto rtvDesc = MakeRTV(format_, slice);
+					device_.GetDevice()->CreateRenderTargetView(resource_.Get(), &rtvDesc, GetRtvHandle(slice));
+				}
+			}
+		}
 	}
 
 	Texture::Texture(const Device& device, wstring name, ComPtr<ID3D12Resource> resource, D3D12_RESOURCE_STATES initialState)
@@ -337,7 +408,7 @@ namespace sqrp
 			texDim_ = TextureDim::Tex1D;
 		}
 		else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D) {
-			texDim_ = TextureDim::Tex2D;
+			texDim_ = (desc.DepthOrArraySize > 1) ? TextureDim::Tex2DArray : TextureDim::Tex2D;
 		}
 		else if (desc.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D) {
 			texDim_ = TextureDim::Tex3D;
@@ -347,7 +418,7 @@ namespace sqrp
 		}
 		width_ = static_cast<UINT>(desc.Width);
 		height_ = desc.Height;
-		depth_ = (texDim_ == TextureDim::Tex3D) ? desc.DepthOrArraySize : 1;
+		depth_ = (texDim_ == TextureDim::Tex3D || texDim_ == TextureDim::Tex2DArray) ? desc.DepthOrArraySize : 1;
 		mipLevels_ = desc.MipLevels;
 		format_ = desc.Format;
 		strideSize_ = static_cast<UINT>(BitsPerPixel(format_) / 8);
@@ -381,6 +452,9 @@ namespace sqrp
 	void Texture::Reset()
 	{
 		resource_.Reset();
+		// The views point at resource_
+		dsvHeap_.Reset();
+		rtvHeap_.Reset();
 	}
 
 	bool Texture::CanCreateView(ViewType view, string* reason) const
@@ -389,6 +463,10 @@ namespace sqrp
 		case ViewType::SRV:
 			if (rscFlag_ & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) {
 				return CannotCreate(reason, "an SRV cannot be created for a texture with D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE");
+			}
+			// 深度は型なしの形式で作ったときだけ SRV の形式がある（D32_FLOAT のままでは読めない）
+			if ((rscFlag_ & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) && DepthSrvFormat(format_) == format_) {
+				return CannotCreate(reason, "an SRV of a depth texture needs a typeless format such as DXGI_FORMAT_R32_TYPELESS");
 			}
 			return true;
 		case ViewType::UAV:
@@ -408,7 +486,8 @@ namespace sqrp
 			throw runtime_error("[Texture::MakeSRV] " + reason);
 		}
 		D3D12_SHADER_RESOURCE_VIEW_DESC viewDesc = {};
-		viewDesc.Format = format_;
+		// A depth buffer is read through the color format of the same bits (R32_TYPELESS -> R32_FLOAT)
+		viewDesc.Format = (rscFlag_ & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL) ? DepthSrvFormat(format_) : format_;
 		if (texDim_ == TextureDim::Tex1D) {
 			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
 			viewDesc.Texture1D.MostDetailedMip = 0;
@@ -433,6 +512,15 @@ namespace sqrp
 			viewDesc.TextureCube.MostDetailedMip = 0;
 			viewDesc.TextureCube.MipLevels = mipLevels_;
 			viewDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+		}
+		else if (texDim_ == TextureDim::Tex2DArray) {
+			viewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+			viewDesc.Texture2DArray.MostDetailedMip = 0;
+			viewDesc.Texture2DArray.MipLevels = mipLevels_;
+			viewDesc.Texture2DArray.FirstArraySlice = 0;
+			viewDesc.Texture2DArray.ArraySize = depth_;
+			viewDesc.Texture2DArray.PlaneSlice = 0;
+			viewDesc.Texture2DArray.ResourceMinLODClamp = 0.0f;
 		}
 		viewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		return viewDesc;
@@ -472,33 +560,93 @@ namespace sqrp
 			viewDesc.Texture2DArray.ArraySize = 6;
 			viewDesc.Texture2DArray.PlaneSlice = 0;
 		}
+		else if (texDim_ == TextureDim::Tex2DArray) {
+			viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+			viewDesc.Texture2DArray.MipSlice = mipSlice;
+			viewDesc.Texture2DArray.FirstArraySlice = 0;
+			viewDesc.Texture2DArray.ArraySize = depth_;
+			viewDesc.Texture2DArray.PlaneSlice = 0;
+		}
 		return viewDesc;
 	}
 
-	D3D12_RENDER_TARGET_VIEW_DESC Texture::MakeRTV(DXGI_FORMAT format) const
+	D3D12_RENDER_TARGET_VIEW_DESC Texture::MakeRTV(DXGI_FORMAT format, int slice) const
 	{
-		if (texDim_ != TextureDim::Tex2D) {
-			throw runtime_error("[Texture::MakeRTV] only Tex2D is supported");
+		if (texDim_ != TextureDim::Tex2D && texDim_ != TextureDim::Tex2DArray) {
+			throw runtime_error("[Texture::MakeRTV] only Tex2D and Tex2DArray are supported");
+		}
+		if (texDim_ == TextureDim::Tex2DArray && slice >= static_cast<int>(depth_)) {
+			throw runtime_error("[Texture::MakeRTV] slice is out of range");
 		}
 		D3D12_RENDER_TARGET_VIEW_DESC viewDesc = {};
 		viewDesc.Format = format;
-		viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-		viewDesc.Texture2D.MipSlice = 0;
-		viewDesc.Texture2D.PlaneSlice = 0;
+		if (texDim_ == TextureDim::Tex2D) {
+			viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			viewDesc.Texture2D.MipSlice = 0;
+			viewDesc.Texture2D.PlaneSlice = 0;
+		}
+		else {
+			viewDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+			viewDesc.Texture2DArray.MipSlice = 0;
+			viewDesc.Texture2DArray.FirstArraySlice = (slice < 0) ? 0 : static_cast<UINT>(slice);
+			viewDesc.Texture2DArray.ArraySize = (slice < 0) ? depth_ : 1;
+			viewDesc.Texture2DArray.PlaneSlice = 0;
+		}
 		return viewDesc;
 	}
 
-	D3D12_DEPTH_STENCIL_VIEW_DESC Texture::MakeDSV() const
+	D3D12_DEPTH_STENCIL_VIEW_DESC Texture::MakeDSV(int slice) const
 	{
-		if (texDim_ != TextureDim::Tex2D) {
-			throw runtime_error("[Texture::MakeDSV] only Tex2D is supported");
+		if (texDim_ != TextureDim::Tex2D && texDim_ != TextureDim::Tex2DArray) {
+			throw runtime_error("[Texture::MakeDSV] only Tex2D and Tex2DArray are supported");
+		}
+		if (texDim_ == TextureDim::Tex2DArray && slice >= static_cast<int>(depth_)) {
+			throw runtime_error("[Texture::MakeDSV] slice is out of range");
 		}
 		D3D12_DEPTH_STENCIL_VIEW_DESC viewDesc = {};
-		viewDesc.Format = format_;
-		viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		viewDesc.Format = DepthDsvFormat(format_);
 		viewDesc.Flags = D3D12_DSV_FLAG_NONE;
-		viewDesc.Texture2D.MipSlice = 0;
+		if (texDim_ == TextureDim::Tex2D) {
+			viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+			viewDesc.Texture2D.MipSlice = 0;
+		}
+		else {
+			viewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
+			viewDesc.Texture2DArray.MipSlice = 0;
+			viewDesc.Texture2DArray.FirstArraySlice = (slice < 0) ? 0 : static_cast<UINT>(slice);
+			viewDesc.Texture2DArray.ArraySize = (slice < 0) ? depth_ : 1;
+		}
 		return viewDesc;
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetDsvHandle(int slice) const
+	{
+		if (!dsvHeap_) {
+			throw runtime_error("[Texture::GetDsvHandle] only a texture created with TextureType::DepthStencil has a DSV");
+		}
+		const bool isArray = (texDim_ == TextureDim::Tex2DArray);
+		if (slice >= static_cast<int>(isArray ? depth_ : 1)) {
+			throw runtime_error("[Texture::GetDsvHandle] slice is out of range");
+		}
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(dsvHeap_->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset((isArray && slice >= 0) ? 1 + slice : 0,
+			device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV));
+		return handle;
+	}
+
+	D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetRtvHandle(int slice) const
+	{
+		if (!rtvHeap_) {
+			throw runtime_error("[Texture::GetRtvHandle] only a texture created with TextureType::RenderTarget has an RTV");
+		}
+		const bool isArray = (texDim_ == TextureDim::Tex2DArray);
+		if (slice >= static_cast<int>(isArray ? depth_ : 1)) {
+			throw runtime_error("[Texture::GetRtvHandle] slice is out of range");
+		}
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handle(rtvHeap_->GetCPUDescriptorHandleForHeapStart());
+		handle.Offset((isArray && slice >= 0) ? 1 + slice : 0,
+			device_.GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		return handle;
 	}
 
 	UINT Texture::GetStrideSize() const
