@@ -434,10 +434,17 @@ namespace sqrp
 			[this](TLAS* p) { DeferredReleaser(p); });
 	}
 
-	WorkGraphHandle Device::CreateWorkGraph(wstring name, const StateObjectHandle& stateObject, vector<vector<LocalRootArguments>> computeLocalRootArguments, vector<vector<LocalRootArguments>> graphicsLocalRootArguments, UINT maxInputRecords, UINT maxNodeInputs) const
+	WorkGraphHandle Device::CreateWorkGraph(wstring name, const StateObjectHandle& stateObject, vector<vector<LocalRootArguments>> computeLocalRootArguments, vector<vector<LocalRootArguments>> graphicsLocalRootArguments, UINT maxInputRecords, UINT maxNodeInputs, const WorkGraphBackingPoolHandle& backingPool) const
 	{
-		return shared_ptr<WorkGraph>(new WorkGraph(*this, name, stateObject, computeLocalRootArguments, graphicsLocalRootArguments, maxInputRecords, maxNodeInputs),
+		return shared_ptr<WorkGraph>(new WorkGraph(*this, name, stateObject, computeLocalRootArguments, graphicsLocalRootArguments, maxInputRecords, maxNodeInputs, backingPool),
 			[this](WorkGraph* p) { DeferredReleaser(p); });
+	}
+
+	WorkGraphBackingPoolHandle Device::CreateWorkGraphBackingPool(wstring name) const
+	{
+		// 共有のメモリは GPU が使い終わってから消す(ワークグラフと同じく遅らせて解放する)
+		return shared_ptr<WorkGraphBackingPool>(new WorkGraphBackingPool(*this, name),
+			[this](WorkGraphBackingPool* p) { DeferredReleaser(p); });
 	}
 
 	void Device::ReleaseCompleted() const

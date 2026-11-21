@@ -101,7 +101,10 @@ namespace sqrp
 		SwapChainHandle			CreateSwapChain(std::wstring name, const HWND& hwnd, SIZE winSize, UINT bufferCount = 2) const;
 		TextureHandle			CreateTexture(std::wstring name, TextureDim texDim, TextureType type, UINT strideSize, DXGI_FORMAT format, UINT width, UINT height, UINT depth, UINT mipLevels = 1) const;
 		TLASHandle				CreateTLAS(std::wstring name, const CommandHandle& command, const std::vector<TLASDesc>& tlasDescs) const;
-		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, std::vector<std::vector<LocalRootArguments>> computeLocalRootArguments, std::vector<std::vector<LocalRootArguments>> graphicsLocalRootArguments, UINT maxInputRecords = 0, UINT maxNodeInputs = 0) const;
+		// backingPool(2026-11-21): 渡すと、そのワークグラフは自分でバッキングメモリを確保せず、共有のメモリを使う(WorkGraph.hpp の WorkGraphBackingPool)
+		WorkGraphHandle			CreateWorkGraph(std::wstring name, const StateObjectHandle& stateObject, std::vector<std::vector<LocalRootArguments>> computeLocalRootArguments, std::vector<std::vector<LocalRootArguments>> graphicsLocalRootArguments, UINT maxInputRecords = 0, UINT maxNodeInputs = 0, const WorkGraphBackingPoolHandle& backingPool = nullptr) const;
+		// 同時に流さないワークグラフどうしで 1 つのバッキングメモリを共有する入れ物(2026-11-21)
+		WorkGraphBackingPoolHandle	CreateWorkGraphBackingPool(std::wstring name) const;
 
 		void ReleaseCompleted() const;
 		void WaitOnCPU(const TimelinePoint& timelinePoint) const;

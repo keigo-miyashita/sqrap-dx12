@@ -435,6 +435,16 @@ namespace sqrp
 
 	void Command::SetProgram(const WorkGraphHandle& workGraph, bool isInitialize)
 	{
+		// 共有のバッキングメモリ(WorkGraphBackingPool、2026-11-21)を、前に別のワークグラフが使っていたら、
+		// 全体の UAV バリアでその実行の終わりを待ってから、初期化を立てて使う(D3D12 Work Graphs の仕様:
+		// 別のワークグラフが使ったバッキングメモリは、前の使用が終わってから INITIALIZE で使い直す)。
+		// 同じワークグラフを続けて張るときは何も足さない(共有しないときと同じ)
+		const WorkGraphBackingPoolHandle& pool = workGraph->GetBackingPool();
+		if (pool && pool->SwitchUser(workGraph.get())) {
+			auto barrier = CD3DX12_RESOURCE_BARRIER::UAV(nullptr);
+			latestCommandList_->ResourceBarrier(1, &barrier);
+			isInitialize = true;
+		}
 		D3D12_SET_PROGRAM_DESC setProgramDesc = workGraph->MakeSetProgramDesc(isInitialize);
 		latestCommandList_->SetProgram(&setProgramDesc);
 	}

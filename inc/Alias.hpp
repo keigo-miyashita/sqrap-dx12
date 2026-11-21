@@ -27,6 +27,7 @@ namespace sqrp
 	class Texture;
 	class TLAS;
 	class WorkGraph;
+	class WorkGraphBackingPool;
 
 	using ASHandle = std::shared_ptr<AS>;
 	using BLASHandle = std::shared_ptr<BLAS>;
@@ -51,4 +52,5 @@ namespace sqrp
 	using TextureHandle = std::shared_ptr<Texture>;
 	using TLASHandle = std::shared_ptr<TLAS>;
 	using WorkGraphHandle = std::shared_ptr<WorkGraph>;
+	using WorkGraphBackingPoolHandle = std::shared_ptr<WorkGraphBackingPool>;
 }

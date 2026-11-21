@@ -10,6 +10,70 @@ using namespace DirectX;
 
 namespace sqrp
 {
+	// ---- 共有のバッキングメモリ(2026-11-21。説明は WorkGraph.hpp) ----
+	WorkGraphBackingPool::WorkGraphBackingPool(const Device& device, wstring name)
+		: device_(&device), name_(name)
+	{
+	}
+
+	void WorkGraphBackingPool::Register(const D3D12_WORK_GRAPH_MEMORY_REQUIREMENTS& memReqs)
+	{
+		requiredSize_ = (std::max)(requiredSize_, memReqs.MaxSizeInBytes);
+		sumOfMaxSizes_ += memReqs.MaxSizeInBytes;
+		numUsers_++;
+	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS_RANGE WorkGraphBackingPool::Acquire()
+	{
+		if (buffer_ && range_.SizeInBytes >= requiredSize_) return range_;
+		// 初めて使うとき、または確保した後により大きいワークグラフが足されたとき。古いメモリは GPU がまだ使っているかもしれないので持っておく
+		if (buffer_) retired_.push_back(buffer_);
+		const UINT64 size = (std::max)(requiredSize_, (UINT64)8);   // MaxSizeInBytes が 0 だけのときも有効な範囲にする
+		CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
+		auto result = device_->GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(buffer_.ReleaseAndGetAddressOf()));
+		if (FAILED(result)) {
+			throw runtime_error("[WorkGraphBackingPool::Acquire] CreateCommittedResource for shared backing memory failed\nHRESULT = " + to_string(result));
+		}
+		buffer_->SetName((name_ + L"_SharedWorkGraphBackingMemory").c_str());
+		range_.StartAddress = buffer_->GetGPUVirtualAddress();
+		range_.SizeInBytes  = size;
+		lastUser_ = nullptr;   // 新しいメモリ。次に張るワークグラフで初期化させる
+		string narrowName;
+		for (wchar_t c : name_) narrowName.push_back(static_cast<char>(c));
+		cout << "[WorkGraphBackingPool] " << narrowName << ": " << numUsers_ << " work graphs share "
+		     << size << " bytes (sum of their MaxSizeInBytes = " << sumOfMaxSizes_ << " bytes)" << endl;
+		return range_;
+	}
+
+	bool WorkGraphBackingPool::SwitchUser(const WorkGraph* user)
+	{
+		if (lastUser_ == user) return false;
+		lastUser_ = user;
+		return true;
+	}
+
+	const ComPtr<ID3D12Resource>& WorkGraphBackingPool::GetBuffer() const
+	{
+		return buffer_;
+	}
+
+	UINT64 WorkGraphBackingPool::GetRequiredSize() const
+	{
+		return requiredSize_;
+	}
+
+	UINT64 WorkGraphBackingPool::GetSumOfMaxSizes() const
+	{
+		return sumOfMaxSizes_;
+	}
+
+	UINT WorkGraphBackingPool::GetNumUsers() const
+	{
+		return numUsers_;
+	}
+
 	UINT WorkGraph::AlignForLocalSigBuffer(UINT size)
 	{
 		const UINT alignment = 8; // sizeof(D3D12_GPU_VIRTUAL_ADDRESS), sizeof(D3D12_GPU_DESCRIPTOR_HANDLE)
@@ -28,7 +92,8 @@ namespace sqrp
 		D3D12_SET_PROGRAM_DESC pgDesc = {};
 
 		pgDesc.Type = D3D12_PROGRAM_TYPE_WORK_GRAPH;
-		pgDesc.WorkGraph.BackingMemory = backingMemoryAddressRange_;
+		// 共有のときは共有のメモリ(このワークグラフの MaxSizeInBytes 以上。大きい分は使われない)
+		pgDesc.WorkGraph.BackingMemory = backingPool_ ? backingPool_->Acquire() : backingMemoryAddressRange_;
 		pgDesc.WorkGraph.Flags = initialize ? D3D12_SET_WORK_GRAPH_FLAG_INITIALIZE : D3D12_SET_WORK_GRAPH_FLAG_NONE;
 		pgDesc.WorkGraph.ProgramIdentifier = workGraphProgramID_;
 		// ローカルルート引数が無いときは範囲 0（null）のまま渡す
@@ -40,8 +105,9 @@ namespace sqrp
 	WorkGraph::WorkGraph(const Device& device, wstring name, const StateObjectHandle& stateObject,
 		std::vector<std::vector<LocalRootArguments>> computeLocalRootArguments,
 		std::vector<std::vector<LocalRootArguments>> graphicsLocalRootArguments,
-		UINT maxInputRecords, UINT maxNodeInputs)
-		: name_(name)
+		UINT maxInputRecords, UINT maxNodeInputs,
+		const WorkGraphBackingPoolHandle& backingPool)
+		: name_(name), backingPool_(backingPool)
 	{
 		if (stateObject->GetStateObjectType() == StateObjectType::Raytracing) {
 			throw runtime_error("[WorkGraph::WorkGraph] stateObject is not a workgraph state object");
@@ -85,17 +151,23 @@ namespace sqrp
 		}
 
 		workGraphProp_->GetWorkGraphMemoryRequirements(workGraphIndex_, &memReqs_);
-		cout << "WorkGraph memory requirements = " << memReqs_.MaxSizeInBytes << endl;
-		CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(memReqs_.MaxSizeInBytes);
-		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
-		result = device.GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
-		if (FAILED(result)) {
-			throw runtime_error("[WorkGraph::WorkGraph] CreateCommittedResource for backing memory failed\nHRESULT = " + to_string(result));
+		cout << "WorkGraph memory requirements = " << memReqs_.MaxSizeInBytes << (backingPool_ ? " (shared backing memory)" : "") << endl;
+		if (backingPool_) {
+			// 共有のメモリを使う(2026-11-21)。確保は初めて張るとき(WorkGraphBackingPool::Acquire)
+			backingPool_->Register(memReqs_);
 		}
-		backingMemory_->SetName((name_ + L"_WorkGraph_BackingMemory").c_str());
-		backingMemoryAddressRange_.SizeInBytes = memReqs_.MaxSizeInBytes;
-		backingMemoryAddressRange_.StartAddress = backingMemory_->GetGPUVirtualAddress();
+		else {
+			CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(memReqs_.MaxSizeInBytes);
+			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+			CD3DX12_HEAP_PROPERTIES prop(D3D12_HEAP_TYPE_DEFAULT);
+			result = device.GetDevice()->CreateCommittedResource(&prop, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(backingMemory_.ReleaseAndGetAddressOf()));
+			if (FAILED(result)) {
+				throw runtime_error("[WorkGraph::WorkGraph] CreateCommittedResource for backing memory failed\nHRESULT = " + to_string(result));
+			}
+			backingMemory_->SetName((name_ + L"_WorkGraph_BackingMemory").c_str());
+			backingMemoryAddressRange_.SizeInBytes = memReqs_.MaxSizeInBytes;
+			backingMemoryAddressRange_.StartAddress = backingMemory_->GetGPUVirtualAddress();
+		}
 		numEntryPoints_ = workGraphProp_->GetNumEntrypoints(workGraphIndex_);
 		numNodes_ = workGraphProp_->GetNumNodes(workGraphIndex_);
 
@@ -205,12 +277,26 @@ namespace sqrp
 
 	D3D12_GPU_VIRTUAL_ADDRESS_RANGE WorkGraph::GetBackingMemoryAddressRange() const
 	{
-		return backingMemoryAddressRange_;
+		return backingPool_ ? backingPool_->Acquire() : backingMemoryAddressRange_;
 	}
 
 	const ComPtr<ID3D12Resource>& WorkGraph::GetBackingMemory() const
 	{
+		if (backingPool_) {
+			backingPool_->Acquire();
+			return backingPool_->GetBuffer();
+		}
 		return backingMemory_;
+	}
+
+	const WorkGraphBackingPoolHandle& WorkGraph::GetBackingPool() const
+	{
+		return backingPool_;
+	}
+
+	const D3D12_WORK_GRAPH_MEMORY_REQUIREMENTS& WorkGraph::GetMemoryRequirements() const
+	{
+		return memReqs_;
 	}
 
 	D3D12_PROGRAM_IDENTIFIER WorkGraph::GetProgramID() const
